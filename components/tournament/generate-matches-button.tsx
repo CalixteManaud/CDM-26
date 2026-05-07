@@ -47,7 +47,7 @@ export function GenerateMatchesButton({ tournamentId, type, groupStageComplete }
 
   return (
     <Card
-      className={`relative overflow-hidden bg-gradient-to-br ${
+      className={`relative overflow-hidden bg-linear-to-br ${
         isKnockout ? 'from-purple-950/30' : 'from-emerald-950/30'
       } via-black to-black border-white/10 p-6 md:p-7`}
     >

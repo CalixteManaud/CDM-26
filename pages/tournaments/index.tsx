@@ -118,7 +118,7 @@ export default function TournamentsPage(props: InferGetServerSidePropsType<typeo
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-24 relative">
             <div className="flex items-end justify-between flex-wrap gap-8">
               <div>
@@ -200,7 +200,7 @@ export default function TournamentsPage(props: InferGetServerSidePropsType<typeo
               </div>
 
               <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterId)}>
-                <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-full h-auto gap-0.5">
+                <TabsList className="bg-white/3 border border-white/10 p-1 rounded-full h-auto gap-0.5">
                   <TabsTrigger
                     value="all"
                     className="rounded-full px-5 py-2 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-black text-white/60"
@@ -300,8 +300,8 @@ function TournamentCard({
     >
       <Link href={`/tournaments/${tournament.id}`} className="block h-full">
         <Card
-          className={`relative overflow-hidden h-full p-0 bg-gradient-to-b ${
-            isLive ? 'from-red-950/30' : isFinal ? 'from-purple-950/30' : 'from-white/[0.03]'
+          className={`relative overflow-hidden h-full p-0 bg-linear-to-b ${
+            isLive ? 'from-red-950/30' : isFinal ? 'from-purple-950/30' : 'from-white/3'
           } to-transparent border-white/10 group-hover:border-white/30 transition-all duration-300`}
         >
           {/* Top status strip */}
@@ -359,7 +359,7 @@ function TournamentCard({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-3 border-t border-white/10 flex items-center justify-between bg-white/[0.02]">
+          <div className="px-6 py-3 border-t border-white/10 flex items-center justify-between bg-white/2">
             <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/50 font-mono">
               Voir le tournoi
             </span>
@@ -418,7 +418,7 @@ function EmptyState({ filter, isAdmin }: { filter: FilterId; isAdmin: boolean })
       : 'Pas de tournoi planifié dans le futur. Reviens bientôt ou crée-en un.';
 
   return (
-    <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 py-20 text-center">
+    <Card className="relative overflow-hidden bg-white/2 border-white/10 py-20 text-center">
       <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 mx-auto">
         <Trophy className="w-12 h-12 text-white/40" />
       </div>

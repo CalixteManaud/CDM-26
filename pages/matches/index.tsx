@@ -181,7 +181,7 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-red-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-24 relative">
             <div className="flex items-end justify-between flex-wrap gap-8">
               <div>
@@ -271,7 +271,7 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
 
               <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                 <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                  <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-full h-auto gap-0.5 w-full md:w-auto">
+                  <TabsList className="bg-white/3 border border-white/10 p-1 rounded-full h-auto gap-0.5 w-full md:w-auto">
                     <TabsTrigger
                       value="all"
                       className="rounded-full px-4 md:px-5 py-2 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-black text-white/60"
@@ -302,7 +302,7 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
 
                 {tournaments.length > 1 && (
                   <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
-                    <SelectTrigger className="w-full sm:w-72 h-11 bg-white/[0.03] border-white/15 hover:border-white/30 text-white">
+                    <SelectTrigger className="w-full sm:w-72 h-11 bg-white/3 border-white/15 hover:border-white/30 text-white">
                       <Trophy className="w-4 h-4 text-emerald-400 mr-1" />
                       <SelectValue placeholder="Filtrer par tournoi" />
                     </SelectTrigger>
@@ -341,7 +341,7 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
                           initial={{ opacity: 0, y: 12 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
-                          className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer bg-white/[0.03] border border-white/10 hover:border-white/30 transition-all group"
+                          className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer bg-white/3 border border-white/10 hover:border-white/30 transition-all group"
                         >
                           <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
                             <Trophy className="w-4 h-4 text-emerald-400" />
@@ -369,7 +369,7 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
                           <div key={stage} className="space-y-4">
                             <div className="flex items-center gap-3">
                               <div
-                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border ${meta.accent} text-[10px] font-mono uppercase tracking-[0.25em]`}
+                                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/3 border ${meta.accent} text-[10px] font-mono uppercase tracking-[0.25em]`}
                               >
                                 <Shield className="w-3 h-3" />
                                 <span>/ {meta.code}</span>
@@ -447,8 +447,8 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
     >
       <Link href={`/matches/${match.id}`} className="block h-full">
         <Card
-          className={`relative overflow-hidden h-full p-0 bg-gradient-to-b ${
-            isLive ? 'from-red-950/30' : 'from-white/[0.03]'
+          className={`relative overflow-hidden h-full p-0 bg-linear-to-b ${
+            isLive ? 'from-red-950/30' : 'from-white/3'
           } to-transparent border-white/10 group-hover:border-white/30 transition-all duration-300`}
         >
           {/* Top status strip */}
@@ -515,7 +515,7 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/10 bg-white/[0.02]">
+          <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/10 bg-white/2">
             {match.group ? (
               <span className="flex items-center gap-1.5 text-[10px] font-mono text-white/45 uppercase tracking-[0.22em]">
                 <Shield className="w-3 h-3" />
@@ -548,7 +548,7 @@ function TeamMiniLogo({ team }: { team: Team }) {
     );
   }
   return (
-    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
+    <div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
       {team.shortName.substring(0, 2).toUpperCase()}
     </div>
   );
@@ -583,7 +583,7 @@ function StatusInline({ status }: { status: MatchStatus }) {
 
 function EmptyState() {
   return (
-    <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 py-20 text-center">
+    <Card className="relative overflow-hidden bg-white/2 border-white/10 py-20 text-center">
       <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 mx-auto">
         <Calendar className="w-12 h-12 text-white/40" />
       </div>

@@ -95,7 +95,7 @@ function TeamRow({
             className="rounded-md object-cover ring-1 ring-white/10 shrink-0"
           />
         ) : (
-          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
+          <div className="w-7 h-7 rounded-md bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
             {team.shortName.substring(0, 2)}
           </div>
         )}
@@ -130,7 +130,7 @@ export function MatchList({ matches, title = 'Matchs' }: MatchListProps) {
 
   if (matches.length === 0) {
     return (
-      <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 py-16 px-6 text-center">
+      <Card className="relative overflow-hidden bg-white/2 border-white/10 py-16 px-6 text-center">
         <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-5">
           <Calendar className="w-12 h-12 text-white/40" />
         </div>
@@ -158,7 +158,7 @@ export function MatchList({ matches, title = 'Matchs' }: MatchListProps) {
           <div key={stage} className="space-y-4">
             <div className="flex items-center gap-3">
               <div
-                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border text-[10px] font-mono uppercase tracking-[0.25em] ${meta.accent}`}
+                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/3 border text-[10px] font-mono uppercase tracking-[0.25em] ${meta.accent}`}
               >
                 <Trophy className="w-3 h-3" />
                 <span>/ {meta.code}</span>
@@ -182,8 +182,8 @@ export function MatchList({ matches, title = 'Matchs' }: MatchListProps) {
                       whileHover={{ y: -2 }}
                     >
                       <Card
-                        className={`relative overflow-hidden bg-gradient-to-b ${
-                          isLive ? 'from-red-950/30' : 'from-white/[0.03]'
+                        className={`relative overflow-hidden bg-linear-to-b ${
+                          isLive ? 'from-red-950/30' : 'from-white/3'
                         } to-transparent border-white/10 group-hover:border-white/30 transition-all p-0`}
                       >
                         {/* Header */}
@@ -202,7 +202,7 @@ export function MatchList({ matches, title = 'Matchs' }: MatchListProps) {
                         </div>
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/10 bg-white/[0.02]">
+                        <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/10 bg-white/2">
                           <span className="flex items-center gap-1.5 text-[10px] font-mono text-white/45 uppercase tracking-[0.22em]">
                             <Clock className="w-3 h-3" />
                             {format(new Date(m.matchDate), 'HH:mm')}

@@ -202,7 +202,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
     return (
       <div className="relative bg-black text-white min-h-screen flex items-center justify-center px-4">
         <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-        <Card className="relative max-w-md text-center p-10 bg-white/[0.02] border-white/10">
+        <Card className="relative max-w-md text-center p-10 bg-white/2 border-white/10">
           <Trophy className="w-14 h-14 text-white/40 mx-auto mb-5" />
           <h2 className="text-2xl font-black mb-3 text-white tracking-tight">Tournoi introuvable</h2>
           <Link
@@ -255,7 +255,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
               href="/tournaments"
@@ -299,7 +299,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabId)} className="w-full">
               <div className="flex justify-center mb-10">
                 <div className="overflow-x-auto max-w-full">
-                  <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-full h-auto gap-0.5">
+                  <TabsList className="bg-white/3 border border-white/10 p-1 rounded-full h-auto gap-0.5">
                     {tabs.map((tab) => {
                       const Icon = tab.icon;
                       return (
@@ -337,7 +337,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
                 </motion.div>
 
                 {/* Quick recap card */}
-                <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-6 md:p-8 mt-5">
+                <Card className="relative overflow-hidden bg-white/2 border-white/10 p-6 md:p-8 mt-5">
                   <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/40 mb-3">
                     / Synthèse
                   </div>
@@ -435,7 +435,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
               <TabsContent value="stats" className="mt-0">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
                   {isPending ? (
-                    <Card className="text-center py-20 bg-white/[0.02] border-white/10">
+                    <Card className="text-center py-20 bg-white/2 border-white/10">
                       <Loader2 className="w-12 h-12 mx-auto mb-4 text-emerald-400 animate-spin" />
                       <h3 className="text-2xl font-black mb-2 text-white tracking-tight">Calcul des statistiques…</h3>
                       <p className="text-white/55">Analyse des matchs et des performances</p>
@@ -549,7 +549,7 @@ function OverviewStat({
 }) {
   const s = ACCENT[accent];
   return (
-    <Card className={`relative overflow-hidden bg-white/[0.02] border ${s.border} hover:border-white/30 transition-all p-6`}>
+    <Card className={`relative overflow-hidden bg-white/2 border ${s.border} hover:border-white/30 transition-all p-6`}>
       <div className="flex items-start justify-between mb-5">
         <div className={`w-11 h-11 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center`}>
           <Icon className={`w-5 h-5 ${s.text}`} />
@@ -578,7 +578,7 @@ function EmptyTabState({
   description: string;
 }) {
   return (
-    <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 text-center py-20 px-6">
+    <Card className="relative overflow-hidden bg-white/2 border-white/10 text-center py-20 px-6">
       <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 mx-auto">
         <Icon className="w-12 h-12 text-white/40" />
       </div>

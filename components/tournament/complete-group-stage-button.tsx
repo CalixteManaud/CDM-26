@@ -50,7 +50,7 @@ export function CompleteGroupStageButton({ tournamentId, allGroupMatchesFinished
 
   return (
     <Card
-      className={`relative overflow-hidden bg-gradient-to-br ${
+      className={`relative overflow-hidden bg-linear-to-br ${
         allGroupMatchesFinished ? 'from-emerald-950/30' : 'from-yellow-950/20'
       } via-black to-black border-white/10 p-6 md:p-7`}
     >

@@ -7,3 +7,4 @@ export * from './match-generation';
 export * from './standings';
 export * from './users';
 export * from './statistics';
+export * from './betting';

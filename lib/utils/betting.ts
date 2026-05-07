@@ -11,8 +11,15 @@
  */
 
 import prisma from '@/lib/prisma';
-import { BetOutcome, BetStatus, MatchStatus } from '@/prisma/prisma-client/enums';
+import { BetOutcome, BetSource, BetStatus, MatchStatus } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints } from '@/lib/wizebot';
+import { computeLiveOdds, isBettingOpen } from './odds';
+
+// Helpers purs ré-exportés pour les imports serveur déjà en place.
+// Les composants client doivent importer directement depuis `@/lib/utils/odds`
+// (ce fichier-ci pull Prisma + wizebot et fuiterait dans le bundle browser).
+export { computeLiveOdds, isBettingOpen };
+export type { LiveOdds } from './odds';
 
 const MIN_BET_POINTS = 1;
 const MAX_BET_POINTS = 1_000_000;
@@ -21,53 +28,6 @@ export class BettingError extends Error {
   constructor(message: string, public code: string) {
     super(message);
   }
-}
-
-export type LiveOdds = {
-  home: number | null;
-  draw: number | null;
-  away: number | null;
-};
-
-/**
- * Calcule les cotes en direct depuis les totaux d'un pool.
- * Retourne `null` pour une issue où personne n'a parié (cote infinie).
- */
-export function computeLiveOdds(pool: {
-  totalHomePool: number;
-  totalDrawPool: number;
-  totalAwayPool: number;
-  housePercentage: { toString(): string } | number;
-}): LiveOdds {
-  const home = Number(pool.totalHomePool);
-  const draw = Number(pool.totalDrawPool);
-  const away = Number(pool.totalAwayPool);
-  const total = home + draw + away;
-  const houseFactor = 1 - Number(pool.housePercentage) / 100;
-
-  if (total === 0) return { home: null, draw: null, away: null };
-
-  return {
-    home: home > 0 ? round3((total / home) * houseFactor) : null,
-    draw: draw > 0 ? round3((total / draw) * houseFactor) : null,
-    away: away > 0 ? round3((total / away) * houseFactor) : null,
-  };
-}
-
-function round3(n: number): number {
-  return Math.round(n * 1000) / 1000;
-}
-
-/**
- * Vrai si le match accepte encore des paris.
- * Logique: SCHEDULED uniquement, ET on est avant matchDate.
- */
-export function isBettingOpen(match: {
-  status: MatchStatus;
-  matchDate: Date;
-}): boolean {
-  if (match.status !== MatchStatus.SCHEDULED) return false;
-  return new Date() < new Date(match.matchDate);
 }
 
 /**
@@ -82,9 +42,12 @@ export async function placeBet(params: {
   matchId: string;
   outcome: BetOutcome;
   pointsWagered: number;
+  source?: BetSource; // défaut WIZEBOT pour rétro-compatibilité avec le webhook chat
   wizebotEventId?: string;
+  wizebotDebitTxId?: string; // pour les paris site, traçabilité du débit
 }): Promise<{ betId: string; oddsAtPlacement: number }> {
   const { userId, matchId, outcome, pointsWagered } = params;
+  const source = params.source ?? BetSource.WIZEBOT;
 
   // Validation des points
   if (!Number.isInteger(pointsWagered) || pointsWagered < MIN_BET_POINTS) {
@@ -123,6 +86,20 @@ export async function placeBet(params: {
       throw new BettingError(
         'Les paris sont fermés sur ce match',
         'BETTING_CLOSED'
+      );
+    }
+
+    // Verrou d'exclusivité — un user qui a déjà parié via l'autre canal sur ce
+    // match ne peut pas parier via celui-ci (évite le double-dipping Twitch+Site).
+    const conflicting = await tx.bet.findFirst({
+      where: { userId, matchId, source: { not: source } },
+      select: { source: true },
+    });
+    if (conflicting) {
+      const otherChannel = conflicting.source === BetSource.WIZEBOT ? 'le chat Twitch' : 'le site';
+      throw new BettingError(
+        `Tu as déjà parié via ${otherChannel} sur ce match. Reste sur ce canal pour les paris suivants.`,
+        'CHANNEL_CONFLICT'
       );
     }
 
@@ -180,7 +157,9 @@ export async function placeBet(params: {
         pickedTeamId,
         pointsWagered,
         oddsAtPlacement: odds ?? 1, // si seul à parier sur cette issue, cote=1 par défaut
+        source,
         wizebotEventId: params.wizebotEventId ?? null,
+        wizebotDebitTxId: params.wizebotDebitTxId ?? null,
       },
     });
 

@@ -37,6 +37,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
+import { MatchBetWidget } from '@/components/betting/match-bet-widget';
 
 type Player = {
   id: string;
@@ -73,7 +74,22 @@ type Match = {
   tournament: { id: string; name: string };
 };
 
-type PageProps = { match: Match | null };
+type BettingDetails = {
+  match: Parameters<typeof MatchBetWidget>[0]['match'];
+  recentBets: Parameters<typeof MatchBetWidget>[0]['recentBets'];
+} | null;
+
+type UserBettingState = {
+  twitchUsername: string | null;
+  blockedByTwitch: boolean;
+  alreadyBetSite: boolean;
+} | null;
+
+type PageProps = {
+  match: Match | null;
+  betting: BettingDetails;
+  userBetting: UserBettingState;
+};
 
 const stageMeta: Record<string, { label: string; code: string }> = {
   GROUP: { label: 'Phase de poules', code: 'GS' },
@@ -89,11 +105,36 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
   if (typeof matchId !== 'string') return { notFound: true };
 
   const { getMatchById } = await import('@/actions/matches');
-  const result = await getMatchById(matchId);
+  const { getMatchBettingDetails, getUserBetStatusForMatch } = await import('@/actions/betting');
+  const { getCurrentDbUserFromReq } = await import('@/lib/auth/page-auth');
+
+  const [result, bettingRes, dbUser] = await Promise.all([
+    getMatchById(matchId),
+    getMatchBettingDetails(matchId),
+    getCurrentDbUserFromReq(ctx.req),
+  ]);
+
   if (!result.success || !result.data) return { notFound: true };
 
+  let userBetting: UserBettingState = null;
+  if (dbUser) {
+    const statusRes = await getUserBetStatusForMatch({ userId: dbUser.id, matchId });
+    userBetting = {
+      twitchUsername: dbUser.twitchUsername ?? null,
+      blockedByTwitch: statusRes.success ? statusRes.data!.blockedByTwitch : false,
+      alreadyBetSite: statusRes.success ? statusRes.data!.alreadyBetSite : false,
+    };
+  }
+
   return {
-    props: { match: JSON.parse(JSON.stringify(result.data)) },
+    props: {
+      match: JSON.parse(JSON.stringify(result.data)),
+      betting:
+        bettingRes.success && bettingRes.data
+          ? JSON.parse(JSON.stringify(bettingRes.data))
+          : null,
+      userBetting,
+    },
   };
 };
 
@@ -156,7 +197,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
     return (
       <div className="relative bg-black text-white min-h-screen flex items-center justify-center px-4">
         <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-        <Card className="relative max-w-md text-center p-10 bg-white/[0.02] border-white/10">
+        <Card className="relative max-w-md text-center p-10 bg-white/2 border-white/10">
           <Trophy className="w-14 h-14 text-white/40 mx-auto mb-5" />
           <h2 className="text-2xl font-black mb-3 text-white tracking-tight">Match introuvable</h2>
           <Link
@@ -278,7 +319,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
           <div
-            className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${
+            className={`absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent ${
               isLive ? 'via-red-500/70' : 'via-emerald-500/60'
             } to-transparent`}
           />
@@ -405,9 +446,20 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
               </Card>
             )}
 
+            {/* Betting widget */}
+            {props.betting && !isDisqualified && (
+              <MatchBetWidget
+                match={props.betting.match}
+                recentBets={props.betting.recentBets}
+                userTwitchUsername={props.userBetting?.twitchUsername ?? null}
+                blockedByTwitch={props.userBetting?.blockedByTwitch ?? false}
+                alreadyBetSite={props.userBetting?.alreadyBetSite ?? false}
+              />
+            )}
+
             {/* Submit result */}
             {canEditMatch && (
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                     <Shield className="w-5 h-5 text-emerald-400" />
@@ -451,7 +503,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                     <div className="border-t border-white/10 pt-6">
                       <div className="flex items-center gap-3 mb-3">
                         <Users className="w-4 h-4 text-yellow-400" />
-                        <h4 className="text-sm font-black text-white tracking-tight uppercase tracking-[0.18em]">
+                        <h4 className="text-sm font-black text-white tracking-tight uppercase">
                           Statistiques des joueurs
                         </h4>
                         <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/40">
@@ -503,7 +555,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
 
             {/* Stream Links */}
             {(hasStreamLinks || canEditMatch) && (
-              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-950/20 via-black to-black border-purple-500/20 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-linear-to-br from-purple-950/20 via-black to-black border-purple-500/20 p-7 md:p-8">
                 <div className="flex items-center justify-between gap-3 mb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0">
@@ -689,7 +741,7 @@ function TeamLogoXl({ team }: { team: TeamSide }) {
     );
   }
   return (
-    <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gradient-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-3xl md:text-4xl ring-1 ring-white/15 shadow-2xl shadow-emerald-500/20 shrink-0">
+    <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-linear-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-3xl md:text-4xl ring-1 ring-white/15 shadow-2xl shadow-emerald-500/20 shrink-0">
       {team.shortName.substring(0, 2).toUpperCase()}
     </div>
   );

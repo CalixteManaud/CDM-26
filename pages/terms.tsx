@@ -169,7 +169,7 @@ export default function TermsPage() {
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-yellow-500/50 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-28 relative">
             <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition">
               <ChevronRight className="w-3 h-3 rotate-180" />
@@ -240,7 +240,7 @@ export default function TermsPage() {
                       transition={{ duration: 0.5, delay: i * 0.04 }}
                       className="relative scroll-mt-24"
                     >
-                      <Card className={`relative overflow-hidden bg-white/[0.02] border ${s.border} hover:border-white/30 transition-colors p-7 md:p-8`}>
+                      <Card className={`relative overflow-hidden bg-white/2 border ${s.border} hover:border-white/30 transition-colors p-7 md:p-8`}>
                         <div className="flex items-start gap-4 mb-5">
                           <div className={`w-11 h-11 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center shrink-0`}>
                             <art.icon className={`w-5 h-5 ${s.text}`} />
@@ -279,7 +279,7 @@ export default function TermsPage() {
         {/* Legal contact + CTA chain */}
         <section className="relative bg-black py-20">
           <div className="container mx-auto px-4">
-            <Card className="relative overflow-hidden bg-gradient-to-br from-yellow-950/30 via-black to-black border-yellow-500/20 p-8 md:p-10">
+            <Card className="relative overflow-hidden bg-linear-to-br from-yellow-950/30 via-black to-black border-yellow-500/20 p-8 md:p-10">
               <div className="grid md:grid-cols-[auto_1fr_auto] items-center gap-6">
                 <div className="w-14 h-14 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center">
                   <Gavel className="w-6 h-6 text-yellow-400" />

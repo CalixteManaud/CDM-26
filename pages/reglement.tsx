@@ -133,7 +133,7 @@ export default function ReglementPage() {
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-30 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-28 relative">
             <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition">
               <ChevronRight className="w-3 h-3 rotate-180" />
@@ -204,7 +204,7 @@ export default function ReglementPage() {
                       transition={{ duration: 0.5, delay: i * 0.05 }}
                       className="relative scroll-mt-24"
                     >
-                      <Card className={`relative overflow-hidden bg-gradient-to-br ${s.ring} via-black to-black ${s.border} p-7 md:p-9`}>
+                      <Card className={`relative overflow-hidden bg-linear-to-br ${s.ring} via-black to-black ${s.border} p-7 md:p-9`}>
                         <div className="flex items-start justify-between gap-4 mb-6">
                           <div className="flex items-start gap-4">
                             <div className={`w-11 h-11 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center shrink-0`}>
@@ -247,7 +247,7 @@ export default function ReglementPage() {
         {/* WARNING + CTA */}
         <section className="relative bg-black py-20 overflow-hidden">
           <div className="container mx-auto px-4">
-            <Card className="relative overflow-hidden bg-gradient-to-br from-red-950/30 via-black to-black border-red-500/20 p-8 md:p-10">
+            <Card className="relative overflow-hidden bg-linear-to-br from-red-950/30 via-black to-black border-red-500/20 p-8 md:p-10">
               <div className="flex items-start gap-4">
                 <div className="w-11 h-11 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5 text-red-400" />

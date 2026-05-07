@@ -115,10 +115,10 @@ export function TournamentStatisticsView({ stats }: Props) {
       {stats.playerStats.filter((p) => p.goals > 0).length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-5">
           <SectionHeader code="SCR" label="Classement des buteurs" title="Le top 10 des artilleurs." icon={Award} />
-          <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-0">
+          <Card className="relative overflow-hidden bg-white/2 border-white/10 p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-white/[0.03] border-b border-white/10">
+                <thead className="bg-white/3 border-b border-white/10">
                   <tr className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45">
                     <th className="text-left px-4 md:px-6 py-3">#</th>
                     <th className="text-left px-4 md:px-6 py-3">Joueur</th>
@@ -132,16 +132,16 @@ export function TournamentStatisticsView({ stats }: Props) {
                     .filter((p) => p.goals > 0)
                     .slice(0, 10)
                     .map((p, idx) => (
-                      <tr key={p.playerId} className="border-t border-white/5 hover:bg-white/[0.03] transition">
+                      <tr key={p.playerId} className="border-t border-white/5 hover:bg-white/3 transition">
                         <td className="px-4 md:px-6 py-3">
                           <span
                             className={`inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-black tabular-nums ${
                               idx === 0
-                                ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-black'
+                                ? 'bg-linear-to-br from-yellow-400 to-amber-600 text-black'
                                 : idx === 1
-                                ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 text-white'
+                                ? 'bg-linear-to-br from-emerald-500 to-emerald-700 text-white'
                                 : idx === 2
-                                ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white'
+                                ? 'bg-linear-to-br from-orange-400 to-red-500 text-white'
                                 : 'bg-white/5 border border-white/10 text-white/55'
                             }`}
                           >
@@ -173,10 +173,10 @@ export function TournamentStatisticsView({ stats }: Props) {
       {/* TEAM STATS TABLE */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-5">
         <SectionHeader code="ALL" label="Classement complet" title="Toutes les équipes." icon={Trophy} />
-        <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-0">
+        <Card className="relative overflow-hidden bg-white/2 border-white/10 p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-white/[0.03] border-b border-white/10">
+              <thead className="bg-white/3 border-b border-white/10">
                 <tr className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45">
                   <th className="text-left px-4 md:px-6 py-3">Équipe</th>
                   <th className="text-center px-3 md:px-4 py-3">MJ</th>
@@ -192,10 +192,10 @@ export function TournamentStatisticsView({ stats }: Props) {
                 {stats.teamStats.map((team) => {
                   const diff = team.goalsScored - team.goalsConceded;
                   return (
-                    <tr key={team.teamId} className="border-t border-white/5 hover:bg-white/[0.03] transition">
+                    <tr key={team.teamId} className="border-t border-white/5 hover:bg-white/3 transition">
                       <td className="px-4 md:px-6 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs ring-1 ring-white/10">
+                          <div className="w-9 h-9 rounded-md bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs ring-1 ring-white/10">
                             {team.teamShortName.substring(0, 2)}
                           </div>
                           <div>
@@ -286,7 +286,7 @@ function BigStatCard({
 }) {
   const c = COLORS[color];
   return (
-    <Card className={`relative overflow-hidden bg-gradient-to-br ${c.ring} via-black to-black border ${c.border} p-7 md:p-8`}>
+    <Card className={`relative overflow-hidden bg-linear-to-br ${c.ring} via-black to-black border ${c.border} p-7 md:p-8`}>
       <div className="flex items-start justify-between mb-6">
         <div className={`w-12 h-12 rounded-xl bg-white/5 border ${c.border} flex items-center justify-center`}>
           <Icon className={`w-5 h-5 ${c.text}`} />
@@ -317,7 +317,7 @@ function TeamStatCard({
 }) {
   const c = COLORS[color];
   return (
-    <Card className={`relative overflow-hidden bg-gradient-to-br ${c.ring} via-black to-black border ${c.border} p-6`}>
+    <Card className={`relative overflow-hidden bg-linear-to-br ${c.ring} via-black to-black border ${c.border} p-6`}>
       <div className="flex items-start justify-between mb-4">
         <div className={`w-10 h-10 rounded-xl bg-white/5 border ${c.border} flex items-center justify-center`}>
           <Icon className={`w-4 h-4 ${c.text}`} />
@@ -350,7 +350,7 @@ function PlayerStatCard({
 }) {
   const c = COLORS[color];
   return (
-    <Card className={`relative overflow-hidden bg-gradient-to-br ${c.ring} via-black to-black border ${c.border} p-6`}>
+    <Card className={`relative overflow-hidden bg-linear-to-br ${c.ring} via-black to-black border ${c.border} p-6`}>
       <div className="flex items-start justify-between mb-4">
         <div className={`w-10 h-10 rounded-xl bg-white/5 border ${c.border} flex items-center justify-center`}>
           <Icon className={`w-4 h-4 ${c.text}`} />

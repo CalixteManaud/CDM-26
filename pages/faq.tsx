@@ -157,7 +157,7 @@ function FaqItem({ q, a, index, accent }: { q: string; a: string; index: number;
       viewport={{ once: true, margin: '-30px' }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
     >
-      <Card className={`relative overflow-hidden bg-white/[0.02] ${open ? 'border-white/30' : 'border-white/10'} transition-all p-0`}>
+      <Card className={`relative overflow-hidden bg-white/2 ${open ? 'border-white/30' : 'border-white/10'} transition-all p-0`}>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -184,7 +184,7 @@ function FaqItem({ q, a, index, accent }: { q: string; a: string; index: number;
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="overflow-hidden"
             >
-              <div className="px-5 pb-5 pt-0 ml-[calc(2.5rem+0.5rem)] text-white/70 leading-relaxed text-sm md:text-base border-l border-white/10 -mt-1">
+              <div className="px-5 pb-5 pt-0 ml-12 text-white/70 leading-relaxed text-sm md:text-base border-l border-white/10 -mt-1">
                 <div className="pl-4">{a}</div>
               </div>
             </motion.div>
@@ -207,7 +207,7 @@ export default function FaqPage() {
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-30 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-yellow-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-28 relative">
             <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition">
               <ChevronRight className="w-3 h-3 rotate-180" />
@@ -240,7 +240,7 @@ export default function FaqPage() {
         <section className="relative bg-black border-b border-white/10 py-20">
           <div className="container mx-auto px-4">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-full flex flex-wrap gap-1 h-auto justify-start mb-10">
+              <TabsList className="bg-white/3 border border-white/10 p-1 rounded-full flex flex-wrap gap-1 h-auto justify-start mb-10">
                 {CATEGORIES.map((c) => (
                   <TabsTrigger
                     key={c.key}
@@ -280,7 +280,7 @@ export default function FaqPage() {
         {/* CTA */}
         <section className="relative bg-black py-20">
           <div className="container mx-auto px-4">
-            <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-950/30 via-black to-black border-emerald-500/20 p-10 text-center">
+            <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-black border-emerald-500/20 p-10 text-center">
               <div className="text-[10px] uppercase tracking-[0.3em] text-emerald-400 font-mono mb-3">
                 / Pas trouvé ta réponse ?
               </div>

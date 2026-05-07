@@ -111,7 +111,7 @@ export function PlayerStatsForm({
   return (
     <div className="space-y-5">
       {/* Validation summary */}
-      <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-5">
+      <Card className="relative overflow-hidden bg-white/2 border-white/10 p-5">
         <div className="grid grid-cols-2 gap-5">
           <ValidationCell
             shortName={homeTeam.shortName}
@@ -148,7 +148,7 @@ export function PlayerStatsForm({
           return (
             <Card
               key={index}
-              className={`relative overflow-hidden bg-white/[0.02] border ${
+              className={`relative overflow-hidden bg-white/2 border ${
                 selectedPlayer
                   ? isHome
                     ? 'border-emerald-500/25'

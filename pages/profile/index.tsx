@@ -160,7 +160,7 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
               href="/"
@@ -203,7 +203,7 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
               className="space-y-6"
             >
               {/* SECTION 01 — IDENTITÉ */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                     <UserIcon className="w-5 h-5 text-emerald-400" />
@@ -257,7 +257,7 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
               </Card>
 
               {/* SECTION 02 — TWITCH */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start justify-between gap-3 mb-7 flex-wrap">
                   <div className="flex items-start gap-4">
                     <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0">
@@ -287,7 +287,7 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
               </Card>
 
               {/* SECTION 03 — INFO COMPTE (read-only) */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-950/30 via-black to-yellow-950/20 border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-yellow-950/20 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
                     <Shield className="w-5 h-5 text-yellow-400" />
@@ -430,7 +430,7 @@ function TwitchLinkCard({
   // === Mode 1 : lié via OAuth ===
   if (isOAuthLinked) {
     return (
-      <div className="relative overflow-hidden rounded-xl p-6 border border-purple-500/40 bg-gradient-to-br from-purple-950/40 via-black to-black">
+      <div className="relative overflow-hidden rounded-xl p-6 border border-purple-500/40 bg-linear-to-br from-purple-950/40 via-black to-black">
         <BorderBeam size={140} duration={8} colorFrom="#9146ff" colorTo="#a855f7" borderWidth={1} />
         <div className="relative flex items-start gap-4">
           <div className="shrink-0 w-12 h-12 rounded-xl bg-[#9146ff] flex items-center justify-center shadow-lg shadow-purple-500/30">
@@ -463,7 +463,7 @@ function TwitchLinkCard({
   // === Mode 2 : saisi manuellement, pas d'OAuth ===
   if (isManualOnly) {
     return (
-      <div className="rounded-xl p-6 border border-amber-500/40 bg-gradient-to-br from-amber-950/30 via-black to-black space-y-4">
+      <div className="rounded-xl p-6 border border-amber-500/40 bg-linear-to-br from-amber-950/30 via-black to-black space-y-4">
         <div className="flex items-start gap-4">
           <div className="shrink-0 w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
             <AlertTriangle className="w-5 h-5 text-black" />
@@ -519,7 +519,7 @@ function TwitchLinkCard({
   return (
     <div className="rounded-xl p-6 border border-white/15 bg-black/40 space-y-4">
       <div className="flex items-start gap-4">
-        <div className="shrink-0 w-12 h-12 rounded-xl bg-white/[0.04] border border-white/15 flex items-center justify-center">
+        <div className="shrink-0 w-12 h-12 rounded-xl bg-white/4 border border-white/15 flex items-center justify-center">
           <Tv className="w-5 h-5 text-white/55" />
         </div>
         <div className="flex-1 min-w-0">

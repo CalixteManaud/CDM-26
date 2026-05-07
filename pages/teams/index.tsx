@@ -149,7 +149,7 @@ export default function TeamsPage(props: InferGetServerSidePropsType<typeof getS
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-24 relative">
             <div className="flex items-end justify-between flex-wrap gap-8">
               <div>
@@ -229,7 +229,7 @@ export default function TeamsPage(props: InferGetServerSidePropsType<typeof getS
 
               {tournaments.length > 1 && (
                 <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
-                  <SelectTrigger className="w-full sm:w-72 h-11 bg-white/[0.03] border-white/15 hover:border-white/30 text-white">
+                  <SelectTrigger className="w-full sm:w-72 h-11 bg-white/3 border-white/15 hover:border-white/30 text-white">
                     <Trophy className="w-4 h-4 text-emerald-400 mr-1" />
                     <SelectValue placeholder="Filtrer par tournoi" />
                   </SelectTrigger>
@@ -268,7 +268,7 @@ export default function TeamsPage(props: InferGetServerSidePropsType<typeof getS
                           initial={{ opacity: 0, y: 12 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
-                          className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer bg-white/[0.03] border border-white/10 hover:border-white/30 transition-all group"
+                          className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer bg-white/3 border border-white/10 hover:border-white/30 transition-all group"
                         >
                           <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
                             <Trophy className="w-4 h-4 text-emerald-400" />
@@ -291,7 +291,7 @@ export default function TeamsPage(props: InferGetServerSidePropsType<typeof getS
                       {Object.entries(groupedByGroup).map(([groupName, groupTeams]) => (
                         <div key={groupName} className="space-y-4">
                           <div className="flex items-center gap-3">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-yellow-500/30 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.25em]">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/3 border border-yellow-500/30 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.25em]">
                               <Shield className="w-3 h-3" />
                               {groupName}
                             </div>
@@ -362,8 +362,8 @@ function TeamCard({ team, idx }: { team: Team; idx: number }) {
     >
       <Link href={`/teams/${team.id}`} className="block h-full">
         <Card
-          className={`relative overflow-hidden h-full p-0 bg-gradient-to-b ${
-            isFirst ? 'from-yellow-950/30' : 'from-white/[0.03]'
+          className={`relative overflow-hidden h-full p-0 bg-linear-to-b ${
+            isFirst ? 'from-yellow-950/30' : 'from-white/3'
           } to-transparent border-white/10 group-hover:border-white/30 transition-all duration-300`}
         >
           {/* Top strip */}
@@ -442,7 +442,7 @@ function TeamLogo({ team }: { team: Team }) {
     );
   }
   return (
-    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-base shadow-md ring-1 ring-white/10 shrink-0">
+    <div className="w-12 h-12 rounded-xl bg-linear-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-base shadow-md ring-1 ring-white/10 shrink-0">
       {team.shortName.substring(0, 2).toUpperCase()}
     </div>
   );
@@ -451,7 +451,7 @@ function TeamLogo({ team }: { team: Team }) {
 function PositionPill({ position }: { position: number }) {
   if (position === 1) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-yellow-500/15 to-amber-500/15 border border-yellow-500/40 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.2em]">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-linear-to-r from-yellow-500/15 to-amber-500/15 border border-yellow-500/40 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.2em]">
         <Crown className="w-3 h-3" />
         1er
       </span>
@@ -480,7 +480,7 @@ function PositionPill({ position }: { position: number }) {
 
 function MiniStat({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="text-center rounded-md bg-white/[0.03] border border-white/10 py-2">
+    <div className="text-center rounded-md bg-white/3 border border-white/10 py-2">
       <div className={`text-xl font-black tabular-nums ${color} leading-none`}>{value}</div>
       <div className="text-[9px] font-mono text-white/40 uppercase tracking-[0.25em] mt-1">{label}</div>
     </div>
@@ -489,7 +489,7 @@ function MiniStat({ label, value, color }: { label: string; value: number; color
 
 function EmptyState() {
   return (
-    <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 py-20 text-center">
+    <Card className="relative overflow-hidden bg-white/2 border-white/10 py-20 text-center">
       <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 mx-auto">
         <Users className="w-12 h-12 text-white/40" />
       </div>

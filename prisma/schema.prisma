@@ -321,6 +321,13 @@ enum BetStatus {
   CREDIT_FAILED // gagné mais le crédit Wizebot a échoué (à rejouer)
 }
 
+// Canal d'origine du pari. Sert au verrou d'exclusivité : un user qui parie via
+// un canal sur un match donné est bloqué sur l'autre canal pour le même match.
+enum BetSource {
+  WIZEBOT // pari placé via le chat Twitch (webhook Wizebot)
+  SITE // pari placé directement depuis l'UI cdm26.com
+}
+
 model MatchBettingPool {
   id      String @id @default(uuid()) @db.Uuid
   matchId String @unique @db.Uuid
@@ -359,6 +366,13 @@ model Bet {
   outcome      BetOutcome
   pickedTeamId String?    @db.Uuid // null si DRAW, sinon homeTeam ou awayTeam du match
   pickedTeam   Team?      @relation("BetPickedTeam", fields: [pickedTeamId], references: [id], onDelete: SetNull)
+
+  // Canal d'origine — détermine le verrou d'exclusivité par user+match
+  source BetSource @default(WIZEBOT)
+
+  // ID de la transaction Wizebot pour le DÉBIT (paris site uniquement, null pour
+  // les paris WIZEBOT car Wizebot a déjà débité avant d'appeler notre webhook).
+  wizebotDebitTxId String?
 
   pointsWagered Int
 

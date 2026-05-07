@@ -13,18 +13,26 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('🌱 Starting seed...');
 
+  // Dates relatives (pour que les matchs soient toujours dans le futur quand on
+  // relance le seed — sinon les paris sont fermés via isBettingOpen()).
+  const now = new Date();
+  const matchDay1 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // J+7
+  const matchDay2 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000); // J+7 +2h
+  const tournamentStart = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000); // J+5
+
   // 1. Créer des utilisateurs de test
   console.log('Creating users...');
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@cantwitch.com' },
-    update: {},
+    update: { twitchUsername: 'seed_admin' },
     create: {
       email: 'admin@cantwitch.com',
       name: 'Admin User',
       username: 'admin',
       clerkId: 'seed_admin_clerk_id',
       role: UserRole.ADMIN,
+      twitchUsername: 'seed_admin',
     },
   });
 
@@ -33,13 +41,14 @@ async function main() {
   for (let i = 1; i <= 20; i++) {
     const player = await prisma.user.upsert({
       where: { email: `player${i}@cantwitch.com` },
-      update: {},
+      update: { twitchUsername: `seed_viewer${i}` },
       create: {
         email: `player${i}@cantwitch.com`,
         name: `Joueur ${i}`,
         username: `player${i}`,
         clerkId: `seed_player${i}_clerk_id`,
         role: UserRole.PARTICIPANT,
+        twitchUsername: `seed_viewer${i}`,
       },
     });
     players.push(player);
@@ -53,7 +62,7 @@ async function main() {
   const tournament = await prisma.tournament.create({
     data: {
       name: 'CDM 26 - Tournoi Test',
-      startDate: new Date('2025-12-26'),
+      startDate: tournamentStart,
       teamsPerGroup: 2,
       playersPerTeam: 5,
       groupCount: 2,
@@ -193,7 +202,7 @@ async function main() {
       status: 'SCHEDULED',
       homeTeamId: team1.id,
       awayTeamId: team2.id,
-      matchDate: new Date('2025-02-05T14:00:00'),
+      matchDate: matchDay1,
     },
   });
 
@@ -206,7 +215,7 @@ async function main() {
       status: 'SCHEDULED',
       homeTeamId: team3.id,
       awayTeamId: team4.id,
-      matchDate: new Date('2025-02-05T16:00:00'),
+      matchDate: matchDay2,
     },
   });
 

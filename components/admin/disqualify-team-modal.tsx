@@ -122,7 +122,7 @@ export function DisqualifyTeamModal({ isOpen, onClose, team, onSuccess }: Disqua
         <div className="space-y-4 py-2">
           {/* Current status banner */}
           <Card
-            className={`relative overflow-hidden bg-white/[0.02] border ${
+            className={`relative overflow-hidden bg-white/2 border ${
               isDisqualified ? 'border-red-500/25' : 'border-emerald-500/25'
             } p-4`}
           >

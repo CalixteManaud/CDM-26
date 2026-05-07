@@ -234,7 +234,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
               href={`/teams/${team.id}`}
@@ -275,7 +275,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
               className="space-y-6"
             >
               {/* SECTION 01 — JOUEUR */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start justify-between gap-4 mb-7">
                   <div className="flex items-start gap-4">
                     <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
@@ -340,7 +340,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
                               className={`w-full text-left px-3 py-2.5 rounded-md transition-all flex items-center justify-between gap-3 group ${
                                 isSelected
                                   ? 'bg-emerald-500/10 border border-emerald-500/40'
-                                  : 'bg-transparent hover:bg-white/[0.03] border border-transparent hover:border-white/15'
+                                  : 'bg-transparent hover:bg-white/3 border border-transparent hover:border-white/15'
                               }`}
                             >
                               <div className="min-w-0 flex-1">
@@ -361,7 +361,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
                         })}
                       </div>
                     ) : (
-                      <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-center">
+                      <div className="rounded-xl border border-dashed border-white/15 bg-white/2 p-8 text-center">
                         <Search className="w-10 h-10 mx-auto mb-3 text-white/30" />
                         <p className="text-sm text-white/55">
                           Aucun joueur trouvé pour <strong className="text-white">« {searchQuery} »</strong>
@@ -373,7 +373,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
               </Card>
 
               {/* SECTION 02 — POSITION */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
                     <Shield className="w-5 h-5 text-yellow-400" />
@@ -396,8 +396,8 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
                         onClick={() => setFormData((p) => ({ ...p, position: pos.value }))}
                         className={`relative overflow-hidden p-5 rounded-xl border transition-all ${
                           isActive
-                            ? `bg-gradient-to-br ${pos.gradient} text-black border-transparent shadow-lg`
-                            : `bg-white/[0.02] ${pos.border} hover:bg-white/[0.04] hover:border-white/30 text-white`
+                            ? `bg-linear-to-br ${pos.gradient} text-black border-transparent shadow-lg`
+                            : `bg-white/2 ${pos.border} hover:bg-white/4 hover:border-white/30 text-white`
                         }`}
                       >
                         <div className={`text-3xl font-black mb-1 tabular-nums tracking-tight ${isActive ? 'text-black' : pos.text}`}>
@@ -413,7 +413,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
               </Card>
 
               {/* SECTION 03 — NUMÉRO */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
                     <Hash className="w-5 h-5 text-red-400" />
@@ -518,7 +518,7 @@ function GateScreen({
     <div className="relative bg-black text-white min-h-screen overflow-hidden isolate">
       <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
       <div className="relative min-h-screen flex items-center justify-center px-4">
-        <Card className={`relative max-w-md w-full text-center p-8 md:p-10 bg-white/[0.02] ${s.border} overflow-hidden`}>
+        <Card className={`relative max-w-md w-full text-center p-8 md:p-10 bg-white/2 ${s.border} overflow-hidden`}>
           <div className={`relative inline-flex p-5 rounded-2xl bg-white/5 border ${s.border} mb-6 mx-auto`}>
             <Icon className={`w-12 h-12 ${s.text}`} />
           </div>

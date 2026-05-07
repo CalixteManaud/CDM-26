@@ -98,7 +98,7 @@ export default function SupportPage() {
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-30 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-28 relative">
             <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition">
               <ChevronRight className="w-3 h-3 rotate-180" />
@@ -150,7 +150,7 @@ export default function SupportPage() {
                     whileHover={{ y: -3 }}
                     className="relative group"
                   >
-                    <Card className={`relative overflow-hidden h-full bg-gradient-to-br ${s.ring} via-black to-black ${s.border} group-hover:border-white/30 p-7 transition-all`}>
+                    <Card className={`relative overflow-hidden h-full bg-linear-to-br ${s.ring} via-black to-black ${s.border} group-hover:border-white/30 p-7 transition-all`}>
                       <div className="flex items-start justify-between mb-5">
                         <div className={`w-11 h-11 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center`}>
                           <t.icon className={`w-5 h-5 ${s.text}`} />
@@ -172,7 +172,7 @@ export default function SupportPage() {
                               href={a.href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`group/link flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/[0.03] border border-white/10 hover:border-white/30 hover:bg-white/[0.06] transition text-sm`}
+                              className={`group/link flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/3 border border-white/10 hover:border-white/30 hover:bg-white/6 transition text-sm`}
                             >
                               <span className="text-white/80 group-hover/link:text-white">{a.label}</span>
                               <ChevronRight className="w-4 h-4 text-white/40 group-hover/link:text-white group-hover/link:translate-x-0.5 transition" />
@@ -181,7 +181,7 @@ export default function SupportPage() {
                             <Link
                               key={a.label}
                               href={a.href}
-                              className="group/link flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/[0.03] border border-white/10 hover:border-white/30 hover:bg-white/[0.06] transition text-sm"
+                              className="group/link flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/3 border border-white/10 hover:border-white/30 hover:bg-white/6 transition text-sm"
                             >
                               <span className="text-white/80 group-hover/link:text-white">{a.label}</span>
                               <ChevronRight className="w-4 h-4 text-white/40 group-hover/link:text-white group-hover/link:translate-x-0.5 transition" />
@@ -202,7 +202,7 @@ export default function SupportPage() {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Mail */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-950/30 via-black to-black border-emerald-500/20 p-8 flex flex-col justify-between">
+              <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-black border-emerald-500/20 p-8 flex flex-col justify-between">
                 <div>
                   <div className="flex items-start gap-3 mb-5">
                     <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
@@ -232,7 +232,7 @@ export default function SupportPage() {
               </Card>
 
               {/* Twitch chat */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-950/30 via-black to-black border-purple-500/20 p-8 flex flex-col justify-between">
+              <Card className="relative overflow-hidden bg-linear-to-br from-purple-950/30 via-black to-black border-purple-500/20 p-8 flex flex-col justify-between">
                 <div>
                   <div className="flex items-start gap-3 mb-5">
                     <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">

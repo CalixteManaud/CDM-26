@@ -54,7 +54,7 @@ interface TeamsListProps {
 function PositionPill({ position }: { position: number }) {
   if (position === 1) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-yellow-500/15 to-amber-500/15 border border-yellow-500/40 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.2em]">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-linear-to-r from-yellow-500/15 to-amber-500/15 border border-yellow-500/40 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.2em]">
         <Crown className="w-3 h-3" />
         1er
       </span>
@@ -91,7 +91,7 @@ export function TeamsList({ teams, title = 'Équipes' }: TeamsListProps) {
 
   if (teams.length === 0) {
     return (
-      <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 py-16 px-6 text-center">
+      <Card className="relative overflow-hidden bg-white/2 border-white/10 py-16 px-6 text-center">
         <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-5">
           <Users className="w-12 h-12 text-white/40" />
         </div>
@@ -114,7 +114,7 @@ export function TeamsList({ teams, title = 'Équipes' }: TeamsListProps) {
       {Object.entries(grouped).map(([groupName, list]) => (
         <div key={groupName} className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-yellow-500/30 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.25em]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/3 border border-yellow-500/30 text-yellow-300 text-[10px] font-mono uppercase tracking-[0.25em]">
               <Shield className="w-3 h-3" />
               <span>{groupName}</span>
             </div>
@@ -139,8 +139,8 @@ export function TeamsList({ teams, title = 'Équipes' }: TeamsListProps) {
                     whileHover={{ y: -3 }}
                   >
                     <Card
-                      className={`relative overflow-hidden h-full bg-gradient-to-b ${
-                        isFirst ? 'from-yellow-950/30' : 'from-white/[0.03]'
+                      className={`relative overflow-hidden h-full bg-linear-to-b ${
+                        isFirst ? 'from-yellow-950/30' : 'from-white/3'
                       } to-transparent border-white/10 group-hover:border-white/30 transition-all p-0`}
                     >
                       {/* Top strip */}
@@ -165,7 +165,7 @@ export function TeamsList({ teams, title = 'Équipes' }: TeamsListProps) {
                               className="rounded-xl object-cover ring-1 ring-white/10 shrink-0"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-base shrink-0 ring-1 ring-white/10">
+                            <div className="w-12 h-12 rounded-xl bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-base shrink-0 ring-1 ring-white/10">
                               {team.shortName.substring(0, 2)}
                             </div>
                           )}
@@ -246,7 +246,7 @@ export function TeamsList({ teams, title = 'Équipes' }: TeamsListProps) {
 
 function MiniStat({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <div className="text-center rounded-md bg-white/[0.03] border border-white/10 py-2">
+    <div className="text-center rounded-md bg-white/3 border border-white/10 py-2">
       <div className={`text-xl font-black tabular-nums ${color} leading-none`}>{value}</div>
       <div className="text-[9px] font-mono text-white/40 uppercase tracking-[0.25em] mt-1">{label}</div>
     </div>

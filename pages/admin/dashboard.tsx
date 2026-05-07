@@ -162,7 +162,7 @@ export default function AdminDashboardPage(
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-red-500/60 to-transparent" />
 
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
@@ -176,10 +176,10 @@ export default function AdminDashboardPage(
             <div className="flex items-start gap-6 flex-wrap">
               {/* Big shield admin signature */}
               <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-600/40 via-orange-600/30 to-yellow-500/40 rounded-3xl blur-xl" />
+                <div className="absolute inset-0 bg-linear-to-br from-red-600/40 via-orange-600/30 to-yellow-500/40 rounded-3xl blur-xl" />
                 <motion.div
                   whileHover={{ rotate: -6, scale: 1.05 }}
-                  className="relative w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-gradient-to-br from-red-600 via-orange-600 to-yellow-500 flex items-center justify-center shadow-2xl shadow-red-500/40 ring-1 ring-white/15"
+                  className="relative w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-linear-to-br from-red-600 via-orange-600 to-yellow-500 flex items-center justify-center shadow-2xl shadow-red-500/40 ring-1 ring-white/15"
                 >
                   <Shield className="w-10 h-10 md:w-12 md:h-12 text-white" strokeWidth={2.2} />
                 </motion.div>
@@ -242,7 +242,7 @@ export default function AdminDashboardPage(
 
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'users' | 'teams')} className="w-full">
               <div className="flex justify-center mb-8">
-                <TabsList className="bg-white/[0.03] border border-white/10 p-1 rounded-full h-auto gap-0.5">
+                <TabsList className="bg-white/3 border border-white/10 p-1 rounded-full h-auto gap-0.5">
                   <TabsTrigger
                     value="users"
                     className="rounded-full px-5 py-2 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-black text-white/60 transition-all flex items-center gap-2"
@@ -269,7 +269,7 @@ export default function AdminDashboardPage(
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-6 md:p-8">
+                  <Card className="relative overflow-hidden bg-white/2 border-white/10 p-6 md:p-8">
                     <div className="flex items-center justify-between gap-3 mb-6 pb-5 border-b border-white/10 flex-wrap">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
@@ -300,7 +300,7 @@ export default function AdminDashboardPage(
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-6 md:p-8">
+                  <Card className="relative overflow-hidden bg-white/2 border-white/10 p-6 md:p-8">
                     <div className="flex items-center justify-between gap-3 mb-6 pb-5 border-b border-white/10 flex-wrap">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">

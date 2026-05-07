@@ -192,7 +192,7 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
               href="/teams"
@@ -233,7 +233,7 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
               className="space-y-6"
             >
               {/* SECTION 01 — COMPÉTITION */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                     <Trophy className="w-5 h-5 text-emerald-400" />
@@ -302,7 +302,7 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
               </Card>
 
               {/* SECTION 02 — IDENTITÉ */}
-              <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4 mb-7">
                   <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
                     <Shield className="w-5 h-5 text-yellow-400" />
@@ -369,7 +369,7 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
               </Card>
 
               {/* SECTION 03 — INFO COACH */}
-              <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-950/30 via-black to-red-950/20 border-white/10 p-7 md:p-8">
+              <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-red-950/20 border-white/10 p-7 md:p-8">
                 <div className="flex items-start gap-4">
                   <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center shrink-0">
                     <Info className="w-5 h-5 text-emerald-400" />
@@ -437,7 +437,7 @@ function GateScreen({
     <div className="relative bg-black text-white min-h-screen overflow-hidden isolate">
       <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
       <div className="relative min-h-screen flex items-center justify-center px-4">
-        <Card className={`relative max-w-md w-full text-center p-8 md:p-10 bg-white/[0.02] ${s.border} overflow-hidden`}>
+        <Card className={`relative max-w-md w-full text-center p-8 md:p-10 bg-white/2 ${s.border} overflow-hidden`}>
           <div className={`relative inline-flex p-5 rounded-2xl bg-white/5 border ${s.border} mb-6 mx-auto`}>
             <Icon className={`w-12 h-12 ${s.text}`} />
           </div>

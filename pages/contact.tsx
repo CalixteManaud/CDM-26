@@ -112,7 +112,7 @@ export default function ContactPage() {
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-30 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-purple-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-20 md:py-28 relative">
             <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition">
               <ChevronRight className="w-3 h-3 rotate-180" />
@@ -168,7 +168,7 @@ export default function ContactPage() {
                     whileHover={{ y: -4 }}
                     className="relative group"
                   >
-                    <Card className={`relative h-full overflow-hidden bg-white/[0.02] ${s.border} group-hover:border-white/30 transition-all p-7`}>
+                    <Card className={`relative h-full overflow-hidden bg-white/2 ${s.border} group-hover:border-white/30 transition-all p-7`}>
                       <div className="flex items-start justify-between mb-6">
                         <div className={`w-11 h-11 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center`}>
                           <c.icon className={`w-5 h-5 ${s.text}`} />
@@ -225,7 +225,7 @@ export default function ContactPage() {
                   Le formulaire ouvre ton client mail avec les bonnes informations préformatées.
                 </p>
 
-                <Card className="relative overflow-hidden bg-white/[0.02] border-white/10 p-7">
+                <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7">
                   {submitted ? (
                     <div className="text-center py-10">
                       <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-4">
@@ -306,7 +306,7 @@ export default function ContactPage() {
 
               {/* INFO */}
               <aside className="lg:col-span-5 space-y-5">
-                <Card className="relative overflow-hidden bg-gradient-to-br from-emerald-950/30 via-black to-black border-emerald-500/20 p-7">
+                <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-black border-emerald-500/20 p-7">
                   <div className="flex items-start gap-3 mb-5">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
                       <Inbox className="w-4 h-4 text-emerald-400" />
@@ -334,7 +334,7 @@ export default function ContactPage() {
                   <BorderBeam size={180} duration={11} colorFrom="#10b981" colorTo="#facc15" borderWidth={1} />
                 </Card>
 
-                <Card className="relative overflow-hidden bg-gradient-to-br from-purple-950/30 via-black to-black border-purple-500/20 p-7">
+                <Card className="relative overflow-hidden bg-linear-to-br from-purple-950/30 via-black to-black border-purple-500/20 p-7">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
                       <MessageCircle className="w-4 h-4 text-purple-400" />

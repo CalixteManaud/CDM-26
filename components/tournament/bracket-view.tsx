@@ -55,8 +55,8 @@ export function BracketView({ matches }: BracketViewProps) {
         won
           ? 'bg-emerald-500/10 border border-emerald-500/30'
           : lost
-          ? 'bg-white/[0.02] border border-white/5 opacity-50'
-          : 'bg-white/[0.03] border border-white/10'
+          ? 'bg-white/2 border border-white/5 opacity-50'
+          : 'bg-white/3er border-white/10'
       }`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
@@ -69,7 +69,7 @@ export function BracketView({ matches }: BracketViewProps) {
             className="rounded-md object-cover ring-1 ring-white/10 shrink-0"
           />
         ) : (
-          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
+          <div className="w-7 h-7 rounded-md bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
             {team.shortName.charAt(0)}
           </div>
         )}
@@ -101,7 +101,7 @@ export function BracketView({ matches }: BracketViewProps) {
         className="relative group"
       >
         <Card
-          className={`relative overflow-hidden bg-gradient-to-b from-white/[0.03] to-transparent border-white/10 ${
+          className={`relative overflow-hidden bg-linear-to-b from-white/3 to-transparent border-white/10 ${
             hoveredMatch === match.id ? 'border-white/30' : ''
           } transition-all p-3.5 min-w-[18rem]`}
         >
@@ -137,7 +137,7 @@ export function BracketView({ matches }: BracketViewProps) {
     return (
       <div className="flex flex-col gap-6">
         <div className="text-center">
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border ${accent} text-[10px] font-mono uppercase tracking-[0.25em]`}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/3 border ${accent} text-[10px] font-mono uppercase tracking-[0.25em]`}>
             <span>/ {code}</span>
             <span className="text-white/30">—</span>
             <span>{label}</span>
@@ -150,7 +150,7 @@ export function BracketView({ matches }: BracketViewProps) {
 
   return (
     <div className="relative w-full overflow-x-auto py-6">
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.04] via-yellow-500/[0.04] to-red-500/[0.04] rounded-2xl pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-r from-emerald-500/4 via-yellow-500/4 to-red-500/4 rounded-2xl pointer-events-none" />
 
       <div className="relative flex justify-center items-start gap-10 md:gap-16 min-w-max px-4 md:px-8">
         {renderRoundColumn('PLAYOFF', 'Barrages', 'PO', ROUND_META.PLAYOFF.accent, 0)}
@@ -166,7 +166,7 @@ export function BracketView({ matches }: BracketViewProps) {
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 1.2, repeat: Infinity, repeatType: 'reverse' }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-500/20 via-amber-500/20 to-red-500/20 border border-yellow-500/40 text-[11px] font-mono uppercase tracking-[0.3em] text-yellow-300 font-black"
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-linear-to-r from-yellow-500/20 via-amber-500/20 to-red-500/20 border border-yellow-500/40 text-[11px] font-mono uppercase tracking-[0.3em] text-yellow-300 font-black"
               >
                 <Sparkles className="w-3 h-3" />
                 <span>/ F — FINALE</span>
