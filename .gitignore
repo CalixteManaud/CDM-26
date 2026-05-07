@@ -46,6 +46,3 @@ next-env.d.ts
 
 # vscode
 .vscode/*
-
-# prisma
-/prisma/prisma-client/
