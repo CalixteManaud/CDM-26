@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(xargs sed:*)",
+      "Bash(cat:*)",
+      "WebSearch",
+      "WebFetch(domain:www.shadcn.io)",
+      "Bash(\"E:\\\\Perso\\\\CANTWITCH\\\\pages\\\\api\\\\matches\\\\[id]\\\\submit-result.ts\")",
+      "Bash(dir:*)",
+      "Bash(if exist \".next\" rmdir /s /q .next)",
+      "Bash(rm:*)",
+      "Bash(npm cache clean:*)"
+    ]
+  }
+}

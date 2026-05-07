@@ -1,0 +1,388 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "./prisma-client"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  PARTICIPANT
+  GUEST
+}
+
+enum MatchStage {
+  GROUP
+  PLAYOFF // Barrages (meilleurs 3èmes)
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  FINAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  CANCELED
+}
+
+model User {
+  id       String   @id @default(uuid()) @db.Uuid
+  email    String   @unique
+  name     String
+  username String? // Pseudo pour l'affichage public
+  avatar   String? // URL de la photo de profil
+  role     UserRole @default(GUEST) // Default to GUEST, can upgrade to PARTICIPANT
+  clerkId  String   @unique // Clerk user ID
+
+  // Lien Twitch — requis pour parier via Wizebot
+  twitchUsername String? @unique // Login Twitch en lowercase, ex: "blaize_viewer42"
+  twitchUserId   String? @unique // ID Twitch immuable (résiste aux renommages), fourni par Clerk OAuth
+
+  // Relations
+  players      Player[]
+  coachedTeams Team[]   @relation("TeamCoach") // Teams where this user is the coach/admin
+  bets         Bet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([username])
+}
+
+model Tournament {
+  id                 String   @id @default(uuid()) @db.Uuid
+  name               String
+  startDate          DateTime
+  teamsPerGroup      Int
+  playersPerTeam     Int
+  groupCount         Int
+  groupStageComplete Boolean  @default(false)
+
+  // Relations
+  teams     Team[]
+  groups    Group[]
+  matches   Match[]
+  standings Standing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Group {
+  id           String @id @default(uuid()) @db.Uuid
+  name         String
+  position     Int
+  tournamentId String @db.Uuid
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teams      Team[]
+  matches    Match[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, position])
+  @@index([tournamentId])
+}
+
+model Team {
+  id        String  @id @default(uuid()) @db.Uuid
+  name      String
+  shortName String
+  logo      String?
+
+  disqualified           Boolean @default(false)
+  disqualificationReason String? // Raison de la disqualification
+
+  tournamentId String  @db.Uuid
+  groupId      String? @db.Uuid
+  coachUserId  String? @db.Uuid // Team coach/admin (optional)
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  group      Group?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  coach      User?      @relation("TeamCoach", fields: [coachUserId], references: [id], onDelete: SetNull)
+
+  players Player[]
+
+  // Match relations (disambiguation)
+  homeMatches   Match[] @relation("HomeTeam")
+  awayMatches   Match[] @relation("AwayTeam")
+  winnerMatches Match[] @relation("WinnerTeam")
+
+  standings Standing[]
+
+  // Paris pointant sur cette équipe (HOME_WIN ou AWAY_WIN)
+  betsPickedOn Bet[] @relation("BetPickedTeam")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, shortName])
+  @@index([tournamentId])
+  @@index([groupId])
+  @@index([coachUserId])
+}
+
+model Player {
+  id           String @id @default(uuid()) @db.Uuid
+  jerseyNumber Int
+  position     String
+
+  userId String @db.Uuid
+  teamId String @db.Uuid
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  stats MatchPlayerStats[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, jerseyNumber])
+  @@index([userId])
+  @@index([teamId])
+}
+
+model Match {
+  id        String      @id @default(uuid()) @db.Uuid
+  stage     MatchStage
+  status    MatchStatus @default(SCHEDULED)
+  matchDate DateTime
+
+  homeScore    Int? // null tant que pas joué
+  awayScore    Int?
+  winnerTeamId String? @db.Uuid
+
+  // Streaming URLs
+  twitchUrl   String? // Twitch stream URL
+  discordUrl  String? // Discord voice/stream channel
+  youtubeUrl  String? // YouTube live stream
+  streamTitle String? // Stream title/description
+
+  groupId      String? @db.Uuid
+  tournamentId String  @db.Uuid
+
+  homeTeamId String @db.Uuid
+  awayTeamId String @db.Uuid
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  group      Group?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  homeTeam   Team  @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Restrict)
+  awayTeam   Team  @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Restrict)
+  winnerTeam Team? @relation("WinnerTeam", fields: [winnerTeamId], references: [id], onDelete: SetNull)
+
+  playerStats MatchPlayerStats[]
+
+  // Paris (Wizebot)
+  bettingPool MatchBettingPool?
+  bets        Bet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tournamentId])
+  @@index([groupId])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([winnerTeamId])
+}
+
+model MatchPlayerStats {
+  id String @id @default(uuid()) @db.Uuid
+
+  goals       Int @default(0)
+  assists     Int @default(0)
+  yellowCards Int @default(0)
+  redCards    Int @default(0)
+
+  matchId  String @db.Uuid
+  playerId String @db.Uuid
+
+  // Relations
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([matchId, playerId])
+  @@index([matchId])
+  @@index([playerId])
+}
+
+model Standing {
+  id           String @id @default(uuid()) @db.Uuid
+  position     Int
+  played       Int    @default(0)
+  won          Int    @default(0)
+  drawn        Int    @default(0)
+  lost         Int    @default(0)
+  goalsFor     Int    @default(0)
+  goalsAgainst Int    @default(0)
+  points       Int    @default(0)
+
+  tournamentId String @db.Uuid
+  teamId       String @db.Uuid
+
+  // Relations
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, teamId])
+  @@index([tournamentId])
+  @@index([teamId])
+}
+
+enum WebhookEventType {
+  MATCH_STARTED // Match passe en LIVE
+  MATCH_FINISHED // Match passe en FINISHED
+  SCORE_UPDATED // Score du match mis à jour
+  STANDINGS_UPDATED // Classement d'une poule/groupe mis à jour
+  BRACKET_UPDATED // Bracket mis à jour (progression)
+}
+
+model Webhook {
+  id       String             @id @default(uuid()) @db.Uuid
+  userId   String             @db.Uuid
+  name     String // Nom personnalisé du webhook
+  url      String // URL du webhook
+  secret   String? // Secret pour signer les requêtes (optionnel)
+  events   WebhookEventType[] // Types d'événements à écouter
+  isActive Boolean            @default(true)
+
+  // Filtres optionnels
+  tournamentId String? @db.Uuid // Si défini, ne déclenche que pour ce tournoi
+  teamId       String? @db.Uuid // Si défini, ne déclenche que pour cette équipe
+
+  // Statistiques
+  lastTriggeredAt DateTime?
+  triggerCount    Int       @default(0)
+  failureCount    Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tournamentId])
+  @@index([teamId])
+  @@index([isActive])
+}
+
+// =================== PARIS WIZEBOT ===================
+//
+// Système de paris en pari mutuel avec les points de chaîne Wizebot.
+//
+// Flow:
+//  1. Viewer chat: !parier <matchId> <HOME|DRAW|AWAY> <points>
+//  2. Wizebot déduit les points et POST sur /api/wizebot/bets
+//     {USER}, {ARG1}, {ARG2}, {ARG3}
+//  3. API valide:
+//     - User.twitchUsername = lookup({USER})
+//     - match.status = SCHEDULED ET now < match.matchDate
+//     - crée le Bet (PENDING), incrémente le pool correspondant
+//  4. Frontend recalcule les cotes en direct depuis MatchBettingPool:
+//     coteHome = totalPool / totalHomePool
+//  5. Settlement après match:
+//     - boucle sur Bet PENDING du match
+//     - winners reçoivent (pointsWagered / poolGagnant) * (totalPool * (1 - housePct))
+//     - API appelle Wizebot pour créditer
+//     - status -> WON / LOST / CREDIT_FAILED si erreur réseau
+//
+// Verrouillage: pas de flag stocké, calculé dynamiquement à partir
+// du status du match et de matchDate. Quand le match passe en LIVE,
+// les paris sont automatiquement bloqués.
+
+enum BetOutcome {
+  HOME_WIN
+  DRAW
+  AWAY_WIN
+}
+
+enum BetStatus {
+  PENDING // pari pris, match pas encore terminé
+  WON // gagné, points crédités côté Wizebot
+  LOST // perdu
+  VOID // match annulé → mise remboursée
+  CANCELED // pari annulé manuellement avant verrouillage
+  CREDIT_FAILED // gagné mais le crédit Wizebot a échoué (à rejouer)
+}
+
+model MatchBettingPool {
+  id      String @id @default(uuid()) @db.Uuid
+  matchId String @unique @db.Uuid
+  match   Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  // Totaux mis à jour à chaque pari pour calcul des cotes en pari mutuel
+  totalHomePool Int @default(0) // Σ pointsWagered des paris HOME_WIN
+  totalDrawPool Int @default(0) // Σ pointsWagered des paris DRAW
+  totalAwayPool Int @default(0) // Σ pointsWagered des paris AWAY_WIN
+
+  // Compteurs pour stats UI
+  betCount      Int @default(0)
+  uniqueBettors Int @default(0)
+
+  // Pourcentage retenu par "la maison" (ex: 5%) — 0 = pari mutuel pur
+  housePercentage Decimal @default(0) @db.Decimal(5, 2)
+
+  // Snapshot pris au moment du verrouillage (passage LIVE) pour le settlement
+  finalTotalPool Int? // null tant que pas verrouillé
+  lockedAt       DateTime?
+  settledAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bet {
+  id String @id @default(uuid()) @db.Uuid
+
+  matchId String @db.Uuid
+  match   Match  @relation(fields: [matchId], references: [id], onDelete: Restrict)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  outcome      BetOutcome
+  pickedTeamId String?    @db.Uuid // null si DRAW, sinon homeTeam ou awayTeam du match
+  pickedTeam   Team?      @relation("BetPickedTeam", fields: [pickedTeamId], references: [id], onDelete: SetNull)
+
+  pointsWagered Int
+
+  // Snapshot informatif des cotes affichées au moment du pari (UX uniquement,
+  // le payout réel est recalculé au settlement à partir des pools finaux).
+  oddsAtPlacement Decimal @db.Decimal(7, 3)
+
+  status       BetStatus @default(PENDING)
+  actualPayout Int       @default(0)
+  settledAt    DateTime?
+
+  // Idempotence Wizebot — header X-Wizebot-Event-Id si dispo, sinon hash payload
+  wizebotEventId String? @unique
+
+  // Audit du crédit sortant
+  wizebotCreditTxId  String? // ID retourné par l'API Wizebot
+  wizebotCreditError String? // dernière erreur de crédit pour CREDIT_FAILED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([matchId])
+  @@index([userId])
+  @@index([status])
+  @@index([matchId, status])
+  @@index([userId, matchId])
+}
