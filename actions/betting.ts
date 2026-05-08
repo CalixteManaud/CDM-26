@@ -26,10 +26,13 @@ const POOL_SELECT = {
  */
 export async function getOpenBettingMatches() {
   try {
+    const liveCutoff = new Date(Date.now() - 25 * 60 * 1000); // matchs LIVE encore bettables
     const matches = await prisma.match.findMany({
       where: {
-        status: MatchStatus.SCHEDULED,
-        matchDate: { gt: new Date() },
+        OR: [
+          { status: MatchStatus.SCHEDULED, matchDate: { gt: new Date() } },
+          { status: MatchStatus.LIVE, matchDate: { gt: liveCutoff } },
+        ],
       },
       orderBy: { matchDate: 'asc' },
       select: {
@@ -59,11 +62,14 @@ export async function getOpenBettingMatches() {
  */
 export async function getTopLiveOdds(limit = 5) {
   try {
+    const liveCutoff = new Date(Date.now() - 25 * 60 * 1000);
     const matches = await prisma.match.findMany({
       where: {
-        status: MatchStatus.SCHEDULED,
-        matchDate: { gt: new Date() },
         bettingPool: { isNot: null },
+        OR: [
+          { status: MatchStatus.SCHEDULED, matchDate: { gt: new Date() } },
+          { status: MatchStatus.LIVE, matchDate: { gt: liveCutoff } },
+        ],
       },
       select: {
         id: true,
@@ -258,5 +264,226 @@ export async function getUserBetStatusForMatch(params: { userId: string; matchId
   } catch (error) {
     console.error('Error fetching user bet status:', error);
     return { success: false, error: 'Erreur lors de la récupération du statut' };
+  }
+}
+
+/**
+ * Historique de paris d'un user + stats personnelles agrégées.
+ * Affiché sur /paris/mes-paris.
+ */
+export async function getUserBetsHistory(userId: string) {
+  try {
+    const [bets, agg] = await Promise.all([
+      prisma.bet.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+        select: {
+          id: true,
+          outcome: true,
+          pointsWagered: true,
+          oddsAtPlacement: true,
+          status: true,
+          actualPayout: true,
+          source: true,
+          createdAt: true,
+          settledAt: true,
+          match: {
+            select: {
+              id: true,
+              matchDate: true,
+              status: true,
+              stage: true,
+              homeScore: true,
+              awayScore: true,
+              homeTeam: { select: TEAM_SELECT },
+              awayTeam: { select: TEAM_SELECT },
+              tournament: { select: { id: true, name: true } },
+            },
+          },
+        },
+      }),
+      prisma.bet.groupBy({
+        by: ['status'],
+        where: { userId },
+        _sum: { pointsWagered: true, actualPayout: true },
+        _count: true,
+      }),
+    ]);
+
+    const byStatus = new Map(agg.map((a) => [a.status, a]));
+    const won = byStatus.get(BetStatus.WON);
+    const lost = byStatus.get(BetStatus.LOST);
+    const pending = byStatus.get(BetStatus.PENDING);
+    const creditFailed = byStatus.get(BetStatus.CREDIT_FAILED);
+    const voided = byStatus.get(BetStatus.VOID);
+
+    const wonCount = (won?._count ?? 0) + (creditFailed?._count ?? 0);
+    const lostCount = lost?._count ?? 0;
+    const pendingCount = pending?._count ?? 0;
+    const totalBets = agg.reduce((s, a) => s + a._count, 0);
+
+    const totalWagered = agg.reduce((s, a) => s + (a._sum.pointsWagered ?? 0), 0);
+    const totalWon = (won?._sum.actualPayout ?? 0) + (creditFailed?._sum.actualPayout ?? 0);
+    const settledStake =
+      (won?._sum.pointsWagered ?? 0) +
+      (lost?._sum.pointsWagered ?? 0) +
+      (creditFailed?._sum.pointsWagered ?? 0);
+    const netProfit = totalWon - settledStake;
+    const winRate = wonCount + lostCount > 0 ? (wonCount / (wonCount + lostCount)) * 100 : 0;
+    const roi = settledStake > 0 ? (netProfit / settledStake) * 100 : 0;
+
+    return {
+      success: true,
+      data: {
+        bets,
+        stats: {
+          totalBets,
+          wonCount,
+          lostCount,
+          pendingCount,
+          voidCount: voided?._count ?? 0,
+          totalWagered,
+          totalWon,
+          netProfit,
+          winRate,
+          roi,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching user bets history:', error);
+    return { success: false, error: 'Erreur lors de la récupération de tes paris' };
+  }
+}
+
+/**
+ * Tournois ayant au moins un marché ouvert (longue durée).
+ * Sert à la page /paris pour le bloc "paris tournoi".
+ */
+export async function getTournamentsWithOpenMarkets() {
+  try {
+    const tournaments = await prisma.tournament.findMany({
+      where: {
+        bettingMarkets: {
+          some: { status: 'OPEN', closesAt: { gt: new Date() } },
+        },
+      },
+      orderBy: { startDate: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        startDate: true,
+        bettingMarkets: {
+          where: { status: 'OPEN', closesAt: { gt: new Date() } },
+          select: {
+            id: true,
+            type: true,
+            pools: { select: { totalPool: true, betCount: true } },
+          },
+        },
+      },
+    });
+
+    const rows = tournaments.map((t) => {
+      const totalPool = t.bettingMarkets.reduce(
+        (s, m) => s + m.pools.reduce((a, p) => a + p.totalPool, 0),
+        0
+      );
+      const totalBets = t.bettingMarkets.reduce(
+        (s, m) => s + m.pools.reduce((a, p) => a + p.betCount, 0),
+        0
+      );
+      return {
+        id: t.id,
+        name: t.name,
+        startDate: t.startDate,
+        marketsCount: t.bettingMarkets.length,
+        marketTypes: t.bettingMarkets.map((m) => m.type),
+        totalPool,
+        totalBets,
+      };
+    });
+
+    return { success: true, data: rows };
+  } catch (error) {
+    console.error('Error fetching tournaments with markets:', error);
+    return { success: false, error: 'Erreur lors de la récupération des marchés tournoi' };
+  }
+}
+
+/**
+ * Classement des parieurs (saison).
+ * Tri par bénéfice net descendant — option de tri ROI côté UI.
+ */
+export async function getBettorsLeaderboard(limit = 25) {
+  try {
+    const aggregations = await prisma.bet.groupBy({
+      by: ['userId', 'status'],
+      where: {
+        status: { in: [BetStatus.WON, BetStatus.LOST, BetStatus.CREDIT_FAILED] },
+      },
+      _sum: { pointsWagered: true, actualPayout: true },
+      _count: true,
+    });
+
+    type Agg = { wagered: number; won: number; wonCount: number; lostCount: number };
+    const byUser = new Map<string, Agg>();
+
+    for (const a of aggregations) {
+      const u = byUser.get(a.userId) ?? { wagered: 0, won: 0, wonCount: 0, lostCount: 0 };
+      u.wagered += a._sum.pointsWagered ?? 0;
+      if (a.status === BetStatus.WON || a.status === BetStatus.CREDIT_FAILED) {
+        u.won += a._sum.actualPayout ?? 0;
+        u.wonCount += a._count;
+      } else if (a.status === BetStatus.LOST) {
+        u.lostCount += a._count;
+      }
+      byUser.set(a.userId, u);
+    }
+
+    const userIds = Array.from(byUser.keys());
+    if (userIds.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: {
+        id: true,
+        twitchUsername: true,
+        username: true,
+        name: true,
+        avatar: true,
+      },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const rows = Array.from(byUser.entries())
+      .map(([userId, agg]) => {
+        const settledBets = agg.wonCount + agg.lostCount;
+        const netProfit = agg.won - agg.wagered;
+        const winRate = settledBets > 0 ? (agg.wonCount / settledBets) * 100 : 0;
+        const roi = agg.wagered > 0 ? (netProfit / agg.wagered) * 100 : 0;
+        return {
+          user: userMap.get(userId) ?? null,
+          wagered: agg.wagered,
+          won: agg.won,
+          netProfit,
+          winRate,
+          roi,
+          totalBets: settledBets,
+          wonCount: agg.wonCount,
+          lostCount: agg.lostCount,
+        };
+      })
+      .filter((r) => r.user && r.totalBets > 0);
+
+    rows.sort((a, b) => b.netProfit - a.netProfit);
+
+    return { success: true, data: rows.slice(0, limit) };
+  } catch (error) {
+    console.error('Error fetching bettors leaderboard:', error);
+    return { success: false, error: 'Erreur lors du calcul du classement' };
   }
 }

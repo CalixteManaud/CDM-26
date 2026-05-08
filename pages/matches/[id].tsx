@@ -38,6 +38,13 @@ import { Label } from '@/components/ui/label';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { MatchBetWidget } from '@/components/betting/match-bet-widget';
+import { MatchMarketsList } from '@/components/betting/match-markets-list';
+import type { Market } from '@/components/betting/market-card';
+import { LivePoller } from '@/components/betting/live-poller';
+import { MatchStatusSwitcher } from '@/components/match/match-status-switcher';
+import { MatchEventComposer } from '@/components/match/match-event-composer';
+import { MatchEventFeed } from '@/components/match/match-event-feed';
+import type { MatchEvent as MatchEventRow } from '@/components/match/match-event-feed';
 
 type Player = {
   id: string;
@@ -89,6 +96,8 @@ type PageProps = {
   match: Match | null;
   betting: BettingDetails;
   userBetting: UserBettingState;
+  markets: Market[];
+  events: MatchEventRow[];
 };
 
 const stageMeta: Record<string, { label: string; code: string }> = {
@@ -106,11 +115,15 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
 
   const { getMatchById } = await import('@/actions/matches');
   const { getMatchBettingDetails, getUserBetStatusForMatch } = await import('@/actions/betting');
+  const { getMatchMarkets } = await import('@/actions/markets');
+  const { getMatchEvents } = await import('@/actions/match-events');
   const { getCurrentDbUserFromReq } = await import('@/lib/auth/page-auth');
 
-  const [result, bettingRes, dbUser] = await Promise.all([
+  const [result, bettingRes, marketsRes, eventsRes, dbUser] = await Promise.all([
     getMatchById(matchId),
     getMatchBettingDetails(matchId),
+    getMatchMarkets(matchId),
+    getMatchEvents(matchId),
     getCurrentDbUserFromReq(ctx.req),
   ]);
 
@@ -134,6 +147,14 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
           ? JSON.parse(JSON.stringify(bettingRes.data))
           : null,
       userBetting,
+      markets:
+        marketsRes.success && marketsRes.data
+          ? JSON.parse(JSON.stringify(marketsRes.data))
+          : [],
+      events:
+        eventsRes.success && eventsRes.data
+          ? JSON.parse(JSON.stringify(eventsRes.data))
+          : [],
     },
   };
 };
@@ -446,6 +467,35 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
               </Card>
             )}
 
+            {/* Live polling pendant le match — refresh cotes + feed toutes les 12s */}
+            <LivePoller active={match.status === 'LIVE'} intervalMs={12_000} />
+
+            {/* Les toasts d'events sont gérés globalement par GlobalLiveNotifier
+                (monté dans pages/_app.tsx) — visible sur toutes les pages. */}
+
+            {/* Pilotage admin/coach — status + event composer */}
+            {canEditMatch && (
+              <>
+                <MatchStatusSwitcher matchId={match.id} currentStatus={match.status as 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED'} />
+                {match.status === 'LIVE' && (
+                  <MatchEventComposer
+                    matchId={match.id}
+                    homeTeam={match.homeTeam}
+                    awayTeam={match.awayTeam}
+                    homePlayers={match.homeTeam.players}
+                    awayPlayers={match.awayTeam.players}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Feed live — visible par tout le monde */}
+            <MatchEventFeed
+              events={props.events}
+              matchId={match.id}
+              canManage={canEditMatch}
+            />
+
             {/* Betting widget */}
             {props.betting && !isDisqualified && (
               <MatchBetWidget
@@ -455,6 +505,11 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                 blockedByTwitch={props.userBetting?.blockedByTwitch ?? false}
                 alreadyBetSite={props.userBetting?.alreadyBetSite ?? false}
               />
+            )}
+
+            {/* Marchés additionnels (score exact, total buts, BTTS) */}
+            {!isDisqualified && props.markets.length > 0 && (
+              <MatchMarketsList markets={props.markets} />
             )}
 
             {/* Submit result */}

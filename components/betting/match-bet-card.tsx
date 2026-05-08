@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar, Coins, Users, ChevronRight, Tv } from 'lucide-react';
+import { Calendar, Coins, Users, ChevronRight, Tv, Radio } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { OddsDisplay, PoolDistributionBar } from './odds-display';
@@ -86,8 +86,17 @@ export function MatchBetCard({ match }: { match: Match }) {
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <Calendar className="h-3 w-3" />
-          <span className="text-white/70">{format(date, "dd MMM · HH'h'mm", { locale: fr })}</span>
+          {match.status === 'LIVE' ? (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/15 border border-red-500/40 text-red-300 text-[9px] font-mono tracking-[0.22em] animate-pulse">
+              <Radio className="h-2.5 w-2.5" />
+              LIVE
+            </span>
+          ) : (
+            <>
+              <Calendar className="h-3 w-3" />
+              <span className="text-white/70">{format(date, "dd MMM · HH'h'mm", { locale: fr })}</span>
+            </>
+          )}
         </div>
       </div>
 

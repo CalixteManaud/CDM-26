@@ -324,6 +324,8 @@ export type MatchWhereInput = {
   playerStats?: Prisma.MatchPlayerStatsListRelationFilter
   bettingPool?: Prisma.XOR<Prisma.MatchBettingPoolNullableScalarRelationFilter, Prisma.MatchBettingPoolWhereInput> | null
   bets?: Prisma.BetListRelationFilter
+  bettingMarkets?: Prisma.BettingMarketListRelationFilter
+  events?: Prisma.MatchEventListRelationFilter
 }
 
 export type MatchOrderByWithRelationInput = {
@@ -352,6 +354,8 @@ export type MatchOrderByWithRelationInput = {
   playerStats?: Prisma.MatchPlayerStatsOrderByRelationAggregateInput
   bettingPool?: Prisma.MatchBettingPoolOrderByWithRelationInput
   bets?: Prisma.BetOrderByRelationAggregateInput
+  bettingMarkets?: Prisma.BettingMarketOrderByRelationAggregateInput
+  events?: Prisma.MatchEventOrderByRelationAggregateInput
 }
 
 export type MatchWhereUniqueInput = Prisma.AtLeast<{
@@ -383,6 +387,8 @@ export type MatchWhereUniqueInput = Prisma.AtLeast<{
   playerStats?: Prisma.MatchPlayerStatsListRelationFilter
   bettingPool?: Prisma.XOR<Prisma.MatchBettingPoolNullableScalarRelationFilter, Prisma.MatchBettingPoolWhereInput> | null
   bets?: Prisma.BetListRelationFilter
+  bettingMarkets?: Prisma.BettingMarketListRelationFilter
+  events?: Prisma.MatchEventListRelationFilter
 }, "id">
 
 export type MatchOrderByWithAggregationInput = {
@@ -454,6 +460,8 @@ export type MatchCreateInput = {
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateInput = {
@@ -477,6 +485,8 @@ export type MatchUncheckedCreateInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUpdateInput = {
@@ -500,6 +510,8 @@ export type MatchUpdateInput = {
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateInput = {
@@ -523,6 +535,8 @@ export type MatchUncheckedUpdateInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchCreateManyInput = {
@@ -663,6 +677,11 @@ export type MatchSumOrderByAggregateInput = {
 export type MatchScalarRelationFilter = {
   is?: Prisma.MatchWhereInput
   isNot?: Prisma.MatchWhereInput
+}
+
+export type MatchNullableScalarRelationFilter = {
+  is?: Prisma.MatchWhereInput | null
+  isNot?: Prisma.MatchWhereInput | null
 }
 
 export type MatchCreateNestedManyWithoutTournamentInput = {
@@ -933,6 +952,36 @@ export type MatchUpdateOneRequiredWithoutBetsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.MatchUpdateToOneWithWhereWithoutBetsInput, Prisma.MatchUpdateWithoutBetsInput>, Prisma.MatchUncheckedUpdateWithoutBetsInput>
 }
 
+export type MatchCreateNestedOneWithoutBettingMarketsInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutBettingMarketsInput, Prisma.MatchUncheckedCreateWithoutBettingMarketsInput>
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutBettingMarketsInput
+  connect?: Prisma.MatchWhereUniqueInput
+}
+
+export type MatchUpdateOneWithoutBettingMarketsNestedInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutBettingMarketsInput, Prisma.MatchUncheckedCreateWithoutBettingMarketsInput>
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutBettingMarketsInput
+  upsert?: Prisma.MatchUpsertWithoutBettingMarketsInput
+  disconnect?: Prisma.MatchWhereInput | boolean
+  delete?: Prisma.MatchWhereInput | boolean
+  connect?: Prisma.MatchWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MatchUpdateToOneWithWhereWithoutBettingMarketsInput, Prisma.MatchUpdateWithoutBettingMarketsInput>, Prisma.MatchUncheckedUpdateWithoutBettingMarketsInput>
+}
+
+export type MatchCreateNestedOneWithoutEventsInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutEventsInput, Prisma.MatchUncheckedCreateWithoutEventsInput>
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutEventsInput
+  connect?: Prisma.MatchWhereUniqueInput
+}
+
+export type MatchUpdateOneRequiredWithoutEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.MatchCreateWithoutEventsInput, Prisma.MatchUncheckedCreateWithoutEventsInput>
+  connectOrCreate?: Prisma.MatchCreateOrConnectWithoutEventsInput
+  upsert?: Prisma.MatchUpsertWithoutEventsInput
+  connect?: Prisma.MatchWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MatchUpdateToOneWithWhereWithoutEventsInput, Prisma.MatchUpdateWithoutEventsInput>, Prisma.MatchUncheckedUpdateWithoutEventsInput>
+}
+
 export type MatchCreateWithoutTournamentInput = {
   id?: string
   stage: $Enums.MatchStage
@@ -953,6 +1002,8 @@ export type MatchCreateWithoutTournamentInput = {
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutTournamentInput = {
@@ -975,6 +1026,8 @@ export type MatchUncheckedCreateWithoutTournamentInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutTournamentInput = {
@@ -1046,6 +1099,8 @@ export type MatchCreateWithoutGroupInput = {
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutGroupInput = {
@@ -1068,6 +1123,8 @@ export type MatchUncheckedCreateWithoutGroupInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutGroupInput = {
@@ -1116,6 +1173,8 @@ export type MatchCreateWithoutHomeTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutHomeTeamInput = {
@@ -1138,6 +1197,8 @@ export type MatchUncheckedCreateWithoutHomeTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutHomeTeamInput = {
@@ -1170,6 +1231,8 @@ export type MatchCreateWithoutAwayTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutAwayTeamInput = {
@@ -1192,6 +1255,8 @@ export type MatchUncheckedCreateWithoutAwayTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutAwayTeamInput = {
@@ -1224,6 +1289,8 @@ export type MatchCreateWithoutWinnerTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutWinnerTeamInput = {
@@ -1246,6 +1313,8 @@ export type MatchUncheckedCreateWithoutWinnerTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutWinnerTeamInput = {
@@ -1326,6 +1395,8 @@ export type MatchCreateWithoutPlayerStatsInput = {
   winnerTeam?: Prisma.TeamCreateNestedOneWithoutWinnerMatchesInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutPlayerStatsInput = {
@@ -1348,6 +1419,8 @@ export type MatchUncheckedCreateWithoutPlayerStatsInput = {
   updatedAt?: Date | string
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutPlayerStatsInput = {
@@ -1386,6 +1459,8 @@ export type MatchUpdateWithoutPlayerStatsInput = {
   winnerTeam?: Prisma.TeamUpdateOneWithoutWinnerMatchesNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutPlayerStatsInput = {
@@ -1408,6 +1483,8 @@ export type MatchUncheckedUpdateWithoutPlayerStatsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchCreateWithoutBettingPoolInput = {
@@ -1430,6 +1507,8 @@ export type MatchCreateWithoutBettingPoolInput = {
   winnerTeam?: Prisma.TeamCreateNestedOneWithoutWinnerMatchesInput
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutBettingPoolInput = {
@@ -1452,6 +1531,8 @@ export type MatchUncheckedCreateWithoutBettingPoolInput = {
   updatedAt?: Date | string
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutBettingPoolInput = {
@@ -1490,6 +1571,8 @@ export type MatchUpdateWithoutBettingPoolInput = {
   winnerTeam?: Prisma.TeamUpdateOneWithoutWinnerMatchesNestedInput
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutBettingPoolInput = {
@@ -1512,6 +1595,8 @@ export type MatchUncheckedUpdateWithoutBettingPoolInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchCreateWithoutBetsInput = {
@@ -1534,6 +1619,8 @@ export type MatchCreateWithoutBetsInput = {
   winnerTeam?: Prisma.TeamCreateNestedOneWithoutWinnerMatchesInput
   playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
 }
 
 export type MatchUncheckedCreateWithoutBetsInput = {
@@ -1556,6 +1643,8 @@ export type MatchUncheckedCreateWithoutBetsInput = {
   updatedAt?: Date | string
   playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
 }
 
 export type MatchCreateOrConnectWithoutBetsInput = {
@@ -1594,6 +1683,8 @@ export type MatchUpdateWithoutBetsInput = {
   winnerTeam?: Prisma.TeamUpdateOneWithoutWinnerMatchesNestedInput
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutBetsInput = {
@@ -1616,6 +1707,232 @@ export type MatchUncheckedUpdateWithoutBetsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
+}
+
+export type MatchCreateWithoutBettingMarketsInput = {
+  id?: string
+  stage: $Enums.MatchStage
+  status?: $Enums.MatchStatus
+  matchDate: Date | string
+  homeScore?: number | null
+  awayScore?: number | null
+  twitchUrl?: string | null
+  discordUrl?: string | null
+  youtubeUrl?: string | null
+  streamTitle?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  tournament: Prisma.TournamentCreateNestedOneWithoutMatchesInput
+  group?: Prisma.GroupCreateNestedOneWithoutMatchesInput
+  homeTeam: Prisma.TeamCreateNestedOneWithoutHomeMatchesInput
+  awayTeam: Prisma.TeamCreateNestedOneWithoutAwayMatchesInput
+  winnerTeam?: Prisma.TeamCreateNestedOneWithoutWinnerMatchesInput
+  playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
+  bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
+  bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventCreateNestedManyWithoutMatchInput
+}
+
+export type MatchUncheckedCreateWithoutBettingMarketsInput = {
+  id?: string
+  stage: $Enums.MatchStage
+  status?: $Enums.MatchStatus
+  matchDate: Date | string
+  homeScore?: number | null
+  awayScore?: number | null
+  winnerTeamId?: string | null
+  twitchUrl?: string | null
+  discordUrl?: string | null
+  youtubeUrl?: string | null
+  streamTitle?: string | null
+  groupId?: string | null
+  tournamentId: string
+  homeTeamId: string
+  awayTeamId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
+  bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  events?: Prisma.MatchEventUncheckedCreateNestedManyWithoutMatchInput
+}
+
+export type MatchCreateOrConnectWithoutBettingMarketsInput = {
+  where: Prisma.MatchWhereUniqueInput
+  create: Prisma.XOR<Prisma.MatchCreateWithoutBettingMarketsInput, Prisma.MatchUncheckedCreateWithoutBettingMarketsInput>
+}
+
+export type MatchUpsertWithoutBettingMarketsInput = {
+  update: Prisma.XOR<Prisma.MatchUpdateWithoutBettingMarketsInput, Prisma.MatchUncheckedUpdateWithoutBettingMarketsInput>
+  create: Prisma.XOR<Prisma.MatchCreateWithoutBettingMarketsInput, Prisma.MatchUncheckedCreateWithoutBettingMarketsInput>
+  where?: Prisma.MatchWhereInput
+}
+
+export type MatchUpdateToOneWithWhereWithoutBettingMarketsInput = {
+  where?: Prisma.MatchWhereInput
+  data: Prisma.XOR<Prisma.MatchUpdateWithoutBettingMarketsInput, Prisma.MatchUncheckedUpdateWithoutBettingMarketsInput>
+}
+
+export type MatchUpdateWithoutBettingMarketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  stage?: Prisma.EnumMatchStageFieldUpdateOperationsInput | $Enums.MatchStage
+  status?: Prisma.EnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus
+  matchDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  awayScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  twitchUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discordUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  youtubeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  tournament?: Prisma.TournamentUpdateOneRequiredWithoutMatchesNestedInput
+  group?: Prisma.GroupUpdateOneWithoutMatchesNestedInput
+  homeTeam?: Prisma.TeamUpdateOneRequiredWithoutHomeMatchesNestedInput
+  awayTeam?: Prisma.TeamUpdateOneRequiredWithoutAwayMatchesNestedInput
+  winnerTeam?: Prisma.TeamUpdateOneWithoutWinnerMatchesNestedInput
+  playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
+  bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
+  bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
+}
+
+export type MatchUncheckedUpdateWithoutBettingMarketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  stage?: Prisma.EnumMatchStageFieldUpdateOperationsInput | $Enums.MatchStage
+  status?: Prisma.EnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus
+  matchDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  awayScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  winnerTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discordUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  youtubeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
+  homeTeamId?: Prisma.StringFieldUpdateOperationsInput | string
+  awayTeamId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
+  bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
+}
+
+export type MatchCreateWithoutEventsInput = {
+  id?: string
+  stage: $Enums.MatchStage
+  status?: $Enums.MatchStatus
+  matchDate: Date | string
+  homeScore?: number | null
+  awayScore?: number | null
+  twitchUrl?: string | null
+  discordUrl?: string | null
+  youtubeUrl?: string | null
+  streamTitle?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  tournament: Prisma.TournamentCreateNestedOneWithoutMatchesInput
+  group?: Prisma.GroupCreateNestedOneWithoutMatchesInput
+  homeTeam: Prisma.TeamCreateNestedOneWithoutHomeMatchesInput
+  awayTeam: Prisma.TeamCreateNestedOneWithoutAwayMatchesInput
+  winnerTeam?: Prisma.TeamCreateNestedOneWithoutWinnerMatchesInput
+  playerStats?: Prisma.MatchPlayerStatsCreateNestedManyWithoutMatchInput
+  bettingPool?: Prisma.MatchBettingPoolCreateNestedOneWithoutMatchInput
+  bets?: Prisma.BetCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketCreateNestedManyWithoutMatchInput
+}
+
+export type MatchUncheckedCreateWithoutEventsInput = {
+  id?: string
+  stage: $Enums.MatchStage
+  status?: $Enums.MatchStatus
+  matchDate: Date | string
+  homeScore?: number | null
+  awayScore?: number | null
+  winnerTeamId?: string | null
+  twitchUrl?: string | null
+  discordUrl?: string | null
+  youtubeUrl?: string | null
+  streamTitle?: string | null
+  groupId?: string | null
+  tournamentId: string
+  homeTeamId: string
+  awayTeamId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  playerStats?: Prisma.MatchPlayerStatsUncheckedCreateNestedManyWithoutMatchInput
+  bettingPool?: Prisma.MatchBettingPoolUncheckedCreateNestedOneWithoutMatchInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutMatchInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedCreateNestedManyWithoutMatchInput
+}
+
+export type MatchCreateOrConnectWithoutEventsInput = {
+  where: Prisma.MatchWhereUniqueInput
+  create: Prisma.XOR<Prisma.MatchCreateWithoutEventsInput, Prisma.MatchUncheckedCreateWithoutEventsInput>
+}
+
+export type MatchUpsertWithoutEventsInput = {
+  update: Prisma.XOR<Prisma.MatchUpdateWithoutEventsInput, Prisma.MatchUncheckedUpdateWithoutEventsInput>
+  create: Prisma.XOR<Prisma.MatchCreateWithoutEventsInput, Prisma.MatchUncheckedCreateWithoutEventsInput>
+  where?: Prisma.MatchWhereInput
+}
+
+export type MatchUpdateToOneWithWhereWithoutEventsInput = {
+  where?: Prisma.MatchWhereInput
+  data: Prisma.XOR<Prisma.MatchUpdateWithoutEventsInput, Prisma.MatchUncheckedUpdateWithoutEventsInput>
+}
+
+export type MatchUpdateWithoutEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  stage?: Prisma.EnumMatchStageFieldUpdateOperationsInput | $Enums.MatchStage
+  status?: Prisma.EnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus
+  matchDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  awayScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  twitchUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discordUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  youtubeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  tournament?: Prisma.TournamentUpdateOneRequiredWithoutMatchesNestedInput
+  group?: Prisma.GroupUpdateOneWithoutMatchesNestedInput
+  homeTeam?: Prisma.TeamUpdateOneRequiredWithoutHomeMatchesNestedInput
+  awayTeam?: Prisma.TeamUpdateOneRequiredWithoutAwayMatchesNestedInput
+  winnerTeam?: Prisma.TeamUpdateOneWithoutWinnerMatchesNestedInput
+  playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
+  bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
+  bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+}
+
+export type MatchUncheckedUpdateWithoutEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  stage?: Prisma.EnumMatchStageFieldUpdateOperationsInput | $Enums.MatchStage
+  status?: Prisma.EnumMatchStatusFieldUpdateOperationsInput | $Enums.MatchStatus
+  matchDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  homeScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  awayScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  winnerTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discordUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  youtubeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  streamTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tournamentId?: Prisma.StringFieldUpdateOperationsInput | string
+  homeTeamId?: Prisma.StringFieldUpdateOperationsInput | string
+  awayTeamId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
+  bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchCreateManyTournamentInput = {
@@ -1657,6 +1974,8 @@ export type MatchUpdateWithoutTournamentInput = {
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutTournamentInput = {
@@ -1679,6 +1998,8 @@ export type MatchUncheckedUpdateWithoutTournamentInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateManyWithoutTournamentInput = {
@@ -1739,6 +2060,8 @@ export type MatchUpdateWithoutGroupInput = {
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutGroupInput = {
@@ -1761,6 +2084,8 @@ export type MatchUncheckedUpdateWithoutGroupInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateManyWithoutGroupInput = {
@@ -1859,6 +2184,8 @@ export type MatchUpdateWithoutHomeTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutHomeTeamInput = {
@@ -1881,6 +2208,8 @@ export type MatchUncheckedUpdateWithoutHomeTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateManyWithoutHomeTeamInput = {
@@ -1922,6 +2251,8 @@ export type MatchUpdateWithoutAwayTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutAwayTeamInput = {
@@ -1944,6 +2275,8 @@ export type MatchUncheckedUpdateWithoutAwayTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateManyWithoutAwayTeamInput = {
@@ -1985,6 +2318,8 @@ export type MatchUpdateWithoutWinnerTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateWithoutWinnerTeamInput = {
@@ -2007,6 +2342,8 @@ export type MatchUncheckedUpdateWithoutWinnerTeamInput = {
   playerStats?: Prisma.MatchPlayerStatsUncheckedUpdateManyWithoutMatchNestedInput
   bettingPool?: Prisma.MatchBettingPoolUncheckedUpdateOneWithoutMatchNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutMatchNestedInput
+  bettingMarkets?: Prisma.BettingMarketUncheckedUpdateManyWithoutMatchNestedInput
+  events?: Prisma.MatchEventUncheckedUpdateManyWithoutMatchNestedInput
 }
 
 export type MatchUncheckedUpdateManyWithoutWinnerTeamInput = {
@@ -2036,11 +2373,15 @@ export type MatchUncheckedUpdateManyWithoutWinnerTeamInput = {
 export type MatchCountOutputType = {
   playerStats: number
   bets: number
+  bettingMarkets: number
+  events: number
 }
 
 export type MatchCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   playerStats?: boolean | MatchCountOutputTypeCountPlayerStatsArgs
   bets?: boolean | MatchCountOutputTypeCountBetsArgs
+  bettingMarkets?: boolean | MatchCountOutputTypeCountBettingMarketsArgs
+  events?: boolean | MatchCountOutputTypeCountEventsArgs
 }
 
 /**
@@ -2065,6 +2406,20 @@ export type MatchCountOutputTypeCountPlayerStatsArgs<ExtArgs extends runtime.Typ
  */
 export type MatchCountOutputTypeCountBetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.BetWhereInput
+}
+
+/**
+ * MatchCountOutputType without action
+ */
+export type MatchCountOutputTypeCountBettingMarketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BettingMarketWhereInput
+}
+
+/**
+ * MatchCountOutputType without action
+ */
+export type MatchCountOutputTypeCountEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MatchEventWhereInput
 }
 
 
@@ -2094,6 +2449,8 @@ export type MatchSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   playerStats?: boolean | Prisma.Match$playerStatsArgs<ExtArgs>
   bettingPool?: boolean | Prisma.Match$bettingPoolArgs<ExtArgs>
   bets?: boolean | Prisma.Match$betsArgs<ExtArgs>
+  bettingMarkets?: boolean | Prisma.Match$bettingMarketsArgs<ExtArgs>
+  events?: boolean | Prisma.Match$eventsArgs<ExtArgs>
   _count?: boolean | Prisma.MatchCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["match"]>
 
@@ -2177,6 +2534,8 @@ export type MatchInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   playerStats?: boolean | Prisma.Match$playerStatsArgs<ExtArgs>
   bettingPool?: boolean | Prisma.Match$bettingPoolArgs<ExtArgs>
   bets?: boolean | Prisma.Match$betsArgs<ExtArgs>
+  bettingMarkets?: boolean | Prisma.Match$bettingMarketsArgs<ExtArgs>
+  events?: boolean | Prisma.Match$eventsArgs<ExtArgs>
   _count?: boolean | Prisma.MatchCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MatchIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2205,6 +2564,8 @@ export type $MatchPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     playerStats: Prisma.$MatchPlayerStatsPayload<ExtArgs>[]
     bettingPool: Prisma.$MatchBettingPoolPayload<ExtArgs> | null
     bets: Prisma.$BetPayload<ExtArgs>[]
+    bettingMarkets: Prisma.$BettingMarketPayload<ExtArgs>[]
+    events: Prisma.$MatchEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2626,6 +2987,8 @@ export interface Prisma__MatchClient<T, Null = never, ExtArgs extends runtime.Ty
   playerStats<T extends Prisma.Match$playerStatsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Match$playerStatsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPlayerStatsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   bettingPool<T extends Prisma.Match$bettingPoolArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Match$bettingPoolArgs<ExtArgs>>): Prisma.Prisma__MatchBettingPoolClient<runtime.Types.Result.GetResult<Prisma.$MatchBettingPoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   bets<T extends Prisma.Match$betsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Match$betsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  bettingMarkets<T extends Prisma.Match$bettingMarketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Match$bettingMarketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BettingMarketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  events<T extends Prisma.Match$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Match$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3175,6 +3538,54 @@ export type Match$betsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
   take?: number
   skip?: number
   distinct?: Prisma.BetScalarFieldEnum | Prisma.BetScalarFieldEnum[]
+}
+
+/**
+ * Match.bettingMarkets
+ */
+export type Match$bettingMarketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BettingMarket
+   */
+  select?: Prisma.BettingMarketSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BettingMarket
+   */
+  omit?: Prisma.BettingMarketOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BettingMarketInclude<ExtArgs> | null
+  where?: Prisma.BettingMarketWhereInput
+  orderBy?: Prisma.BettingMarketOrderByWithRelationInput | Prisma.BettingMarketOrderByWithRelationInput[]
+  cursor?: Prisma.BettingMarketWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BettingMarketScalarFieldEnum | Prisma.BettingMarketScalarFieldEnum[]
+}
+
+/**
+ * Match.events
+ */
+export type Match$eventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MatchEvent
+   */
+  select?: Prisma.MatchEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MatchEvent
+   */
+  omit?: Prisma.MatchEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MatchEventInclude<ExtArgs> | null
+  where?: Prisma.MatchEventWhereInput
+  orderBy?: Prisma.MatchEventOrderByWithRelationInput | Prisma.MatchEventOrderByWithRelationInput[]
+  cursor?: Prisma.MatchEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MatchEventScalarFieldEnum | Prisma.MatchEventScalarFieldEnum[]
 }
 
 /**

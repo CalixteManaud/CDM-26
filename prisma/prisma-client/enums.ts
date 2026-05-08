@@ -78,3 +78,43 @@ export const BetSource = {
 } as const
 
 export type BetSource = (typeof BetSource)[keyof typeof BetSource]
+
+
+export const BettingMarketType = {
+  MATCH_EXACT_SCORE: 'MATCH_EXACT_SCORE',
+  MATCH_TOTAL_GOALS: 'MATCH_TOTAL_GOALS',
+  MATCH_BTTS: 'MATCH_BTTS',
+  TOURNAMENT_TOP_SCORER: 'TOURNAMENT_TOP_SCORER',
+  TOURNAMENT_MVP: 'TOURNAMENT_MVP',
+  TOURNAMENT_WINNER: 'TOURNAMENT_WINNER'
+} as const
+
+export type BettingMarketType = (typeof BettingMarketType)[keyof typeof BettingMarketType]
+
+
+export const BettingMarketStatus = {
+  OPEN: 'OPEN',
+  LOCKED: 'LOCKED',
+  SETTLED: 'SETTLED',
+  VOID: 'VOID'
+} as const
+
+export type BettingMarketStatus = (typeof BettingMarketStatus)[keyof typeof BettingMarketStatus]
+
+
+export const MatchEventType = {
+  MATCH_STARTED: 'MATCH_STARTED',
+  HALF_TIME: 'HALF_TIME',
+  SECOND_HALF: 'SECOND_HALF',
+  MATCH_ENDED: 'MATCH_ENDED',
+  GOAL: 'GOAL',
+  OWN_GOAL: 'OWN_GOAL',
+  PENALTY_SCORED: 'PENALTY_SCORED',
+  PENALTY_MISSED: 'PENALTY_MISSED',
+  YELLOW_CARD: 'YELLOW_CARD',
+  RED_CARD: 'RED_CARD',
+  SUBSTITUTION: 'SUBSTITUTION',
+  COMMENT: 'COMMENT'
+} as const
+
+export type MatchEventType = (typeof MatchEventType)[keyof typeof MatchEventType]

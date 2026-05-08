@@ -394,7 +394,12 @@ export const ModelName = {
   Standing: 'Standing',
   Webhook: 'Webhook',
   MatchBettingPool: 'MatchBettingPool',
-  Bet: 'Bet'
+  Bet: 'Bet',
+  BettingMarket: 'BettingMarket',
+  MarketPool: 'MarketPool',
+  MarketBet: 'MarketBet',
+  BetSlip: 'BetSlip',
+  MatchEvent: 'MatchEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -410,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet"
+    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1228,6 +1233,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    BettingMarket: {
+      payload: Prisma.$BettingMarketPayload<ExtArgs>
+      fields: Prisma.BettingMarketFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BettingMarketFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BettingMarketFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>
+        }
+        findFirst: {
+          args: Prisma.BettingMarketFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BettingMarketFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>
+        }
+        findMany: {
+          args: Prisma.BettingMarketFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>[]
+        }
+        create: {
+          args: Prisma.BettingMarketCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>
+        }
+        createMany: {
+          args: Prisma.BettingMarketCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BettingMarketCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>[]
+        }
+        delete: {
+          args: Prisma.BettingMarketDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>
+        }
+        update: {
+          args: Prisma.BettingMarketUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>
+        }
+        deleteMany: {
+          args: Prisma.BettingMarketDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BettingMarketUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BettingMarketUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>[]
+        }
+        upsert: {
+          args: Prisma.BettingMarketUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BettingMarketPayload>
+        }
+        aggregate: {
+          args: Prisma.BettingMarketAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBettingMarket>
+        }
+        groupBy: {
+          args: Prisma.BettingMarketGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BettingMarketGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BettingMarketCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BettingMarketCountAggregateOutputType> | number
+        }
+      }
+    }
+    MarketPool: {
+      payload: Prisma.$MarketPoolPayload<ExtArgs>
+      fields: Prisma.MarketPoolFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MarketPoolFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MarketPoolFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>
+        }
+        findFirst: {
+          args: Prisma.MarketPoolFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MarketPoolFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>
+        }
+        findMany: {
+          args: Prisma.MarketPoolFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>[]
+        }
+        create: {
+          args: Prisma.MarketPoolCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>
+        }
+        createMany: {
+          args: Prisma.MarketPoolCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MarketPoolCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>[]
+        }
+        delete: {
+          args: Prisma.MarketPoolDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>
+        }
+        update: {
+          args: Prisma.MarketPoolUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>
+        }
+        deleteMany: {
+          args: Prisma.MarketPoolDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MarketPoolUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MarketPoolUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>[]
+        }
+        upsert: {
+          args: Prisma.MarketPoolUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketPoolPayload>
+        }
+        aggregate: {
+          args: Prisma.MarketPoolAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMarketPool>
+        }
+        groupBy: {
+          args: Prisma.MarketPoolGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MarketPoolGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MarketPoolCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MarketPoolCountAggregateOutputType> | number
+        }
+      }
+    }
+    MarketBet: {
+      payload: Prisma.$MarketBetPayload<ExtArgs>
+      fields: Prisma.MarketBetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MarketBetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MarketBetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>
+        }
+        findFirst: {
+          args: Prisma.MarketBetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MarketBetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>
+        }
+        findMany: {
+          args: Prisma.MarketBetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>[]
+        }
+        create: {
+          args: Prisma.MarketBetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>
+        }
+        createMany: {
+          args: Prisma.MarketBetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MarketBetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>[]
+        }
+        delete: {
+          args: Prisma.MarketBetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>
+        }
+        update: {
+          args: Prisma.MarketBetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>
+        }
+        deleteMany: {
+          args: Prisma.MarketBetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MarketBetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MarketBetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>[]
+        }
+        upsert: {
+          args: Prisma.MarketBetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MarketBetPayload>
+        }
+        aggregate: {
+          args: Prisma.MarketBetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMarketBet>
+        }
+        groupBy: {
+          args: Prisma.MarketBetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MarketBetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MarketBetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MarketBetCountAggregateOutputType> | number
+        }
+      }
+    }
+    BetSlip: {
+      payload: Prisma.$BetSlipPayload<ExtArgs>
+      fields: Prisma.BetSlipFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BetSlipFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BetSlipFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>
+        }
+        findFirst: {
+          args: Prisma.BetSlipFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BetSlipFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>
+        }
+        findMany: {
+          args: Prisma.BetSlipFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>[]
+        }
+        create: {
+          args: Prisma.BetSlipCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>
+        }
+        createMany: {
+          args: Prisma.BetSlipCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BetSlipCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>[]
+        }
+        delete: {
+          args: Prisma.BetSlipDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>
+        }
+        update: {
+          args: Prisma.BetSlipUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>
+        }
+        deleteMany: {
+          args: Prisma.BetSlipDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BetSlipUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BetSlipUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>[]
+        }
+        upsert: {
+          args: Prisma.BetSlipUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BetSlipPayload>
+        }
+        aggregate: {
+          args: Prisma.BetSlipAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBetSlip>
+        }
+        groupBy: {
+          args: Prisma.BetSlipGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BetSlipGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BetSlipCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BetSlipCountAggregateOutputType> | number
+        }
+      }
+    }
+    MatchEvent: {
+      payload: Prisma.$MatchEventPayload<ExtArgs>
+      fields: Prisma.MatchEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MatchEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MatchEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>
+        }
+        findFirst: {
+          args: Prisma.MatchEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MatchEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>
+        }
+        findMany: {
+          args: Prisma.MatchEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>[]
+        }
+        create: {
+          args: Prisma.MatchEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>
+        }
+        createMany: {
+          args: Prisma.MatchEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MatchEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>[]
+        }
+        delete: {
+          args: Prisma.MatchEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>
+        }
+        update: {
+          args: Prisma.MatchEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.MatchEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MatchEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MatchEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.MatchEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MatchEventPayload>
+        }
+        aggregate: {
+          args: Prisma.MatchEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMatchEvent>
+        }
+        groupBy: {
+          args: Prisma.MatchEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MatchEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MatchEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MatchEventCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1460,6 +1835,97 @@ export const BetScalarFieldEnum = {
 export type BetScalarFieldEnum = (typeof BetScalarFieldEnum)[keyof typeof BetScalarFieldEnum]
 
 
+export const BettingMarketScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  status: 'status',
+  param: 'param',
+  matchId: 'matchId',
+  tournamentId: 'tournamentId',
+  closesAt: 'closesAt',
+  housePercentage: 'housePercentage',
+  finalTotalPool: 'finalTotalPool',
+  settledOutcomeKey: 'settledOutcomeKey',
+  lockedAt: 'lockedAt',
+  settledAt: 'settledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BettingMarketScalarFieldEnum = (typeof BettingMarketScalarFieldEnum)[keyof typeof BettingMarketScalarFieldEnum]
+
+
+export const MarketPoolScalarFieldEnum = {
+  id: 'id',
+  marketId: 'marketId',
+  outcomeKey: 'outcomeKey',
+  totalPool: 'totalPool',
+  betCount: 'betCount',
+  playerId: 'playerId',
+  teamId: 'teamId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MarketPoolScalarFieldEnum = (typeof MarketPoolScalarFieldEnum)[keyof typeof MarketPoolScalarFieldEnum]
+
+
+export const MarketBetScalarFieldEnum = {
+  id: 'id',
+  marketId: 'marketId',
+  userId: 'userId',
+  outcomeKey: 'outcomeKey',
+  pointsWagered: 'pointsWagered',
+  oddsAtPlacement: 'oddsAtPlacement',
+  source: 'source',
+  status: 'status',
+  actualPayout: 'actualPayout',
+  settledAt: 'settledAt',
+  slipId: 'slipId',
+  wizebotDebitTxId: 'wizebotDebitTxId',
+  wizebotCreditTxId: 'wizebotCreditTxId',
+  wizebotCreditError: 'wizebotCreditError',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MarketBetScalarFieldEnum = (typeof MarketBetScalarFieldEnum)[keyof typeof MarketBetScalarFieldEnum]
+
+
+export const BetSlipScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  totalStake: 'totalStake',
+  combinedOdds: 'combinedOdds',
+  potentialPayout: 'potentialPayout',
+  actualPayout: 'actualPayout',
+  status: 'status',
+  settledAt: 'settledAt',
+  source: 'source',
+  wizebotDebitTxId: 'wizebotDebitTxId',
+  wizebotCreditTxId: 'wizebotCreditTxId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BetSlipScalarFieldEnum = (typeof BetSlipScalarFieldEnum)[keyof typeof BetSlipScalarFieldEnum]
+
+
+export const MatchEventScalarFieldEnum = {
+  id: 'id',
+  matchId: 'matchId',
+  type: 'type',
+  minute: 'minute',
+  teamId: 'teamId',
+  playerId: 'playerId',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type MatchEventScalarFieldEnum = (typeof MatchEventScalarFieldEnum)[keyof typeof MatchEventScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1652,6 +2118,48 @@ export type ListEnumBetStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
 
 
 /**
+ * Reference to a field of type 'BettingMarketType'
+ */
+export type EnumBettingMarketTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketType'>
+    
+
+
+/**
+ * Reference to a field of type 'BettingMarketType[]'
+ */
+export type ListEnumBettingMarketTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BettingMarketStatus'
+ */
+export type EnumBettingMarketStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'BettingMarketStatus[]'
+ */
+export type ListEnumBettingMarketStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MatchEventType'
+ */
+export type EnumMatchEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchEventType'>
+    
+
+
+/**
+ * Reference to a field of type 'MatchEventType[]'
+ */
+export type ListEnumMatchEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MatchEventType[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -1785,6 +2293,11 @@ export type GlobalOmitConfig = {
   webhook?: Prisma.WebhookOmit
   matchBettingPool?: Prisma.MatchBettingPoolOmit
   bet?: Prisma.BetOmit
+  bettingMarket?: Prisma.BettingMarketOmit
+  marketPool?: Prisma.MarketPoolOmit
+  marketBet?: Prisma.MarketBetOmit
+  betSlip?: Prisma.BetSlipOmit
+  matchEvent?: Prisma.MatchEventOmit
 }
 
 /* Types for Logging */

@@ -42,13 +42,50 @@ export function computeLiveOdds(pool: {
 }
 
 /**
+ * Fenêtre live betting : on continue d'accepter des paris jusqu'à
+ * `matchDate + LIVE_WINDOW_MINUTES`. À régler selon la durée moyenne d'un
+ * match FIFA 26 (mi-temps + temps additionnel inclus).
+ */
+const LIVE_WINDOW_MINUTES = 25;
+
+/**
  * Vrai si le match accepte encore des paris.
- * Logique: SCHEDULED uniquement, ET on est avant matchDate.
+ * Logique :
+ *  - SCHEDULED → ouvert tant qu'on est avant matchDate
+ *  - LIVE → ouvert pendant la fenêtre live (matchDate + LIVE_WINDOW_MINUTES)
+ *  - sinon → fermé
  */
 export function isBettingOpen(match: {
   status: string;
   matchDate: Date | string;
 }): boolean {
-  if (match.status !== 'SCHEDULED') return false;
-  return new Date() < new Date(match.matchDate);
+  const md = new Date(match.matchDate).getTime();
+  const now = Date.now();
+  if (match.status === 'SCHEDULED') return now < md;
+  if (match.status === 'LIVE') {
+    return now < md + LIVE_WINDOW_MINUTES * 60 * 1000;
+  }
+  return false;
+}
+
+/**
+ * Phase courante du marché 1X2 sur ce match.
+ *  - 'PRE'   → avant le coup d'envoi (cotes "stables")
+ *  - 'LIVE'  → match en cours (cotes mouvantes — polling recommandé côté UI)
+ *  - 'CLOSED' → match terminé / annulé / fermé
+ */
+export function bettingPhase(match: {
+  status: string;
+  matchDate: Date | string;
+}): 'PRE' | 'LIVE' | 'CLOSED' {
+  const md = new Date(match.matchDate).getTime();
+  const now = Date.now();
+  if (match.status === 'SCHEDULED' && now < md) return 'PRE';
+  if (
+    match.status === 'LIVE' &&
+    now < md + LIVE_WINDOW_MINUTES * 60 * 1000
+  ) {
+    return 'LIVE';
+  }
+  return 'CLOSED';
 }

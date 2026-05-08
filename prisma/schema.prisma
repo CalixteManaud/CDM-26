@@ -47,6 +47,8 @@ model User {
   players      Player[]
   coachedTeams Team[]   @relation("TeamCoach") // Teams where this user is the coach/admin
   bets         Bet[]
+  marketBets   MarketBet[] @relation("MarketBetUser")
+  betSlips     BetSlip[]   @relation("BetSlipUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,6 +70,9 @@ model Tournament {
   groups    Group[]
   matches   Match[]
   standings Standing[]
+
+  // Marchés tournoi (top buteur, MVP, vainqueur)
+  bettingMarkets BettingMarket[] @relation("TournamentMarkets")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -116,10 +121,16 @@ model Team {
   awayMatches   Match[] @relation("AwayTeam")
   winnerMatches Match[] @relation("WinnerTeam")
 
+  // Events live (l'équipe concernée par un but/carton)
+  matchEvents MatchEvent[] @relation("MatchEventTeam")
+
   standings Standing[]
 
   // Paris pointant sur cette équipe (HOME_WIN ou AWAY_WIN)
   betsPickedOn Bet[] @relation("BetPickedTeam")
+
+  // Pools des marchés où cette équipe est l'outcome (vainqueur tournoi par ex.)
+  marketPoolEntries MarketPool[] @relation("MarketPoolTeam")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -143,6 +154,12 @@ model Player {
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   stats MatchPlayerStats[]
+
+  // Pools des marchés où ce joueur est l'outcome (top buteur, MVP)
+  marketPoolEntries MarketPool[] @relation("MarketPoolPlayer")
+
+  // Events live (le joueur qui a marqué / pris un carton)
+  matchEvents MatchEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -187,6 +204,12 @@ model Match {
   // Paris (Wizebot)
   bettingPool MatchBettingPool?
   bets        Bet[]
+
+  // Marchés additionnels (score exact, total buts, BTTS…)
+  bettingMarkets BettingMarket[] @relation("MatchMarkets")
+
+  // Live events (kick-off, buts, cartons…)
+  events MatchEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -399,4 +422,196 @@ model Bet {
   @@index([status])
   @@index([matchId, status])
   @@index([userId, matchId])
+}
+
+// =================== MARCHÉS FLEXIBLES ===================
+//
+// Tables génériques pour gérer plusieurs types de paris au-delà du 1X2 :
+//  - Score exact d'un match
+//  - Total buts (over/under)
+//  - Both teams to score
+//  - Top buteur d'un tournoi
+//  - MVP d'un tournoi
+//  - Vainqueur d'un tournoi
+//
+// Le 1X2 (HOME/DRAW/AWAY) reste sur Bet/MatchBettingPool pour ne pas casser le
+// flow Wizebot existant. Tout le reste utilise BettingMarket + MarketPool +
+// MarketBet. Un MarketBet peut être groupé dans un BetSlip pour un pari
+// combiné (cote = produit, all-or-nothing).
+
+enum BettingMarketType {
+  MATCH_EXACT_SCORE       // outcomeKey = "<home>-<away>"
+  MATCH_TOTAL_GOALS       // outcomeKey = "OVER" | "UNDER" ; param = ligne ex "2.5"
+  MATCH_BTTS              // outcomeKey = "YES" | "NO"
+  TOURNAMENT_TOP_SCORER   // outcomeKey = playerId
+  TOURNAMENT_MVP          // outcomeKey = playerId
+  TOURNAMENT_WINNER       // outcomeKey = teamId
+}
+
+enum BettingMarketStatus {
+  OPEN
+  LOCKED
+  SETTLED
+  VOID
+}
+
+model BettingMarket {
+  id     String              @id @default(uuid()) @db.Uuid
+  type   BettingMarketType
+  status BettingMarketStatus @default(OPEN)
+  param  String? // ex "2.5" pour MATCH_TOTAL_GOALS
+
+  matchId String? @db.Uuid
+  match   Match?  @relation("MatchMarkets", fields: [matchId], references: [id], onDelete: Cascade)
+
+  tournamentId String?     @db.Uuid
+  tournament   Tournament? @relation("TournamentMarkets", fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  closesAt DateTime // pari fermé après cette date
+
+  housePercentage   Decimal   @default(0) @db.Decimal(5, 2)
+  finalTotalPool    Int? // snapshot au lock
+  settledOutcomeKey String? // outcome gagnant
+  lockedAt          DateTime?
+  settledAt         DateTime?
+
+  pools MarketPool[]
+  bets  MarketBet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([matchId])
+  @@index([tournamentId])
+  @@index([type])
+  @@index([status])
+}
+
+model MarketPool {
+  id         String        @id @default(uuid()) @db.Uuid
+  marketId   String        @db.Uuid
+  market     BettingMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  outcomeKey String // "2-1" / "OVER" / "<playerId>" / "<teamId>"
+  totalPool  Int           @default(0)
+  betCount   Int           @default(0)
+
+  // Liens facultatifs pour faciliter les jointures UI
+  playerId String? @db.Uuid
+  teamId   String? @db.Uuid
+  player   Player? @relation("MarketPoolPlayer", fields: [playerId], references: [id], onDelete: SetNull)
+  team     Team?   @relation("MarketPoolTeam", fields: [teamId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([marketId, outcomeKey])
+  @@index([marketId])
+  @@index([playerId])
+  @@index([teamId])
+}
+
+model MarketBet {
+  id              String        @id @default(uuid()) @db.Uuid
+  marketId        String        @db.Uuid
+  market          BettingMarket @relation(fields: [marketId], references: [id], onDelete: Restrict)
+  userId          String        @db.Uuid
+  user            User          @relation("MarketBetUser", fields: [userId], references: [id], onDelete: Restrict)
+  outcomeKey      String
+  pointsWagered   Int
+  oddsAtPlacement Decimal       @db.Decimal(7, 3)
+  source          BetSource     @default(SITE)
+  status          BetStatus     @default(PENDING)
+  actualPayout    Int           @default(0)
+  settledAt       DateTime?
+
+  // Combiné — null si pari simple
+  slipId String?  @db.Uuid
+  slip   BetSlip? @relation(fields: [slipId], references: [id], onDelete: Cascade)
+
+  wizebotDebitTxId   String?
+  wizebotCreditTxId  String?
+  wizebotCreditError String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([marketId])
+  @@index([status])
+  @@index([slipId])
+}
+
+model BetSlip {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @db.Uuid
+  user            User      @relation("BetSlipUser", fields: [userId], references: [id], onDelete: Restrict)
+  totalStake      Int
+  combinedOdds    Decimal   @db.Decimal(10, 3) // produit des cotes des bets
+  potentialPayout Int
+  actualPayout    Int       @default(0)
+  status          BetStatus @default(PENDING)
+  settledAt       DateTime?
+  source          BetSource @default(SITE)
+
+  wizebotDebitTxId  String?
+  wizebotCreditTxId String?
+
+  bets MarketBet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+// =================== LIVE EVENTS ===================
+//
+// Chaque événement publié pendant un match (kick-off, but, carton, fin).
+// Append-only : on ne modifie pas un event, on le supprime + en recrée si
+// erreur de saisie. Ces events alimentent à la fois :
+//  - le feed visible sur la page match
+//  - les notifications toast pour les viewers (polling /events?since=...)
+//  - le webhook outbound (MATCH_STARTED / MATCH_FINISHED) pour les intégrations
+
+enum MatchEventType {
+  MATCH_STARTED       // Coup d'envoi
+  HALF_TIME           // Mi-temps
+  SECOND_HALF         // Reprise 2e mi-temps
+  MATCH_ENDED         // Coup de sifflet final
+  GOAL                // But marqué
+  OWN_GOAL            // But contre son camp
+  PENALTY_SCORED      // Penalty marqué
+  PENALTY_MISSED      // Penalty manqué
+  YELLOW_CARD         // Carton jaune
+  RED_CARD            // Carton rouge
+  SUBSTITUTION        // Remplacement
+  COMMENT             // Commentaire libre du speaker
+}
+
+model MatchEvent {
+  id      String         @id @default(uuid()) @db.Uuid
+  matchId String         @db.Uuid
+  match   Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type    MatchEventType
+  minute  Int? // minute du match (null pour MATCH_STARTED/MATCH_ENDED)
+
+  // Équipe concernée (but, carton…). null pour les events neutres
+  teamId String? @db.Uuid
+  team   Team?   @relation("MatchEventTeam", fields: [teamId], references: [id], onDelete: SetNull)
+
+  // Joueur concerné si applicable
+  playerId String? @db.Uuid
+  player   Player? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  description String? // Texte libre, ex "Penalty arrêté par le gardien"
+
+  // Auteur (admin/coach qui a publié)
+  createdById String? @db.Uuid
+
+  createdAt DateTime @default(now())
+
+  @@index([matchId])
+  @@index([matchId, createdAt])
+  @@index([type])
 }

@@ -22,6 +22,8 @@ import {
   Award,
   Shield,
   Coins,
+  Activity,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -112,6 +114,27 @@ const TEAMS_LINKS: NavLinkItem[] = [
     title: 'Inscrire une équipe',
     description: 'Crée ta nation et invite tes joueurs',
     icon: Sparkles,
+  },
+];
+
+const BETTING_LINKS: NavLinkItem[] = [
+  {
+    href: '/paris',
+    title: 'Cotes en direct',
+    description: 'Tous les matchs ouverts aux paris en pari mutuel',
+    icon: Activity,
+  },
+  {
+    href: '/paris/mes-paris',
+    title: 'Mes paris',
+    description: 'Historique perso, ROI, gains et pertes',
+    icon: User,
+  },
+  {
+    href: '/paris/classement',
+    title: 'Classement',
+    description: 'Top parieurs saison · net, ROI, win rate',
+    icon: TrendingUp,
   },
 ];
 
@@ -371,24 +394,28 @@ export function ModernHeader() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href="/paris"
-                      data-active={pathname?.startsWith('/paris')}
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        'flex-row gap-2 bg-transparent text-white/75 hover:bg-white/5 hover:text-white font-bold uppercase tracking-widest text-xs',
-                        pathname?.startsWith('/paris') && 'bg-yellow-500/10 text-yellow-300'
-                      )}
-                    >
-                      <Coins className="w-4 h-4" />
-                      Paris
-                      <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 text-[8px] font-mono tracking-[0.2em]">
-                        <span className="w-1 h-1 rounded-full bg-yellow-400 animate-pulse" />
-                        LIVE
-                      </span>
-                    </Link>
-                  </NavigationMenuLink>
+                  <NavigationMenuTrigger
+                    className={cn(
+                      'gap-2 bg-transparent text-white/75 hover:bg-white/5 hover:text-white data-[state=open]:bg-white/6 data-[state=open]:text-white font-bold uppercase tracking-widest text-xs',
+                      pathname?.startsWith('/paris') && 'bg-yellow-500/10 text-yellow-300'
+                    )}
+                  >
+                    <Coins className="w-4 h-4" />
+                    Paris
+                    <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 text-[8px] font-mono tracking-[0.2em]">
+                      <span className="w-1 h-1 rounded-full bg-yellow-400 animate-pulse" />
+                      LIVE
+                    </span>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="bg-black/95 backdrop-blur-xl border border-white/10">
+                    <ul className="grid w-95 gap-1 p-2">
+                      {BETTING_LINKS.map((item) => (
+                        <li key={item.href}>
+                          <NavLinkCard item={item} inMenu />
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
                 </NavigationMenuItem>
 
                 {isSignedIn && (
@@ -574,34 +601,13 @@ export function ModernHeader() {
                     ))}
 
                     <SectionLabel>Paris</SectionLabel>
-                    <Link
-                      href="/paris"
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        'group flex items-start gap-3 rounded-xl p-3 border transition-all',
-                        pathname?.startsWith('/paris')
-                          ? 'bg-yellow-500/10 border-yellow-500/30'
-                          : 'border-transparent hover:bg-white/4 hover:border-white/15'
-                      )}
-                    >
-                      <div className="shrink-0 w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
-                        <Coins className="w-4 h-4 text-yellow-300" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-white text-sm leading-tight tracking-tight">
-                            Cotes en direct
-                          </span>
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 text-[8px] font-mono tracking-[0.2em]">
-                            <span className="w-1 h-1 rounded-full bg-yellow-400 animate-pulse" />
-                            LIVE
-                          </span>
-                        </div>
-                        <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/45 mt-1 leading-snug">
-                          Pari mutuel · Wizebot · Twitch
-                        </div>
-                      </div>
-                    </Link>
+                    {BETTING_LINKS.map((item) => (
+                      <NavLinkCard
+                        key={item.href}
+                        item={item}
+                        onClick={() => setMobileOpen(false)}
+                      />
+                    ))}
 
                     {isSignedIn && (
                       <Link

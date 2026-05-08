@@ -8,3 +8,5 @@ export * from './standings';
 export * from './users';
 export * from './statistics';
 export * from './betting';
+export * from './markets';
+export * from './match-events';

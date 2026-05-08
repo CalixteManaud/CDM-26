@@ -1,8 +1,9 @@
-import { Coins, Users, Lock, Flame } from 'lucide-react';
+import { Coins, Users, Lock, Flame, Radio } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BorderBeam } from '@/components/ui/border-beam';
+import { isBettingOpen, bettingPhase } from '@/lib/utils/odds';
 
 import { OddsDisplay, PoolDistributionBar } from './odds-display';
 import { RecentBetsFeed } from './recent-bets-feed';
@@ -39,10 +40,6 @@ type Props = {
   alreadyBetSite?: boolean;
 };
 
-function isOpen(match: Match): boolean {
-  return match.status === 'SCHEDULED' && new Date(match.matchDate) > new Date();
-}
-
 export function MatchBetWidget({
   match,
   recentBets,
@@ -50,7 +47,8 @@ export function MatchBetWidget({
   blockedByTwitch = false,
   alreadyBetSite = false,
 }: Props) {
-  const open = isOpen(match);
+  const open = isBettingOpen(match);
+  const phase = bettingPhase(match);
   const pool = match.bettingPool;
   const total = pool
     ? Number(pool.totalHomePool) + Number(pool.totalDrawPool) + Number(pool.totalAwayPool)
@@ -71,10 +69,14 @@ export function MatchBetWidget({
             § Marché — Paris mutuel
           </div>
           <h3 className="text-xl md:text-2xl font-black text-white tracking-tight">
-            {open ? 'Cotes en direct' : 'Marché clôturé'}
+            {phase === 'LIVE' ? 'Live · cotes en direct' : open ? 'Cotes en direct' : 'Marché clôturé'}
           </h3>
         </div>
-        {open ? (
+        {phase === 'LIVE' ? (
+          <Badge className="bg-red-500/15 border-red-500/40 text-red-300 uppercase tracking-[0.22em] text-[10px] font-mono shrink-0 animate-pulse">
+            <Radio className="w-2.5 h-2.5 mr-1" /> Live
+          </Badge>
+        ) : open ? (
           <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono shrink-0">
             <Flame className="w-2.5 h-2.5 mr-1" /> Ouvert
           </Badge>

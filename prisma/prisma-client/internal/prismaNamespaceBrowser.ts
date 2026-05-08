@@ -61,7 +61,12 @@ export const ModelName = {
   Standing: 'Standing',
   Webhook: 'Webhook',
   MatchBettingPool: 'MatchBettingPool',
-  Bet: 'Bet'
+  Bet: 'Bet',
+  BettingMarket: 'BettingMarket',
+  MarketPool: 'MarketPool',
+  MarketBet: 'MarketBet',
+  BetSlip: 'BetSlip',
+  MatchEvent: 'MatchEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -271,6 +276,97 @@ export const BetScalarFieldEnum = {
 } as const
 
 export type BetScalarFieldEnum = (typeof BetScalarFieldEnum)[keyof typeof BetScalarFieldEnum]
+
+
+export const BettingMarketScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  status: 'status',
+  param: 'param',
+  matchId: 'matchId',
+  tournamentId: 'tournamentId',
+  closesAt: 'closesAt',
+  housePercentage: 'housePercentage',
+  finalTotalPool: 'finalTotalPool',
+  settledOutcomeKey: 'settledOutcomeKey',
+  lockedAt: 'lockedAt',
+  settledAt: 'settledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BettingMarketScalarFieldEnum = (typeof BettingMarketScalarFieldEnum)[keyof typeof BettingMarketScalarFieldEnum]
+
+
+export const MarketPoolScalarFieldEnum = {
+  id: 'id',
+  marketId: 'marketId',
+  outcomeKey: 'outcomeKey',
+  totalPool: 'totalPool',
+  betCount: 'betCount',
+  playerId: 'playerId',
+  teamId: 'teamId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MarketPoolScalarFieldEnum = (typeof MarketPoolScalarFieldEnum)[keyof typeof MarketPoolScalarFieldEnum]
+
+
+export const MarketBetScalarFieldEnum = {
+  id: 'id',
+  marketId: 'marketId',
+  userId: 'userId',
+  outcomeKey: 'outcomeKey',
+  pointsWagered: 'pointsWagered',
+  oddsAtPlacement: 'oddsAtPlacement',
+  source: 'source',
+  status: 'status',
+  actualPayout: 'actualPayout',
+  settledAt: 'settledAt',
+  slipId: 'slipId',
+  wizebotDebitTxId: 'wizebotDebitTxId',
+  wizebotCreditTxId: 'wizebotCreditTxId',
+  wizebotCreditError: 'wizebotCreditError',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MarketBetScalarFieldEnum = (typeof MarketBetScalarFieldEnum)[keyof typeof MarketBetScalarFieldEnum]
+
+
+export const BetSlipScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  totalStake: 'totalStake',
+  combinedOdds: 'combinedOdds',
+  potentialPayout: 'potentialPayout',
+  actualPayout: 'actualPayout',
+  status: 'status',
+  settledAt: 'settledAt',
+  source: 'source',
+  wizebotDebitTxId: 'wizebotDebitTxId',
+  wizebotCreditTxId: 'wizebotCreditTxId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BetSlipScalarFieldEnum = (typeof BetSlipScalarFieldEnum)[keyof typeof BetSlipScalarFieldEnum]
+
+
+export const MatchEventScalarFieldEnum = {
+  id: 'id',
+  matchId: 'matchId',
+  type: 'type',
+  minute: 'minute',
+  teamId: 'teamId',
+  playerId: 'playerId',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type MatchEventScalarFieldEnum = (typeof MatchEventScalarFieldEnum)[keyof typeof MatchEventScalarFieldEnum]
 
 
 export const SortOrder = {

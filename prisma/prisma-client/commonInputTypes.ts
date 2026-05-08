@@ -385,6 +385,57 @@ export type EnumBetStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumBetStatusFilter<$PrismaModel>
 }
 
+export type EnumBettingMarketTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketType | Prisma.EnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketTypeFilter<$PrismaModel> | $Enums.BettingMarketType
+}
+
+export type EnumBettingMarketStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketStatus | Prisma.EnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketStatusFilter<$PrismaModel> | $Enums.BettingMarketStatus
+}
+
+export type EnumBettingMarketTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketType | Prisma.EnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketTypeWithAggregatesFilter<$PrismaModel> | $Enums.BettingMarketType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumBettingMarketTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumBettingMarketTypeFilter<$PrismaModel>
+}
+
+export type EnumBettingMarketStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketStatus | Prisma.EnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketStatusWithAggregatesFilter<$PrismaModel> | $Enums.BettingMarketStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumBettingMarketStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumBettingMarketStatusFilter<$PrismaModel>
+}
+
+export type EnumMatchEventTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.MatchEventType | Prisma.EnumMatchEventTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMatchEventTypeFilter<$PrismaModel> | $Enums.MatchEventType
+}
+
+export type EnumMatchEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MatchEventType | Prisma.EnumMatchEventTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMatchEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.MatchEventType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMatchEventTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMatchEventTypeFilter<$PrismaModel>
+}
+
 export type NestedUuidFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -763,6 +814,57 @@ export type NestedEnumBetStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumBetStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumBetStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumBettingMarketTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketType | Prisma.EnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketTypeFilter<$PrismaModel> | $Enums.BettingMarketType
+}
+
+export type NestedEnumBettingMarketStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketStatus | Prisma.EnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketStatusFilter<$PrismaModel> | $Enums.BettingMarketStatus
+}
+
+export type NestedEnumBettingMarketTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketType | Prisma.EnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketTypeWithAggregatesFilter<$PrismaModel> | $Enums.BettingMarketType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumBettingMarketTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumBettingMarketTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumBettingMarketStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.BettingMarketStatus | Prisma.EnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.BettingMarketStatus[] | Prisma.ListEnumBettingMarketStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumBettingMarketStatusWithAggregatesFilter<$PrismaModel> | $Enums.BettingMarketStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumBettingMarketStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumBettingMarketStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumMatchEventTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.MatchEventType | Prisma.EnumMatchEventTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMatchEventTypeFilter<$PrismaModel> | $Enums.MatchEventType
+}
+
+export type NestedEnumMatchEventTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MatchEventType | Prisma.EnumMatchEventTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MatchEventType[] | Prisma.ListEnumMatchEventTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMatchEventTypeWithAggregatesFilter<$PrismaModel> | $Enums.MatchEventType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMatchEventTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMatchEventTypeFilter<$PrismaModel>
 }
 
 

@@ -233,6 +233,8 @@ export type UserWhereInput = {
   players?: Prisma.PlayerListRelationFilter
   coachedTeams?: Prisma.TeamListRelationFilter
   bets?: Prisma.BetListRelationFilter
+  marketBets?: Prisma.MarketBetListRelationFilter
+  betSlips?: Prisma.BetSlipListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -250,6 +252,8 @@ export type UserOrderByWithRelationInput = {
   players?: Prisma.PlayerOrderByRelationAggregateInput
   coachedTeams?: Prisma.TeamOrderByRelationAggregateInput
   bets?: Prisma.BetOrderByRelationAggregateInput
+  marketBets?: Prisma.MarketBetOrderByRelationAggregateInput
+  betSlips?: Prisma.BetSlipOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -270,6 +274,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   players?: Prisma.PlayerListRelationFilter
   coachedTeams?: Prisma.TeamListRelationFilter
   bets?: Prisma.BetListRelationFilter
+  marketBets?: Prisma.MarketBetListRelationFilter
+  betSlips?: Prisma.BetSlipListRelationFilter
 }, "id" | "email" | "clerkId" | "twitchUsername" | "twitchUserId" | "username">
 
 export type UserOrderByWithAggregationInput = {
@@ -321,6 +327,8 @@ export type UserCreateInput = {
   players?: Prisma.PlayerCreateNestedManyWithoutUserInput
   coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
   bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -338,6 +346,8 @@ export type UserUncheckedCreateInput = {
   players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
   coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -355,6 +365,8 @@ export type UserUpdateInput = {
   players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
   coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
   bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -372,6 +384,8 @@ export type UserUncheckedUpdateInput = {
   players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
   coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -528,6 +542,34 @@ export type UserUpdateOneRequiredWithoutBetsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBetsInput, Prisma.UserUpdateWithoutBetsInput>, Prisma.UserUncheckedUpdateWithoutBetsInput>
 }
 
+export type UserCreateNestedOneWithoutMarketBetsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMarketBetsInput, Prisma.UserUncheckedCreateWithoutMarketBetsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMarketBetsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMarketBetsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMarketBetsInput, Prisma.UserUncheckedCreateWithoutMarketBetsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMarketBetsInput
+  upsert?: Prisma.UserUpsertWithoutMarketBetsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMarketBetsInput, Prisma.UserUpdateWithoutMarketBetsInput>, Prisma.UserUncheckedUpdateWithoutMarketBetsInput>
+}
+
+export type UserCreateNestedOneWithoutBetSlipsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutBetSlipsInput, Prisma.UserUncheckedCreateWithoutBetSlipsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutBetSlipsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutBetSlipsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutBetSlipsInput, Prisma.UserUncheckedCreateWithoutBetSlipsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutBetSlipsInput
+  upsert?: Prisma.UserUpsertWithoutBetSlipsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBetSlipsInput, Prisma.UserUpdateWithoutBetSlipsInput>, Prisma.UserUncheckedUpdateWithoutBetSlipsInput>
+}
+
 export type UserCreateWithoutCoachedTeamsInput = {
   id?: string
   email: string
@@ -542,6 +584,8 @@ export type UserCreateWithoutCoachedTeamsInput = {
   updatedAt?: Date | string
   players?: Prisma.PlayerCreateNestedManyWithoutUserInput
   bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCoachedTeamsInput = {
@@ -558,6 +602,8 @@ export type UserUncheckedCreateWithoutCoachedTeamsInput = {
   updatedAt?: Date | string
   players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCoachedTeamsInput = {
@@ -590,6 +636,8 @@ export type UserUpdateWithoutCoachedTeamsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
   bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCoachedTeamsInput = {
@@ -606,6 +654,8 @@ export type UserUncheckedUpdateWithoutCoachedTeamsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlayersInput = {
@@ -622,6 +672,8 @@ export type UserCreateWithoutPlayersInput = {
   updatedAt?: Date | string
   coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
   bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlayersInput = {
@@ -638,6 +690,8 @@ export type UserUncheckedCreateWithoutPlayersInput = {
   updatedAt?: Date | string
   coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlayersInput = {
@@ -670,6 +724,8 @@ export type UserUpdateWithoutPlayersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
   bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlayersInput = {
@@ -686,6 +742,8 @@ export type UserUncheckedUpdateWithoutPlayersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
   bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBetsInput = {
@@ -702,6 +760,8 @@ export type UserCreateWithoutBetsInput = {
   updatedAt?: Date | string
   players?: Prisma.PlayerCreateNestedManyWithoutUserInput
   coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBetsInput = {
@@ -718,6 +778,8 @@ export type UserUncheckedCreateWithoutBetsInput = {
   updatedAt?: Date | string
   players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
   coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBetsInput = {
@@ -750,6 +812,8 @@ export type UserUpdateWithoutBetsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
   coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBetsInput = {
@@ -766,6 +830,184 @@ export type UserUncheckedUpdateWithoutBetsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
   coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMarketBetsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMarketBetsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMarketBetsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMarketBetsInput, Prisma.UserUncheckedCreateWithoutMarketBetsInput>
+}
+
+export type UserUpsertWithoutMarketBetsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMarketBetsInput, Prisma.UserUncheckedUpdateWithoutMarketBetsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMarketBetsInput, Prisma.UserUncheckedCreateWithoutMarketBetsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMarketBetsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMarketBetsInput, Prisma.UserUncheckedUpdateWithoutMarketBetsInput>
+}
+
+export type UserUpdateWithoutMarketBetsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMarketBetsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutBetSlipsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutBetSlipsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutBetSlipsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutBetSlipsInput, Prisma.UserUncheckedCreateWithoutBetSlipsInput>
+}
+
+export type UserUpsertWithoutBetSlipsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutBetSlipsInput, Prisma.UserUncheckedUpdateWithoutBetSlipsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutBetSlipsInput, Prisma.UserUncheckedCreateWithoutBetSlipsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutBetSlipsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutBetSlipsInput, Prisma.UserUncheckedUpdateWithoutBetSlipsInput>
+}
+
+export type UserUpdateWithoutBetSlipsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutBetSlipsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -777,12 +1019,16 @@ export type UserCountOutputType = {
   players: number
   coachedTeams: number
   bets: number
+  marketBets: number
+  betSlips: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   players?: boolean | UserCountOutputTypeCountPlayersArgs
   coachedTeams?: boolean | UserCountOutputTypeCountCoachedTeamsArgs
   bets?: boolean | UserCountOutputTypeCountBetsArgs
+  marketBets?: boolean | UserCountOutputTypeCountMarketBetsArgs
+  betSlips?: boolean | UserCountOutputTypeCountBetSlipsArgs
 }
 
 /**
@@ -816,6 +1062,20 @@ export type UserCountOutputTypeCountBetsArgs<ExtArgs extends runtime.Types.Exten
   where?: Prisma.BetWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMarketBetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MarketBetWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountBetSlipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BetSlipWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -832,6 +1092,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   players?: boolean | Prisma.User$playersArgs<ExtArgs>
   coachedTeams?: boolean | Prisma.User$coachedTeamsArgs<ExtArgs>
   bets?: boolean | Prisma.User$betsArgs<ExtArgs>
+  marketBets?: boolean | Prisma.User$marketBetsArgs<ExtArgs>
+  betSlips?: boolean | Prisma.User$betSlipsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -882,6 +1144,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   players?: boolean | Prisma.User$playersArgs<ExtArgs>
   coachedTeams?: boolean | Prisma.User$coachedTeamsArgs<ExtArgs>
   bets?: boolean | Prisma.User$betsArgs<ExtArgs>
+  marketBets?: boolean | Prisma.User$marketBetsArgs<ExtArgs>
+  betSlips?: boolean | Prisma.User$betSlipsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -893,6 +1157,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     players: Prisma.$PlayerPayload<ExtArgs>[]
     coachedTeams: Prisma.$TeamPayload<ExtArgs>[]
     bets: Prisma.$BetPayload<ExtArgs>[]
+    marketBets: Prisma.$MarketBetPayload<ExtArgs>[]
+    betSlips: Prisma.$BetSlipPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1303,6 +1569,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   players<T extends Prisma.User$playersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$playersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   coachedTeams<T extends Prisma.User$coachedTeamsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$coachedTeamsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   bets<T extends Prisma.User$betsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$betsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  marketBets<T extends Prisma.User$marketBetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$marketBetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MarketBetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  betSlips<T extends Prisma.User$betSlipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$betSlipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BetSlipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1805,6 +2073,54 @@ export type User$betsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   take?: number
   skip?: number
   distinct?: Prisma.BetScalarFieldEnum | Prisma.BetScalarFieldEnum[]
+}
+
+/**
+ * User.marketBets
+ */
+export type User$marketBetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MarketBet
+   */
+  select?: Prisma.MarketBetSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MarketBet
+   */
+  omit?: Prisma.MarketBetOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MarketBetInclude<ExtArgs> | null
+  where?: Prisma.MarketBetWhereInput
+  orderBy?: Prisma.MarketBetOrderByWithRelationInput | Prisma.MarketBetOrderByWithRelationInput[]
+  cursor?: Prisma.MarketBetWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MarketBetScalarFieldEnum | Prisma.MarketBetScalarFieldEnum[]
+}
+
+/**
+ * User.betSlips
+ */
+export type User$betSlipsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BetSlip
+   */
+  select?: Prisma.BetSlipSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BetSlip
+   */
+  omit?: Prisma.BetSlipOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BetSlipInclude<ExtArgs> | null
+  where?: Prisma.BetSlipWhereInput
+  orderBy?: Prisma.BetSlipOrderByWithRelationInput | Prisma.BetSlipOrderByWithRelationInput[]
+  cursor?: Prisma.BetSlipWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BetSlipScalarFieldEnum | Prisma.BetSlipScalarFieldEnum[]
 }
 
 /**

@@ -72,3 +72,28 @@ export type MatchBettingPool = Prisma.MatchBettingPoolModel
  * 
  */
 export type Bet = Prisma.BetModel
+/**
+ * Model BettingMarket
+ * 
+ */
+export type BettingMarket = Prisma.BettingMarketModel
+/**
+ * Model MarketPool
+ * 
+ */
+export type MarketPool = Prisma.MarketPoolModel
+/**
+ * Model MarketBet
+ * 
+ */
+export type MarketBet = Prisma.MarketBetModel
+/**
+ * Model BetSlip
+ * 
+ */
+export type BetSlip = Prisma.BetSlipModel
+/**
+ * Model MatchEvent
+ * 
+ */
+export type MatchEvent = Prisma.MatchEventModel

@@ -11,6 +11,9 @@ import {
   Tv,
   TrendingUp,
   ArrowRight,
+  Trophy,
+  Star,
+  Crown,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +25,7 @@ import { MatchBetCard } from '@/components/betting/match-bet-card';
 import { TopOddsLeaderboard } from '@/components/betting/top-odds-leaderboard';
 import { RecentBetsFeed } from '@/components/betting/recent-bets-feed';
 import { HowToBetCard } from '@/components/betting/how-to-bet-card';
+import { ParisSubnav } from '@/components/betting/paris-subnav';
 
 type ActionResult<T> = { success: boolean; data?: T; error?: string };
 
@@ -36,22 +40,39 @@ type Stats = {
   uniqueBettors: number;
 };
 
+type TournamentMarketSummary = {
+  id: string;
+  name: string;
+  startDate: string;
+  marketsCount: number;
+  marketTypes: string[];
+  totalPool: number;
+  totalBets: number;
+};
+
 type PageProps = {
   matches: Match[];
   topOdds: TopRow[];
   recentBets: Bet[];
   stats: Stats;
+  tournamentMarkets: TournamentMarketSummary[];
 };
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
-  const { getOpenBettingMatches, getTopLiveOdds, getRecentBets, getGlobalBettingStats } =
-    await import('@/actions/betting');
+  const {
+    getOpenBettingMatches,
+    getTopLiveOdds,
+    getRecentBets,
+    getGlobalBettingStats,
+    getTournamentsWithOpenMarkets,
+  } = await import('@/actions/betting');
 
-  const [matchesRes, topRes, recentRes, statsRes] = await Promise.all([
+  const [matchesRes, topRes, recentRes, statsRes, tournamentsRes] = await Promise.all([
     getOpenBettingMatches() as Promise<ActionResult<Match[]>>,
     getTopLiveOdds(8) as Promise<ActionResult<TopRow[]>>,
     getRecentBets(15) as Promise<ActionResult<Bet[]>>,
     getGlobalBettingStats() as Promise<ActionResult<Stats>>,
+    getTournamentsWithOpenMarkets() as Promise<ActionResult<TournamentMarketSummary[]>>,
   ]);
 
   return {
@@ -62,6 +83,10 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
       stats: statsRes.success && statsRes.data
         ? statsRes.data
         : { totalWagered: 0, totalBets: 0, pendingBets: 0, uniqueBettors: 0 },
+      tournamentMarkets:
+        tournamentsRes.success && tournamentsRes.data
+          ? JSON.parse(JSON.stringify(tournamentsRes.data))
+          : [],
     },
   };
 };
@@ -118,7 +143,7 @@ function StatCell({
 }
 
 export default function ParisPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const { matches, topOdds, recentBets, stats } = props;
+  const { matches, topOdds, recentBets, stats, tournamentMarkets } = props;
 
   return (
     <>
@@ -131,6 +156,8 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
+        <ParisSubnav active="live" />
+
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
@@ -236,6 +263,80 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
             </div>
           </div>
         </section>
+
+        {/* TOURNAMENT MARKETS — paris longue durée */}
+        {tournamentMarkets.length > 0 && (
+          <section className="relative bg-black border-b border-white/10 py-16">
+            <div className="container mx-auto px-4">
+              <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
+                <div>
+                  <SectionEyebrow num="LONG" label="Paris longue durée" accent="purple" />
+                  <h2 className="text-3xl md:text-5xl font-black mt-4 leading-[0.95] tracking-tight">
+                    Tournois <span className="text-gradient-worldcup">à parier</span>
+                  </h2>
+                  <p className="text-white/50 mt-3 font-mono text-sm uppercase tracking-[0.22em]">
+                    / vainqueur · top buteur · MVP
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {tournamentMarkets.map((t, i) => (
+                  <motion.div
+                    key={t.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i * 0.05, 0.3) }}
+                  >
+                    <Link
+                      href={`/paris/tournoi/${t.id}`}
+                      className="group block rounded-xl border border-white/10 bg-white/[0.02] hover:border-yellow-400/40 hover:bg-yellow-500/[0.02] transition-all overflow-hidden"
+                    >
+                      <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Trophy className="w-4 h-4 text-yellow-300 shrink-0" />
+                            <span className="text-base font-black text-white tracking-tight truncate">
+                              {t.name}
+                            </span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-yellow-300 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                      <div className="px-5 py-5 space-y-3">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {t.marketTypes.includes('TOURNAMENT_WINNER') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded border border-emerald-500/30 bg-emerald-500/5 text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-300">
+                              <Crown className="w-3 h-3" /> Vainqueur
+                            </span>
+                          )}
+                          {t.marketTypes.includes('TOURNAMENT_TOP_SCORER') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded border border-yellow-500/30 bg-yellow-500/5 text-[9px] font-mono uppercase tracking-[0.22em] text-yellow-300">
+                              <Star className="w-3 h-3" /> Top buteur
+                            </span>
+                          )}
+                          {t.marketTypes.includes('TOURNAMENT_MVP') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded border border-purple-500/30 bg-purple-500/5 text-[9px] font-mono uppercase tracking-[0.22em] text-purple-300">
+                              <Trophy className="w-3 h-3" /> MVP
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.22em]">
+                          <span className="text-white/45">
+                            {t.totalBets} paris · {t.totalPool.toLocaleString('fr-FR')} pts
+                          </span>
+                          <span className="text-yellow-300 font-bold">
+                            {t.marketsCount} marché{t.marketsCount > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* RECENT BETS — full width */}
         <section className="relative bg-black border-b border-white/10 py-16">
