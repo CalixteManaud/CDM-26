@@ -88,7 +88,6 @@ type BettingDetails = {
 
 type UserBettingState = {
   twitchUsername: string | null;
-  blockedByTwitch: boolean;
   alreadyBetSite: boolean;
 } | null;
 
@@ -134,7 +133,6 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
     const statusRes = await getUserBetStatusForMatch({ userId: dbUser.id, matchId });
     userBetting = {
       twitchUsername: dbUser.twitchUsername ?? null,
-      blockedByTwitch: statusRes.success ? statusRes.data!.blockedByTwitch : false,
       alreadyBetSite: statusRes.success ? statusRes.data!.alreadyBetSite : false,
     };
   }
@@ -502,7 +500,6 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                 match={props.betting.match}
                 recentBets={props.betting.recentBets}
                 userTwitchUsername={props.userBetting?.twitchUsername ?? null}
-                blockedByTwitch={props.userBetting?.blockedByTwitch ?? false}
                 alreadyBetSite={props.userBetting?.alreadyBetSite ?? false}
               />
             )}

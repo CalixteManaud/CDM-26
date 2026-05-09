@@ -1818,7 +1818,6 @@ export const BetScalarFieldEnum = {
   userId: 'userId',
   outcome: 'outcome',
   pickedTeamId: 'pickedTeamId',
-  source: 'source',
   wizebotDebitTxId: 'wizebotDebitTxId',
   pointsWagered: 'pointsWagered',
   oddsAtPlacement: 'oddsAtPlacement',
@@ -1877,7 +1876,6 @@ export const MarketBetScalarFieldEnum = {
   outcomeKey: 'outcomeKey',
   pointsWagered: 'pointsWagered',
   oddsAtPlacement: 'oddsAtPlacement',
-  source: 'source',
   status: 'status',
   actualPayout: 'actualPayout',
   settledAt: 'settledAt',
@@ -1901,7 +1899,6 @@ export const BetSlipScalarFieldEnum = {
   actualPayout: 'actualPayout',
   status: 'status',
   settledAt: 'settledAt',
-  source: 'source',
   wizebotDebitTxId: 'wizebotDebitTxId',
   wizebotCreditTxId: 'wizebotCreditTxId',
   createdAt: 'createdAt',
@@ -2086,20 +2083,6 @@ export type EnumBetOutcomeFieldRefInput<$PrismaModel> = FieldRefInputType<$Prism
  * Reference to a field of type 'BetOutcome[]'
  */
 export type ListEnumBetOutcomeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BetOutcome[]'>
-    
-
-
-/**
- * Reference to a field of type 'BetSource'
- */
-export type EnumBetSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BetSource'>
-    
-
-
-/**
- * Reference to a field of type 'BetSource[]'
- */
-export type ListEnumBetSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BetSource[]'>
     
 
 

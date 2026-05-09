@@ -175,8 +175,8 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
               Mon <span className="text-gradient-worldcup">profil.</span>
             </h1>
             <p className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed">
-              Gère ton identité, ton avatar et ta liaison Twitch pour parier dans le chat de la
-              chaîne CDM 26.
+              Gère ton identité, ton avatar et ta liaison Twitch — indispensable pour miser tes points
+              de chaîne sur les paris CDM 26.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -273,7 +273,7 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
                     </div>
                   </div>
                   <Badge className="bg-purple-500/10 border-purple-500/30 text-purple-300 uppercase tracking-[0.22em] text-[10px] font-mono shrink-0">
-                    Wizebot · !parier
+                    Points Wizebot
                   </Badge>
                 </div>
 
@@ -447,12 +447,9 @@ function TwitchLinkCard({
               @{user.twitchUsername}
             </div>
             <p className="text-xs text-white/65 mt-3 leading-relaxed">
-              Ton compte Twitch est lié automatiquement via Clerk. Tu peux maintenant utiliser{' '}
-              <code className="text-purple-300 bg-purple-500/10 border border-purple-500/30 px-1.5 py-0.5 rounded text-[11px] font-mono">
-                !parier
-              </code>{' '}
-              dans le chat de la chaîne CDM 26. Pour délier, va dans les paramètres Clerk via le
-              bouton avatar en haut à droite.
+              Ton compte Twitch est lié automatiquement via Clerk. Tu peux maintenant miser tes
+              points de chaîne (gérés par Wizebot) sur les matchs CDM 26 depuis le site. Pour
+              délier, va dans les paramètres Clerk via le bouton avatar en haut à droite.
             </p>
           </div>
         </div>
@@ -480,7 +477,7 @@ function TwitchLinkCard({
             </div>
             <p className="text-xs text-white/65 mt-3 leading-relaxed">
               Pour plus de sécurité, lie ton compte Twitch via OAuth. Ça garantit que c&apos;est
-              bien <strong className="text-white">toi</strong> qui paries depuis le chat.
+              bien <strong className="text-white">toi</strong> qui mises tes points lors d&apos;un pari.
             </p>
           </div>
         </div>
@@ -530,11 +527,8 @@ function TwitchLinkCard({
             Lie ton compte pour <span className="text-gradient-twitch">parier.</span>
           </h3>
           <p className="text-xs text-white/60 leading-relaxed">
-            Pour utiliser{' '}
-            <code className="text-purple-300 bg-purple-500/10 border border-purple-500/30 px-1.5 py-0.5 rounded text-[11px] font-mono">
-              !parier
-            </code>{' '}
-            dans le chat de la chaîne CDM 26 et miser tes points Wizebot, lie ton compte Twitch.
+            Pour parier sur les matchs CDM 26, lie ton compte Twitch — c&apos;est l&apos;adresse
+            sur laquelle tes points de chaîne (Wizebot) seront débités/crédités.
           </p>
         </div>
       </div>

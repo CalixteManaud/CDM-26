@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   Trophy,
   Coins,
-  Tv,
   ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -24,7 +23,6 @@ type BetRow = {
   oddsAtPlacement: { toString(): string } | number;
   status: string;
   actualPayout: number;
-  source: 'WIZEBOT' | 'SITE';
   createdAt: string | Date;
   settledAt: string | Date | null;
   match: {
@@ -228,10 +226,6 @@ export function MyBetsHistory({ bets }: { bets: BetRow[] }) {
                             )}
                           >
                             {oc.text} · {pickedTeamLabel(b)}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.22em] text-white/45">
-                            <Tv className="w-3 h-3" />
-                            {b.source === 'WIZEBOT' ? 'Twitch chat' : 'Site'}
                           </span>
                         </div>
                         <div className="flex items-center gap-5">

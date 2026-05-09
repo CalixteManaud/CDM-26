@@ -151,7 +151,7 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
         <title>Paris en direct — CDM 26</title>
         <meta
           name="description"
-          content="Toutes les cotes en direct CDM 26. Pari mutuel via les points de chaîne Twitch et Wizebot. Les plus grosses cotes, le flux des mises et l'état des pools."
+          content="Toutes les cotes en direct CDM 26. Pari mutuel sur le site avec tes points de chaîne Twitch (Wizebot). Les plus grosses cotes, le flux des mises et l'état des pools."
         />
       </Head>
 
@@ -172,15 +172,16 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
                   <span className="italic font-light text-white/35">en direct.</span>
                 </h1>
                 <p className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed">
-                  Pari mutuel sur les points de chaîne Twitch via Wizebot. Les cotes bougent en temps réel
-                  selon l'état du pool. Pas de bookmaker — tu joues contre les autres viewers.
+                  Tu paries depuis le site avec tes points de chaîne Twitch (gérés par Wizebot). Pari mutuel —
+                  les cotes bougent en temps réel selon l&apos;état du pool. Pas de bookmaker, tu joues contre
+                  les autres viewers.
                 </p>
                 <div className="mt-7 flex flex-wrap items-center gap-3">
                   <Badge className="bg-yellow-500/10 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <CircleDot className="w-3 h-3 mr-1" /> Live
                   </Badge>
                   <Badge className="bg-purple-500/10 border-purple-500/30 text-purple-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                    <Tv className="w-3 h-3 mr-1" /> Wizebot · Twitch
+                    <Tv className="w-3 h-3 mr-1" /> Points Wizebot
                   </Badge>
                   <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Coins className="w-3 h-3 mr-1" /> Pari mutuel
@@ -290,9 +291,9 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
                   >
                     <Link
                       href={`/paris/tournoi/${t.id}`}
-                      className="group block rounded-xl border border-white/10 bg-white/[0.02] hover:border-yellow-400/40 hover:bg-yellow-500/[0.02] transition-all overflow-hidden"
+                      className="group block rounded-xl border border-white/10 bg-white/2 hover:border-yellow-400/40 hover:bg-yellow-500/2 transition-all overflow-hidden"
                     >
-                      <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+                      <div className="px-5 py-4 border-b border-white/5 bg-white/2">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Trophy className="w-4 h-4 text-yellow-300 shrink-0" />

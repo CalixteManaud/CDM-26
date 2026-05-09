@@ -84,13 +84,14 @@ const ARTICLES = [
   {
     code: '04',
     icon: Coins,
-    title: "Paris Wizebot — pari mutuel",
+    title: "Paris — pari mutuel",
     accent: 'yellow' as Accent,
     body: [
-      "Les paris s'effectuent uniquement avec des points de chaîne Twitch (sans valeur monétaire réelle).",
+      "Les paris se placent uniquement depuis le site cdm26.com, sur la page d'un match ouvert.",
+      "Les mises sont débitées sur tes points de chaîne Twitch (gérés par Wizebot) — aucune valeur monétaire réelle.",
       "Le système est en pari mutuel : les cotes sont calculées dynamiquement selon le pool, avec une marge maison de 5%.",
-      "Une fois la commande !parier validée, le pari est définitif (idempotence garantie). Aucun remboursement n'est possible.",
-      "Les gains sont crédités automatiquement après validation officielle du score. En cas d'échec, l'admin peut relancer le crédit.",
+      "Une fois validé, le pari est définitif. Aucun remboursement n'est possible (sauf match annulé → mise remboursée intégralement).",
+      "Les gains sont crédités automatiquement après validation officielle du score. En cas d'échec côté Wizebot, l'admin peut relancer le crédit.",
       "L'organisation n'est pas responsable d'un éventuel dysfonctionnement de Wizebot ou de Twitch entraînant un retard de crédit.",
     ],
   },
@@ -162,7 +163,7 @@ export default function TermsPage() {
     <>
       <Head>
         <title>Conditions d'utilisation — CDM 26</title>
-        <meta name="description" content="Conditions générales d'utilisation CDM 26 — accès, conduite, paris Wizebot, responsabilité, sanctions." />
+        <meta name="description" content="Conditions générales d'utilisation CDM 26 — accès, conduite, paris, responsabilité, sanctions." />
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">

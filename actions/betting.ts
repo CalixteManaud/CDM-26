@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { computeLiveOdds } from '@/lib/utils/betting';
-import { BetSource, BetStatus, MatchStatus } from '@/prisma/prisma-client/enums';
+import { BetStatus, MatchStatus } from '@/prisma/prisma-client/enums';
 
 const TEAM_SELECT = {
   id: true,
@@ -246,21 +246,15 @@ export async function getMatchBettingDetails(matchId: string) {
 }
 
 /**
- * Statut de pari de l'user courant sur un match donné.
- * Sert à savoir si le verrou Twitch est actif (cas où l'user a déjà parié via
- * le chat) ou si on autorise un pari supplémentaire via le site.
+ * Indique si l'user courant a déjà parié sur un match donné.
+ * Pas un verrou — juste un flag UX pour informer ("tu as déjà 2 paris sur ce match").
  */
 export async function getUserBetStatusForMatch(params: { userId: string; matchId: string }) {
   try {
-    const bets = await prisma.bet.findMany({
+    const count = await prisma.bet.count({
       where: { userId: params.userId, matchId: params.matchId },
-      select: { source: true },
     });
-
-    const blockedByTwitch = bets.some((b) => b.source === BetSource.WIZEBOT);
-    const alreadyBetSite = bets.some((b) => b.source === BetSource.SITE);
-
-    return { success: true, data: { blockedByTwitch, alreadyBetSite } };
+    return { success: true, data: { alreadyBetSite: count > 0 } };
   } catch (error) {
     console.error('Error fetching user bet status:', error);
     return { success: false, error: 'Erreur lors de la récupération du statut' };
@@ -285,7 +279,6 @@ export async function getUserBetsHistory(userId: string) {
           oddsAtPlacement: true,
           status: true,
           actualPayout: true,
-          source: true,
           createdAt: true,
           settledAt: true,
           match: {

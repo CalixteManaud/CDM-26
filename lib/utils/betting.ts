@@ -1,5 +1,8 @@
 /**
- * Logique métier pour les paris en pari mutuel (système Wizebot).
+ * Logique métier pour les paris en pari mutuel.
+ *
+ * Entrée unique : UI site (POST /api/bets/place). Monnaie : points de chaîne
+ * Twitch gérés par Wizebot — débit/crédit via l'API Wizebot.
  *
  * Calcul des cotes:
  *   cote_X = (totalPool / poolPourX) * (1 - houseCut)
@@ -11,7 +14,7 @@
  */
 
 import prisma from '@/lib/prisma';
-import { BetOutcome, BetSource, BetStatus, MatchStatus } from '@/prisma/prisma-client/enums';
+import { BetOutcome, BetStatus } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints } from '@/lib/wizebot';
 import { computeLiveOdds, isBettingOpen } from './odds';
 
@@ -35,19 +38,17 @@ export class BettingError extends Error {
  * Effectue la validation, l'incrémentation atomique du pool, et la création du Bet
  * dans une transaction Prisma.
  *
- * `wizebotEventId` permet l'idempotence si Wizebot retry.
+ * Le débit Wizebot est effectué AMONT par l'API route (cf. pages/api/bets/place.ts) ;
+ * `wizebotDebitTxId` est l'ID retourné par Wizebot, stocké pour audit / refund manuel.
  */
 export async function placeBet(params: {
   userId: string;
   matchId: string;
   outcome: BetOutcome;
   pointsWagered: number;
-  source?: BetSource; // défaut WIZEBOT pour rétro-compatibilité avec le webhook chat
-  wizebotEventId?: string;
-  wizebotDebitTxId?: string; // pour les paris site, traçabilité du débit
+  wizebotDebitTxId?: string; // ID retourné par Wizebot points/remove
 }): Promise<{ betId: string; oddsAtPlacement: number }> {
   const { userId, matchId, outcome, pointsWagered } = params;
-  const source = params.source ?? BetSource.WIZEBOT;
 
   // Validation des points
   if (!Number.isInteger(pointsWagered) || pointsWagered < MIN_BET_POINTS) {
@@ -58,19 +59,6 @@ export async function placeBet(params: {
   }
   if (pointsWagered > MAX_BET_POINTS) {
     throw new BettingError(`Mise maximum: ${MAX_BET_POINTS} pts`, 'MAX_BET');
-  }
-
-  // Idempotence: si on a déjà ce wizebotEventId, retourner le pari existant
-  if (params.wizebotEventId) {
-    const existing = await prisma.bet.findUnique({
-      where: { wizebotEventId: params.wizebotEventId },
-    });
-    if (existing) {
-      return {
-        betId: existing.id,
-        oddsAtPlacement: Number(existing.oddsAtPlacement),
-      };
-    }
   }
 
   return prisma.$transaction(async (tx) => {
@@ -86,20 +74,6 @@ export async function placeBet(params: {
       throw new BettingError(
         'Les paris sont fermés sur ce match',
         'BETTING_CLOSED'
-      );
-    }
-
-    // Verrou d'exclusivité — un user qui a déjà parié via l'autre canal sur ce
-    // match ne peut pas parier via celui-ci (évite le double-dipping Twitch+Site).
-    const conflicting = await tx.bet.findFirst({
-      where: { userId, matchId, source: { not: source } },
-      select: { source: true },
-    });
-    if (conflicting) {
-      const otherChannel = conflicting.source === BetSource.WIZEBOT ? 'le chat Twitch' : 'le site';
-      throw new BettingError(
-        `Tu as déjà parié via ${otherChannel} sur ce match. Reste sur ce canal pour les paris suivants.`,
-        'CHANNEL_CONFLICT'
       );
     }
 
@@ -157,8 +131,6 @@ export async function placeBet(params: {
         pickedTeamId,
         pointsWagered,
         oddsAtPlacement: odds ?? 1, // si seul à parier sur cette issue, cote=1 par défaut
-        source,
-        wizebotEventId: params.wizebotEventId ?? null,
         wizebotDebitTxId: params.wizebotDebitTxId ?? null,
       },
     });

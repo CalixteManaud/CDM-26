@@ -72,14 +72,6 @@ export const BetStatus = {
 export type BetStatus = (typeof BetStatus)[keyof typeof BetStatus]
 
 
-export const BetSource = {
-  WIZEBOT: 'WIZEBOT',
-  SITE: 'SITE'
-} as const
-
-export type BetSource = (typeof BetSource)[keyof typeof BetSource]
-
-
 export const BettingMarketType = {
   MATCH_EXACT_SCORE: 'MATCH_EXACT_SCORE',
   MATCH_TOTAL_GOALS: 'MATCH_TOTAL_GOALS',

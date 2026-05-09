@@ -45,7 +45,6 @@ export type MarketBetMinAggregateOutputType = {
   outcomeKey: string | null
   pointsWagered: number | null
   oddsAtPlacement: runtime.Decimal | null
-  source: $Enums.BetSource | null
   status: $Enums.BetStatus | null
   actualPayout: number | null
   settledAt: Date | null
@@ -64,7 +63,6 @@ export type MarketBetMaxAggregateOutputType = {
   outcomeKey: string | null
   pointsWagered: number | null
   oddsAtPlacement: runtime.Decimal | null
-  source: $Enums.BetSource | null
   status: $Enums.BetStatus | null
   actualPayout: number | null
   settledAt: Date | null
@@ -83,7 +81,6 @@ export type MarketBetCountAggregateOutputType = {
   outcomeKey: number
   pointsWagered: number
   oddsAtPlacement: number
-  source: number
   status: number
   actualPayout: number
   settledAt: number
@@ -116,7 +113,6 @@ export type MarketBetMinAggregateInputType = {
   outcomeKey?: true
   pointsWagered?: true
   oddsAtPlacement?: true
-  source?: true
   status?: true
   actualPayout?: true
   settledAt?: true
@@ -135,7 +131,6 @@ export type MarketBetMaxAggregateInputType = {
   outcomeKey?: true
   pointsWagered?: true
   oddsAtPlacement?: true
-  source?: true
   status?: true
   actualPayout?: true
   settledAt?: true
@@ -154,7 +149,6 @@ export type MarketBetCountAggregateInputType = {
   outcomeKey?: true
   pointsWagered?: true
   oddsAtPlacement?: true
-  source?: true
   status?: true
   actualPayout?: true
   settledAt?: true
@@ -260,7 +254,6 @@ export type MarketBetGroupByOutputType = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal
-  source: $Enums.BetSource
   status: $Enums.BetStatus
   actualPayout: number
   settledAt: Date | null
@@ -302,7 +295,6 @@ export type MarketBetWhereInput = {
   outcomeKey?: Prisma.StringFilter<"MarketBet"> | string
   pointsWagered?: Prisma.IntFilter<"MarketBet"> | number
   oddsAtPlacement?: Prisma.DecimalFilter<"MarketBet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFilter<"MarketBet"> | $Enums.BetSource
   status?: Prisma.EnumBetStatusFilter<"MarketBet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntFilter<"MarketBet"> | number
   settledAt?: Prisma.DateTimeNullableFilter<"MarketBet"> | Date | string | null
@@ -324,7 +316,6 @@ export type MarketBetOrderByWithRelationInput = {
   outcomeKey?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -349,7 +340,6 @@ export type MarketBetWhereUniqueInput = Prisma.AtLeast<{
   outcomeKey?: Prisma.StringFilter<"MarketBet"> | string
   pointsWagered?: Prisma.IntFilter<"MarketBet"> | number
   oddsAtPlacement?: Prisma.DecimalFilter<"MarketBet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFilter<"MarketBet"> | $Enums.BetSource
   status?: Prisma.EnumBetStatusFilter<"MarketBet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntFilter<"MarketBet"> | number
   settledAt?: Prisma.DateTimeNullableFilter<"MarketBet"> | Date | string | null
@@ -371,7 +361,6 @@ export type MarketBetOrderByWithAggregationInput = {
   outcomeKey?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -398,7 +387,6 @@ export type MarketBetScalarWhereWithAggregatesInput = {
   outcomeKey?: Prisma.StringWithAggregatesFilter<"MarketBet"> | string
   pointsWagered?: Prisma.IntWithAggregatesFilter<"MarketBet"> | number
   oddsAtPlacement?: Prisma.DecimalWithAggregatesFilter<"MarketBet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceWithAggregatesFilter<"MarketBet"> | $Enums.BetSource
   status?: Prisma.EnumBetStatusWithAggregatesFilter<"MarketBet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntWithAggregatesFilter<"MarketBet"> | number
   settledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"MarketBet"> | Date | string | null
@@ -415,7 +403,6 @@ export type MarketBetCreateInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -436,7 +423,6 @@ export type MarketBetUncheckedCreateInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -453,7 +439,6 @@ export type MarketBetUpdateInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -474,7 +459,6 @@ export type MarketBetUncheckedUpdateInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -493,7 +477,6 @@ export type MarketBetCreateManyInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -510,7 +493,6 @@ export type MarketBetUpdateManyMutationInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -528,7 +510,6 @@ export type MarketBetUncheckedUpdateManyInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -557,7 +538,6 @@ export type MarketBetCountOrderByAggregateInput = {
   outcomeKey?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrder
@@ -582,7 +562,6 @@ export type MarketBetMaxOrderByAggregateInput = {
   outcomeKey?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrder
@@ -601,7 +580,6 @@ export type MarketBetMinOrderByAggregateInput = {
   outcomeKey?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrder
@@ -750,7 +728,6 @@ export type MarketBetCreateWithoutUserInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -769,7 +746,6 @@ export type MarketBetUncheckedCreateWithoutUserInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -817,7 +793,6 @@ export type MarketBetScalarWhereInput = {
   outcomeKey?: Prisma.StringFilter<"MarketBet"> | string
   pointsWagered?: Prisma.IntFilter<"MarketBet"> | number
   oddsAtPlacement?: Prisma.DecimalFilter<"MarketBet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFilter<"MarketBet"> | $Enums.BetSource
   status?: Prisma.EnumBetStatusFilter<"MarketBet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntFilter<"MarketBet"> | number
   settledAt?: Prisma.DateTimeNullableFilter<"MarketBet"> | Date | string | null
@@ -834,7 +809,6 @@ export type MarketBetCreateWithoutMarketInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -853,7 +827,6 @@ export type MarketBetUncheckedCreateWithoutMarketInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -896,7 +869,6 @@ export type MarketBetCreateWithoutSlipInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -916,7 +888,6 @@ export type MarketBetUncheckedCreateWithoutSlipInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -959,7 +930,6 @@ export type MarketBetCreateManyUserInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -976,7 +946,6 @@ export type MarketBetUpdateWithoutUserInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -995,7 +964,6 @@ export type MarketBetUncheckedUpdateWithoutUserInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1013,7 +981,6 @@ export type MarketBetUncheckedUpdateManyWithoutUserInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1031,7 +998,6 @@ export type MarketBetCreateManyMarketInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -1048,7 +1014,6 @@ export type MarketBetUpdateWithoutMarketInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1067,7 +1032,6 @@ export type MarketBetUncheckedUpdateWithoutMarketInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1085,7 +1049,6 @@ export type MarketBetUncheckedUpdateManyWithoutMarketInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1104,7 +1067,6 @@ export type MarketBetCreateManySlipInput = {
   outcomeKey: string
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: $Enums.BetSource
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
@@ -1120,7 +1082,6 @@ export type MarketBetUpdateWithoutSlipInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1140,7 +1101,6 @@ export type MarketBetUncheckedUpdateWithoutSlipInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1158,7 +1118,6 @@ export type MarketBetUncheckedUpdateManyWithoutSlipInput = {
   outcomeKey?: Prisma.StringFieldUpdateOperationsInput | string
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1178,7 +1137,6 @@ export type MarketBetSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   outcomeKey?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
-  source?: boolean
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
@@ -1200,7 +1158,6 @@ export type MarketBetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   outcomeKey?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
-  source?: boolean
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
@@ -1222,7 +1179,6 @@ export type MarketBetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   outcomeKey?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
-  source?: boolean
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
@@ -1244,7 +1200,6 @@ export type MarketBetSelectScalar = {
   outcomeKey?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
-  source?: boolean
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
@@ -1256,7 +1211,7 @@ export type MarketBetSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MarketBetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "marketId" | "userId" | "outcomeKey" | "pointsWagered" | "oddsAtPlacement" | "source" | "status" | "actualPayout" | "settledAt" | "slipId" | "wizebotDebitTxId" | "wizebotCreditTxId" | "wizebotCreditError" | "createdAt" | "updatedAt", ExtArgs["result"]["marketBet"]>
+export type MarketBetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "marketId" | "userId" | "outcomeKey" | "pointsWagered" | "oddsAtPlacement" | "status" | "actualPayout" | "settledAt" | "slipId" | "wizebotDebitTxId" | "wizebotCreditTxId" | "wizebotCreditError" | "createdAt" | "updatedAt", ExtArgs["result"]["marketBet"]>
 export type MarketBetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   market?: boolean | Prisma.BettingMarketDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1287,7 +1242,6 @@ export type $MarketBetPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     outcomeKey: string
     pointsWagered: number
     oddsAtPlacement: runtime.Decimal
-    source: $Enums.BetSource
     status: $Enums.BetStatus
     actualPayout: number
     settledAt: Date | null
@@ -1729,7 +1683,6 @@ export interface MarketBetFieldRefs {
   readonly outcomeKey: Prisma.FieldRef<"MarketBet", 'String'>
   readonly pointsWagered: Prisma.FieldRef<"MarketBet", 'Int'>
   readonly oddsAtPlacement: Prisma.FieldRef<"MarketBet", 'Decimal'>
-  readonly source: Prisma.FieldRef<"MarketBet", 'BetSource'>
   readonly status: Prisma.FieldRef<"MarketBet", 'BetStatus'>
   readonly actualPayout: Prisma.FieldRef<"MarketBet", 'Int'>
   readonly settledAt: Prisma.FieldRef<"MarketBet", 'DateTime'>

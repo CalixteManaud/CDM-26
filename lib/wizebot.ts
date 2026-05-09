@@ -1,12 +1,12 @@
 /**
  * Wizebot integration helpers.
  *
- * Wizebot fournit deux ponts :
- *  - Inbound  (Wizebot → notre API) : webhook custom configurable via
- *    "Actions web" dans le dashboard Wizebot. On vérifie un secret partagé
- *    passé en header `x-wizebot-secret`.
- *  - Outbound (notre API → Wizebot) : appels REST authentifiés par
- *    une clé API stockée dans WIZEBOT_API_KEY.
+ * Wizebot sert UNIQUEMENT de wallet pour les points de chaîne Twitch :
+ *  - debitWizebotPoints : débite quand l'user place un pari depuis le site
+ *  - creditWizebotPoints : crédite quand le settlement attribue un payout
+ *
+ * Pas d'inbound webhook — les paris ne passent plus par le chat, donc plus
+ * de commande !parier ni d'endpoint /api/wizebot/bets.
  *
  * En dev (env vars manquantes), les appels sortants sont mockés et loggés
  * pour que tu puisses tester le flow complet sans toucher au vrai bot.
@@ -14,38 +14,10 @@
 
 const WIZEBOT_API_BASE = process.env.WIZEBOT_API_BASE || 'https://api.wizebot.tv/v1';
 
-export class WizebotConfigError extends Error {}
 export class WizebotApiError extends Error {
   constructor(message: string, public statusCode?: number, public body?: unknown) {
     super(message);
   }
-}
-
-/**
- * Valide qu'un webhook entrant vient bien de Wizebot via le secret partagé.
- * Constant-time comparison pour éviter les timing attacks.
- */
-export function verifyWizebotInbound(receivedSecret: string | undefined | string[]): boolean {
-  const expected = process.env.WIZEBOT_INBOUND_SECRET;
-  if (!expected) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new WizebotConfigError(
-        'WIZEBOT_INBOUND_SECRET non défini — les paris ne peuvent pas être validés en production.'
-      );
-    }
-    // En dev, on tolère l'absence pour permettre les tests rapides
-    console.warn('[wizebot] WIZEBOT_INBOUND_SECRET non défini — validation désactivée (dev only)');
-    return true;
-  }
-
-  const provided = Array.isArray(receivedSecret) ? receivedSecret[0] : receivedSecret;
-  if (!provided || provided.length !== expected.length) return false;
-
-  let mismatch = 0;
-  for (let i = 0; i < expected.length; i++) {
-    mismatch |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
-  }
-  return mismatch === 0;
 }
 
 /**

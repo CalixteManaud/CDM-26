@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
-import { Coins, Lock, AlertTriangle } from 'lucide-react';
+import { Coins, Lock, AlertTriangle, Info } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +28,7 @@ type Props = {
   pool: Pool | null;
   /** twitchUsername lié de l'user courant (null si pas lié) */
   userTwitchUsername: string | null;
-  /** True si l'user a déjà parié via Twitch sur ce match (verrou exclusivité) */
-  blockedByTwitch?: boolean;
-  /** True si l'user a déjà parié via le site (autorisé à rejouer) */
+  /** True si l'user a déjà placé au moins un pari sur ce match */
   alreadyBetSite?: boolean;
 };
 
@@ -62,7 +60,6 @@ export function PlaceBetForm({
   awayShort,
   pool,
   userTwitchUsername,
-  blockedByTwitch = false,
   alreadyBetSite = false,
 }: Props) {
   const router = useRouter();
@@ -109,7 +106,7 @@ export function PlaceBetForm({
           <div>
             <div className="text-sm font-bold text-yellow-200">Compte Twitch non lié</div>
             <p className="text-[11px] text-white/60 mt-1 leading-relaxed">
-              Les paris débitent tes points Wizebot — il faut donc lier ton compte Twitch.
+              Les mises sont débitées sur tes points de chaîne Wizebot — il faut donc lier ton compte Twitch.
             </p>
             <Link
               href="/profile"
@@ -117,24 +114,6 @@ export function PlaceBetForm({
             >
               Lier mon compte → /profile
             </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (blockedByTwitch) {
-    return (
-      <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-5">
-        <div className="flex gap-3 items-start">
-          <Lock className="h-5 w-5 text-purple-300 flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="text-sm font-bold text-purple-200">Verrou Twitch actif</div>
-            <p className="text-[11px] text-white/60 mt-1 leading-relaxed">
-              Tu as déjà parié via <strong className="text-purple-300">le chat Twitch</strong> sur ce match.
-              Pour rester cohérent, continue sur ce canal — la commande <code className="text-yellow-300 font-mono">!parier</code>
-              dans le chat de la stream.
-            </p>
           </div>
         </div>
       </div>
@@ -220,7 +199,7 @@ export function PlaceBetForm({
       {/* Points input */}
       <div>
         <Label htmlFor="bet-points" className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/50">
-          Mise (points Wizebot)
+          Mise (points de chaîne)
         </Label>
         <div className="mt-2 flex gap-2">
           <Input
@@ -264,8 +243,8 @@ export function PlaceBetForm({
 
       {alreadyBetSite && (
         <div className="flex gap-2 items-start text-[10px] font-mono uppercase tracking-[0.22em] text-white/50">
-          <AlertTriangle className="h-3 w-3 text-yellow-400/70 flex-shrink-0 mt-0.5" />
-          <span>tu as déjà parié sur ce match — tu peux remiser, le verrou twitch reste actif</span>
+          <Info className="h-3 w-3 text-yellow-400/70 flex-shrink-0 mt-0.5" />
+          <span>tu as déjà un pari sur ce match — tu peux en placer d&apos;autres</span>
         </div>
       )}
 
@@ -281,8 +260,8 @@ export function PlaceBetForm({
       </ShimmerButton>
 
       <p className="text-[10px] text-white/35 leading-relaxed font-mono">
-        Le débit est effectué sur tes points Wizebot avant le placement. Cote affichée = cote au moment du placement,
-        payout final recalculé au coup d'envoi.
+        Le débit est effectué sur tes points de chaîne Wizebot avant le placement. Cote affichée = cote au
+        moment du placement, payout final recalculé au coup d&apos;envoi.
       </p>
     </form>
   );

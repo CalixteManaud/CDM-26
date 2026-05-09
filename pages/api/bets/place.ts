@@ -3,13 +3,12 @@
  *
  * Permet à un user authentifié (Clerk) de placer un pari depuis le site.
  * Flow:
- *  1. Auth Clerk → DB user
+ *  1. Auth Clerk → DB user (twitchUsername requis pour le débit Wizebot)
  *  2. Validation body (matchId, outcome, points)
- *  3. Pré-check du verrou exclusivité (avant de débiter Wizebot inutilement)
+ *  3. Pré-check fenêtre de paris (évite un débit Wizebot pour rien)
  *  4. Débit Wizebot (points/remove) — si fail (solde insuffisant, réseau...) → abort
- *  5. placeBet(source: SITE, wizebotDebitTxId) — si fail, on log : le débit est
- *     déjà fait côté Wizebot. Cas rare (race condition sur fenêtre de paris)
- *     mais on enregistre l'erreur pour audit/refund manuel.
+ *  5. placeBet(wizebotDebitTxId) — si fail après débit (race rare), on log
+ *     pour permettre un refund manuel.
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -18,7 +17,7 @@ import { syncClerkUserById } from '@/lib/clerk';
 import prisma from '@/lib/prisma';
 import { placeBet, BettingError } from '@/lib/utils/betting';
 import { debitWizebotPoints } from '@/lib/wizebot';
-import { BetOutcome, BetSource } from '@/prisma/prisma-client/enums';
+import { BetOutcome } from '@/prisma/prisma-client/enums';
 import { isBettingOpen } from '@/lib/utils/odds';
 
 const MIN_POINTS = 1;
@@ -47,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (!dbUser.twitchUsername) {
     return res.status(400).json({
-      error: 'Lie ton compte Twitch sur ton profil pour parier (les points viennent de Wizebot).',
+      error: 'Lie ton compte Twitch sur ton profil pour parier — les mises sont débitées sur tes points de chaîne Wizebot.',
       code: 'NO_TWITCH_LINK',
     });
   }
@@ -82,22 +81,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Les paris sont fermés sur ce match', code: 'BETTING_CLOSED' });
   }
 
-  const conflicting = await prisma.bet.findFirst({
-    where: { userId: dbUser.id, matchId, source: BetSource.WIZEBOT },
-    select: { id: true },
-  });
-  if (conflicting) {
-    return res.status(409).json({
-      error: 'Tu as déjà parié via le chat Twitch sur ce match. Reste sur ce canal.',
-      code: 'CHANNEL_CONFLICT',
-    });
-  }
-
   // 4. Débit Wizebot
   const debit = await debitWizebotPoints({
     twitchUsername: dbUser.twitchUsername,
     amount: points,
-    reason: `CDM 26 — pari site sur ${matchId}`,
+    reason: `CDM 26 — pari sur ${matchId}`,
   });
 
   if (!debit.ok) {
@@ -117,7 +105,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       matchId,
       outcome,
       pointsWagered: points,
-      source: BetSource.SITE,
       wizebotDebitTxId: debit.txId,
     });
 
@@ -127,9 +114,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       oddsAtPlacement: result.oddsAtPlacement,
     });
   } catch (err) {
-    // Edge case : Wizebot débité mais placement KO (race avec la fenêtre de paris,
-    // race avec un pari Twitch sur le même match...). On log explicitement pour
-    // permettre un remboursement manuel.
+    // Edge case : Wizebot débité mais placement KO (race rare avec la fenêtre
+    // de paris). On log explicitement pour permettre un remboursement manuel.
     console.error('[bets/place] DEBIT DONE BUT BET FAILED', {
       userId: dbUser.id,
       matchId,

@@ -44,7 +44,6 @@ export type BetMinAggregateOutputType = {
   userId: string | null
   outcome: $Enums.BetOutcome | null
   pickedTeamId: string | null
-  source: $Enums.BetSource | null
   wizebotDebitTxId: string | null
   pointsWagered: number | null
   oddsAtPlacement: runtime.Decimal | null
@@ -64,7 +63,6 @@ export type BetMaxAggregateOutputType = {
   userId: string | null
   outcome: $Enums.BetOutcome | null
   pickedTeamId: string | null
-  source: $Enums.BetSource | null
   wizebotDebitTxId: string | null
   pointsWagered: number | null
   oddsAtPlacement: runtime.Decimal | null
@@ -84,7 +82,6 @@ export type BetCountAggregateOutputType = {
   userId: number
   outcome: number
   pickedTeamId: number
-  source: number
   wizebotDebitTxId: number
   pointsWagered: number
   oddsAtPlacement: number
@@ -118,7 +115,6 @@ export type BetMinAggregateInputType = {
   userId?: true
   outcome?: true
   pickedTeamId?: true
-  source?: true
   wizebotDebitTxId?: true
   pointsWagered?: true
   oddsAtPlacement?: true
@@ -138,7 +134,6 @@ export type BetMaxAggregateInputType = {
   userId?: true
   outcome?: true
   pickedTeamId?: true
-  source?: true
   wizebotDebitTxId?: true
   pointsWagered?: true
   oddsAtPlacement?: true
@@ -158,7 +153,6 @@ export type BetCountAggregateInputType = {
   userId?: true
   outcome?: true
   pickedTeamId?: true
-  source?: true
   wizebotDebitTxId?: true
   pointsWagered?: true
   oddsAtPlacement?: true
@@ -265,7 +259,6 @@ export type BetGroupByOutputType = {
   userId: string
   outcome: $Enums.BetOutcome
   pickedTeamId: string | null
-  source: $Enums.BetSource
   wizebotDebitTxId: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal
@@ -308,7 +301,6 @@ export type BetWhereInput = {
   userId?: Prisma.UuidFilter<"Bet"> | string
   outcome?: Prisma.EnumBetOutcomeFilter<"Bet"> | $Enums.BetOutcome
   pickedTeamId?: Prisma.UuidNullableFilter<"Bet"> | string | null
-  source?: Prisma.EnumBetSourceFilter<"Bet"> | $Enums.BetSource
   wizebotDebitTxId?: Prisma.StringNullableFilter<"Bet"> | string | null
   pointsWagered?: Prisma.IntFilter<"Bet"> | number
   oddsAtPlacement?: Prisma.DecimalFilter<"Bet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -331,7 +323,6 @@ export type BetOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   outcome?: Prisma.SortOrder
   pickedTeamId?: Prisma.SortOrderInput | Prisma.SortOrder
-  source?: Prisma.SortOrder
   wizebotDebitTxId?: Prisma.SortOrderInput | Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
@@ -358,7 +349,6 @@ export type BetWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.UuidFilter<"Bet"> | string
   outcome?: Prisma.EnumBetOutcomeFilter<"Bet"> | $Enums.BetOutcome
   pickedTeamId?: Prisma.UuidNullableFilter<"Bet"> | string | null
-  source?: Prisma.EnumBetSourceFilter<"Bet"> | $Enums.BetSource
   wizebotDebitTxId?: Prisma.StringNullableFilter<"Bet"> | string | null
   pointsWagered?: Prisma.IntFilter<"Bet"> | number
   oddsAtPlacement?: Prisma.DecimalFilter<"Bet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -380,7 +370,6 @@ export type BetOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   outcome?: Prisma.SortOrder
   pickedTeamId?: Prisma.SortOrderInput | Prisma.SortOrder
-  source?: Prisma.SortOrder
   wizebotDebitTxId?: Prisma.SortOrderInput | Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
@@ -408,7 +397,6 @@ export type BetScalarWhereWithAggregatesInput = {
   userId?: Prisma.UuidWithAggregatesFilter<"Bet"> | string
   outcome?: Prisma.EnumBetOutcomeWithAggregatesFilter<"Bet"> | $Enums.BetOutcome
   pickedTeamId?: Prisma.UuidNullableWithAggregatesFilter<"Bet"> | string | null
-  source?: Prisma.EnumBetSourceWithAggregatesFilter<"Bet"> | $Enums.BetSource
   wizebotDebitTxId?: Prisma.StringNullableWithAggregatesFilter<"Bet"> | string | null
   pointsWagered?: Prisma.IntWithAggregatesFilter<"Bet"> | number
   oddsAtPlacement?: Prisma.DecimalWithAggregatesFilter<"Bet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -425,7 +413,6 @@ export type BetScalarWhereWithAggregatesInput = {
 export type BetCreateInput = {
   id?: string
   outcome: $Enums.BetOutcome
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -448,7 +435,6 @@ export type BetUncheckedCreateInput = {
   userId: string
   outcome: $Enums.BetOutcome
   pickedTeamId?: string | null
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -465,7 +451,6 @@ export type BetUncheckedCreateInput = {
 export type BetUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -488,7 +473,6 @@ export type BetUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
   pickedTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -508,7 +492,6 @@ export type BetCreateManyInput = {
   userId: string
   outcome: $Enums.BetOutcome
   pickedTeamId?: string | null
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -525,7 +508,6 @@ export type BetCreateManyInput = {
 export type BetUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -545,7 +527,6 @@ export type BetUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
   pickedTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -575,7 +556,6 @@ export type BetCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   outcome?: Prisma.SortOrder
   pickedTeamId?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   wizebotDebitTxId?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
@@ -601,7 +581,6 @@ export type BetMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   outcome?: Prisma.SortOrder
   pickedTeamId?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   wizebotDebitTxId?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
@@ -621,7 +600,6 @@ export type BetMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   outcome?: Prisma.SortOrder
   pickedTeamId?: Prisma.SortOrder
-  source?: Prisma.SortOrder
   wizebotDebitTxId?: Prisma.SortOrder
   pointsWagered?: Prisma.SortOrder
   oddsAtPlacement?: Prisma.SortOrder
@@ -771,10 +749,6 @@ export type EnumBetOutcomeFieldUpdateOperationsInput = {
   set?: $Enums.BetOutcome
 }
 
-export type EnumBetSourceFieldUpdateOperationsInput = {
-  set?: $Enums.BetSource
-}
-
 export type EnumBetStatusFieldUpdateOperationsInput = {
   set?: $Enums.BetStatus
 }
@@ -782,7 +756,6 @@ export type EnumBetStatusFieldUpdateOperationsInput = {
 export type BetCreateWithoutUserInput = {
   id?: string
   outcome: $Enums.BetOutcome
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -803,7 +776,6 @@ export type BetUncheckedCreateWithoutUserInput = {
   matchId: string
   outcome: $Enums.BetOutcome
   pickedTeamId?: string | null
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -852,7 +824,6 @@ export type BetScalarWhereInput = {
   userId?: Prisma.UuidFilter<"Bet"> | string
   outcome?: Prisma.EnumBetOutcomeFilter<"Bet"> | $Enums.BetOutcome
   pickedTeamId?: Prisma.UuidNullableFilter<"Bet"> | string | null
-  source?: Prisma.EnumBetSourceFilter<"Bet"> | $Enums.BetSource
   wizebotDebitTxId?: Prisma.StringNullableFilter<"Bet"> | string | null
   pointsWagered?: Prisma.IntFilter<"Bet"> | number
   oddsAtPlacement?: Prisma.DecimalFilter<"Bet"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -869,7 +840,6 @@ export type BetScalarWhereInput = {
 export type BetCreateWithoutPickedTeamInput = {
   id?: string
   outcome: $Enums.BetOutcome
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -890,7 +860,6 @@ export type BetUncheckedCreateWithoutPickedTeamInput = {
   matchId: string
   userId: string
   outcome: $Enums.BetOutcome
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -933,7 +902,6 @@ export type BetUpdateManyWithWhereWithoutPickedTeamInput = {
 export type BetCreateWithoutMatchInput = {
   id?: string
   outcome: $Enums.BetOutcome
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -954,7 +922,6 @@ export type BetUncheckedCreateWithoutMatchInput = {
   userId: string
   outcome: $Enums.BetOutcome
   pickedTeamId?: string | null
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -999,7 +966,6 @@ export type BetCreateManyUserInput = {
   matchId: string
   outcome: $Enums.BetOutcome
   pickedTeamId?: string | null
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1016,7 +982,6 @@ export type BetCreateManyUserInput = {
 export type BetUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1037,7 +1002,6 @@ export type BetUncheckedUpdateWithoutUserInput = {
   matchId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
   pickedTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1056,7 +1020,6 @@ export type BetUncheckedUpdateManyWithoutUserInput = {
   matchId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
   pickedTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1075,7 +1038,6 @@ export type BetCreateManyPickedTeamInput = {
   matchId: string
   userId: string
   outcome: $Enums.BetOutcome
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1092,7 +1054,6 @@ export type BetCreateManyPickedTeamInput = {
 export type BetUpdateWithoutPickedTeamInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1113,7 +1074,6 @@ export type BetUncheckedUpdateWithoutPickedTeamInput = {
   matchId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1132,7 +1092,6 @@ export type BetUncheckedUpdateManyWithoutPickedTeamInput = {
   matchId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1151,7 +1110,6 @@ export type BetCreateManyMatchInput = {
   userId: string
   outcome: $Enums.BetOutcome
   pickedTeamId?: string | null
-  source?: $Enums.BetSource
   wizebotDebitTxId?: string | null
   pointsWagered: number
   oddsAtPlacement: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1168,7 +1126,6 @@ export type BetCreateManyMatchInput = {
 export type BetUpdateWithoutMatchInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1189,7 +1146,6 @@ export type BetUncheckedUpdateWithoutMatchInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
   pickedTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1208,7 +1164,6 @@ export type BetUncheckedUpdateManyWithoutMatchInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   outcome?: Prisma.EnumBetOutcomeFieldUpdateOperationsInput | $Enums.BetOutcome
   pickedTeamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  source?: Prisma.EnumBetSourceFieldUpdateOperationsInput | $Enums.BetSource
   wizebotDebitTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pointsWagered?: Prisma.IntFieldUpdateOperationsInput | number
   oddsAtPlacement?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1230,7 +1185,6 @@ export type BetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
   userId?: boolean
   outcome?: boolean
   pickedTeamId?: boolean
-  source?: boolean
   wizebotDebitTxId?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
@@ -1253,7 +1207,6 @@ export type BetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extension
   userId?: boolean
   outcome?: boolean
   pickedTeamId?: boolean
-  source?: boolean
   wizebotDebitTxId?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
@@ -1276,7 +1229,6 @@ export type BetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extension
   userId?: boolean
   outcome?: boolean
   pickedTeamId?: boolean
-  source?: boolean
   wizebotDebitTxId?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
@@ -1299,7 +1251,6 @@ export type BetSelectScalar = {
   userId?: boolean
   outcome?: boolean
   pickedTeamId?: boolean
-  source?: boolean
   wizebotDebitTxId?: boolean
   pointsWagered?: boolean
   oddsAtPlacement?: boolean
@@ -1313,7 +1264,7 @@ export type BetSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "matchId" | "userId" | "outcome" | "pickedTeamId" | "source" | "wizebotDebitTxId" | "pointsWagered" | "oddsAtPlacement" | "status" | "actualPayout" | "settledAt" | "wizebotEventId" | "wizebotCreditTxId" | "wizebotCreditError" | "createdAt" | "updatedAt", ExtArgs["result"]["bet"]>
+export type BetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "matchId" | "userId" | "outcome" | "pickedTeamId" | "wizebotDebitTxId" | "pointsWagered" | "oddsAtPlacement" | "status" | "actualPayout" | "settledAt" | "wizebotEventId" | "wizebotCreditTxId" | "wizebotCreditError" | "createdAt" | "updatedAt", ExtArgs["result"]["bet"]>
 export type BetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   match?: boolean | Prisma.MatchDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1343,7 +1294,6 @@ export type $BetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
     userId: string
     outcome: $Enums.BetOutcome
     pickedTeamId: string | null
-    source: $Enums.BetSource
     wizebotDebitTxId: string | null
     pointsWagered: number
     oddsAtPlacement: runtime.Decimal
@@ -1786,7 +1736,6 @@ export interface BetFieldRefs {
   readonly userId: Prisma.FieldRef<"Bet", 'String'>
   readonly outcome: Prisma.FieldRef<"Bet", 'BetOutcome'>
   readonly pickedTeamId: Prisma.FieldRef<"Bet", 'String'>
-  readonly source: Prisma.FieldRef<"Bet", 'BetSource'>
   readonly wizebotDebitTxId: Prisma.FieldRef<"Bet", 'String'>
   readonly pointsWagered: Prisma.FieldRef<"Bet", 'Int'>
   readonly oddsAtPlacement: Prisma.FieldRef<"Bet", 'Decimal'>

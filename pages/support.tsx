@@ -35,7 +35,7 @@ const TOPICS = [
   {
     code: '02',
     icon: Coins,
-    title: 'Wizebot & paris',
+    title: 'Paris & points Wizebot',
     accent: 'yellow',
     desc: 'Mon pari n\'a pas été crédité, mes points de chaîne ne se débitent pas, retry échec de crédit.',
     actions: [
@@ -48,7 +48,7 @@ const TOPICS = [
     icon: Tv,
     title: 'Stream & diffusion Twitch',
     accent: 'purple',
-    desc: 'Le stream coupe, le chat ne s\'affiche pas, les commandes !parier ne répondent pas.',
+    desc: 'Le stream coupe, le chat ne s\'affiche pas, je ne vois pas le bot dans le chat.',
     actions: [
       { label: 'Chaîne officielle CDM 26', href: 'https://www.twitch.tv/blaize', external: true },
       { label: 'Vérifier le lien Twitch', href: '/profile' },
@@ -91,7 +91,7 @@ export default function SupportPage() {
     <>
       <Head>
         <title>Support — CDM 26</title>
-        <meta name="description" content="Centre de support CDM 26. Aide pour ton compte, les paris Wizebot, le stream Twitch, les bugs." />
+        <meta name="description" content="Centre de support CDM 26. Aide pour ton compte, les paris (points Wizebot), le stream Twitch, les bugs." />
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">

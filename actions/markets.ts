@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 import {
   BettingMarketStatus,
   BettingMarketType,
-  BetSource,
   BetStatus,
 } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints, debitWizebotPoints } from '@/lib/wizebot';
@@ -387,7 +386,6 @@ export async function placeMarketBet(input: PlaceMarketBetInput) {
           outcomeKey: input.outcomeKey,
           pointsWagered: input.amount,
           oddsAtPlacement: snapshotOdds.toFixed(3),
-          source: BetSource.SITE,
           wizebotDebitTxId: debitTxId,
         },
       });
@@ -525,7 +523,6 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
           totalStake: input.totalStake,
           combinedOdds: combinedOdds.toFixed(3),
           potentialPayout,
-          source: BetSource.SITE,
           wizebotDebitTxId: debitTxId,
           bets: {
             create: legOdds.map((l) => ({
@@ -534,7 +531,6 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
               outcomeKey: l.outcomeKey,
               pointsWagered: l.stake,
               oddsAtPlacement: l.odds.toFixed(3),
-              source: BetSource.SITE,
             })),
           },
         },

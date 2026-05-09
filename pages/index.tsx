@@ -116,7 +116,7 @@ const TESTIMONIALS: Testimonial[] = [
 const CHAT_LINES = [
   { user: 'KylianFan10', msg: "OOOH QUEL BUT 🔥🔥", color: 'text-emerald-400' },
   { user: 'BrazilianGod', msg: 'on va revenir, restez calmes', color: 'text-yellow-400' },
-  { user: 'Mod_Akira', msg: 'rappel : !parier <équipe> <points>', color: 'text-red-400' },
+  { user: 'Mod_Akira', msg: 'rappel : on parie sur cdm26.com/paris', color: 'text-red-400' },
   { user: 'cdm26_bot', msg: 'Pool actuel : 142,000 pts · cote France 1.42', color: 'text-purple-400' },
   { user: 'StreamQueen', msg: 'meilleur match du tournoi sans débat', color: 'text-emerald-400' },
   { user: 'Bratislav', msg: 'NEYMAR EN DESSOUS DE LA BARRE 😭', color: 'text-yellow-400' },
@@ -128,7 +128,7 @@ const SPONSORS = [
   '★',
   'OFFICIAL TWITCH BROADCAST',
   '★',
-  'POWERED BY WIZEBOT',
+  'POINTS POWERED BY WIZEBOT',
   '★',
   'BLAIZE PRODUCTIONS',
   '★',
@@ -569,19 +569,22 @@ export default function CDM26Home() {
                     <div className="flex items-center gap-3">
                       <Crown className="w-7 h-7 text-yellow-400" />
                       <Badge className="bg-yellow-500/15 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.2em] text-[10px] font-mono">
-                        WIZEBOT
+                        POINTS WIZEBOT
                       </Badge>
                     </div>
-                    <code className="text-yellow-300 font-mono text-xs bg-black/40 border border-yellow-500/20 px-2 py-1 rounded">
-                      !parier
-                    </code>
+                    <Link
+                      href="/paris"
+                      className="text-yellow-300 font-mono text-xs bg-black/40 border border-yellow-500/20 px-2 py-1 rounded hover:border-yellow-400/60 transition"
+                    >
+                      /paris →
+                    </Link>
                   </div>
                   <div>
                     <h3 className="text-xl md:text-2xl font-black text-white mb-1 leading-tight">
-                      Pari mutuel <span className="text-yellow-400">Twitch</span>
+                      Pari mutuel <span className="text-yellow-400">on-site</span>
                     </h3>
                     <p className="text-white/60 text-sm">
-                      Mise tes points de chaîne. Cotes calculées en live, gains crédités en automatique.
+                      Mise tes points de chaîne directement depuis le site. Cotes en live, gains crédités automatiquement sur Twitch.
                     </p>
                   </div>
                   <BorderBeam size={150} duration={10} colorFrom="#facc15" colorTo="#dc2626" borderWidth={1} />
@@ -729,11 +732,14 @@ export default function CDM26Home() {
                   <span className="text-gradient-twitch">en direct.</span>
                 </h2>
                 <p className="text-white/60 mb-6 leading-relaxed">
-                  Le chat Twitch fait partie du jeu. Mise tes points avec{' '}
-                  <code className="text-purple-300 font-mono bg-purple-500/10 border border-purple-500/30 px-1.5 py-0.5 rounded text-sm">
-                    !parier
-                  </code>{' '}
-                  , soutiens ta nation, monte au classement des parieurs.
+                  Le chat Twitch fait partie du jeu. Pose ton pari sur{' '}
+                  <Link
+                    href="/paris"
+                    className="text-purple-300 font-mono bg-purple-500/10 border border-purple-500/30 px-1.5 py-0.5 rounded text-sm hover:border-purple-400/50 transition"
+                  >
+                    cdm26.com/paris
+                  </Link>{' '}
+                  avec tes points de chaîne, soutiens ta nation, monte au classement des parieurs.
                 </p>
 
                 {/* Mini chat */}

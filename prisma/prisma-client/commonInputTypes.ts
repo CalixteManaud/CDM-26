@@ -341,13 +341,6 @@ export type EnumBetOutcomeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumBetOutcomeFilter<$PrismaModel> | $Enums.BetOutcome
 }
 
-export type EnumBetSourceFilter<$PrismaModel = never> = {
-  equals?: $Enums.BetSource | Prisma.EnumBetSourceFieldRefInput<$PrismaModel>
-  in?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBetSourceFilter<$PrismaModel> | $Enums.BetSource
-}
-
 export type EnumBetStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.BetStatus | Prisma.EnumBetStatusFieldRefInput<$PrismaModel>
   in?: $Enums.BetStatus[] | Prisma.ListEnumBetStatusFieldRefInput<$PrismaModel>
@@ -363,16 +356,6 @@ export type EnumBetOutcomeWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumBetOutcomeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumBetOutcomeFilter<$PrismaModel>
-}
-
-export type EnumBetSourceWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.BetSource | Prisma.EnumBetSourceFieldRefInput<$PrismaModel>
-  in?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBetSourceWithAggregatesFilter<$PrismaModel> | $Enums.BetSource
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumBetSourceFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumBetSourceFilter<$PrismaModel>
 }
 
 export type EnumBetStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -772,13 +755,6 @@ export type NestedEnumBetOutcomeFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumBetOutcomeFilter<$PrismaModel> | $Enums.BetOutcome
 }
 
-export type NestedEnumBetSourceFilter<$PrismaModel = never> = {
-  equals?: $Enums.BetSource | Prisma.EnumBetSourceFieldRefInput<$PrismaModel>
-  in?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBetSourceFilter<$PrismaModel> | $Enums.BetSource
-}
-
 export type NestedEnumBetStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.BetStatus | Prisma.EnumBetStatusFieldRefInput<$PrismaModel>
   in?: $Enums.BetStatus[] | Prisma.ListEnumBetStatusFieldRefInput<$PrismaModel>
@@ -794,16 +770,6 @@ export type NestedEnumBetOutcomeWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumBetOutcomeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumBetOutcomeFilter<$PrismaModel>
-}
-
-export type NestedEnumBetSourceWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.BetSource | Prisma.EnumBetSourceFieldRefInput<$PrismaModel>
-  in?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  notIn?: $Enums.BetSource[] | Prisma.ListEnumBetSourceFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumBetSourceWithAggregatesFilter<$PrismaModel> | $Enums.BetSource
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumBetSourceFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumBetSourceFilter<$PrismaModel>
 }
 
 export type NestedEnumBetStatusWithAggregatesFilter<$PrismaModel = never> = {

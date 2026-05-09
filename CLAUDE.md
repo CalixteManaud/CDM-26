@@ -1,15 +1,15 @@
 # CDM 26 — Developer Guide
 
 ## What is this project?
-CDM 26 est une plateforme Next.js de gestion de tournois esport pour la **Coupe du Monde FIFA 26 diffusée sur Twitch**. Elle gère les tournois (phase de poules + bracket d'élimination), les équipes/coachs/joueurs, les matchs (scores, streams), un système de **paris en pari mutuel** via les points de chaîne **Wizebot**, et l'authentification Clerk avec OAuth Twitch.
+CDM 26 est une plateforme Next.js de gestion de tournois esport pour la **Coupe du Monde FIFA 26 diffusée sur Twitch**. Elle gère les tournois (phase de poules + bracket d'élimination), les équipes/coachs/joueurs, les matchs (scores, streams), un système de **paris en pari mutuel placés depuis le site** (mises débitées sur les points de chaîne Twitch via l'API Wizebot), et l'authentification Clerk avec OAuth Twitch.
 
 ## Tech Stack
 - **Framework**: Next.js 16 — **Pages Router** (PAS App Router)
 - **Auth**: Clerk (middleware in `proxy.ts`, file is named `proxy.ts` not `middleware.ts`)
 - **Database**: Prisma 7 + PostgreSQL (Supabase)
 - **Storage**: Vercel Blob (logos d'équipes, avatars)
-- **Streaming**: Twitch (OAuth user link + lecture du chat via Wizebot webhooks)
-- **Betting**: Wizebot — paris en pari mutuel via les points de chaîne Twitch
+- **Streaming**: Twitch (OAuth user link uniquement — Clerk gère le lien)
+- **Betting**: paris en pari mutuel placés depuis le site, débit/crédit sur les points de chaîne Twitch via l'API Wizebot
 - **Styling**: Tailwind CSS 4 (oklch + `@theme inline`) + shadcn/ui + Magic UI
 - **Animations**: Framer Motion + `motion/react`
 
@@ -151,12 +151,16 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
 - Le payload est en **snake_case** (`external_accounts`, `provider_user_id`) — utilise `extractTwitchFromClerkWebhook`, **pas** `extractTwitchFromClerkUser` (qui est pour le SDK camelCase).
 - La route est dans la whitelist `isPublicRoute` du `proxy.ts`.
 
-### Wizebot betting (`lib/wizebot.ts` + `lib/utils/betting.ts`)
-- **Inbound** : `pages/api/wizebot/bets.ts` reçoit les commandes `!parier` du chat Twitch via webhook Wizebot. Auth = header `x-wizebot-secret` constant-time compared à `WIZEBOT_INBOUND_SECRET`.
-- **Outbound** : `creditWizebotPoints({ twitchUsername, amount, reason })` crédite les gagnants via l'API Wizebot. **Mocké en dev** si la var d'env manque, **erreur explicite en prod**.
+### Site betting (`lib/wizebot.ts` + `lib/utils/betting.ts` + `actions/markets.ts`)
+- **Entrée unique** : UI cdm26.com (formulaire `PlaceBetForm` → POST `/api/bets/place` pour le 1X2, et POST `/api/markets/place` / `/api/markets/slip` pour les marchés flexibles). **Plus de commande `!parier` dans le chat** — l'inbound Wizebot a été supprimé.
+- **Monnaie** : points de chaîne Twitch gérés par Wizebot.
+  - **Débit** : `debitWizebotPoints({ twitchUsername, amount, reason })` est appelé par l'API route AVANT la création du Bet. Si le débit échoue (solde insuffisant, réseau), l'API renvoie une erreur et aucun pari n'est créé.
+  - **Crédit** : `creditWizebotPoints({ twitchUsername, amount, reason })` crédite les gagnants au settlement.
+  - **Mocké en dev** si la config manque (`WIZEBOT_API_KEY`, `WIZEBOT_CHANNEL`), **erreur explicite en prod**.
+- **Twitch lié obligatoire** : un user qui veut parier DOIT avoir `User.twitchUsername` set (sinon les API routes renvoient `NO_TWITCH_LINK`). Le lien est posé via Clerk OAuth ou saisie manuelle sur `/profile`.
 - **Pari mutuel** : aucune cote stockée. Les odds sont calculées dynamiquement depuis `MatchBettingPool` via `computeLiveOdds(pool)` — formule `(total / poolX) × (1 - housePercentage/100)`.
-- **Verrouillage** : `isBettingOpen(match)` = `status === 'SCHEDULED' && now < matchDate`. Pas de flag stocké, pas de race condition à gérer.
-- **Idempotence** : `Bet.wizebotEventId` est `@unique` — un retry Wizebot ne peut pas créer un doublon.
+- **Verrouillage** : `isBettingOpen(match)` = `SCHEDULED && now < matchDate` OU `LIVE && now < matchDate + 25min` (fenêtre live betting). Pas de flag stocké.
+- **Idempotence Wizebot** : `Bet.wizebotEventId` reste `@unique` (legacy — utilisable pour des retry futurs). En pratique le débit Wizebot est synchrone, on n'en a plus besoin pour bloquer les doublons.
 - **Settlement** : `settleMatchBets({matchId, outcome})` est appelé fire-and-forget depuis `pages/api/matches/[id]/submit-result.ts`. Si le crédit Wizebot échoue, le bet est marqué `CREDIT_FAILED` et `retryFailedCredits()` peut le rejouer plus tard via `pages/api/admin/bets/retry-failed.ts`.
 
 ### File Storage (`lib/save-file-and-images.ts`)
@@ -178,10 +182,11 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
 - **Idempotence** : pour les opérations financières (paris, crédits), utiliser un identifiant unique (`wizebotEventId`).
 
 ### Webhooks
-- **Wizebot** : header `x-wizebot-secret` comparé en **constant-time** (`crypto.timingSafeEqual`) pour éviter les timing attacks.
 - **Clerk** : signature svix vérifiée via `wh.verify()`. Ne jamais skip.
+- (Pas d'inbound Wizebot — les paris ne passent plus par le chat.)
 
 ### Twitch Linking
+- Le lien Twitch est **requis pour parier** : c'est sur ce compte que Wizebot débite/crédite les points de chaîne.
 - Le lien Twitch a **deux modes** :
   1. **OAuth-linked** (`twitchUserId` non-null) : géré par Clerk webhook → DB. Read-only depuis le profil. L'utilisateur doit délier via Clerk pour le modifier.
   2. **Manual** (`twitchUsername` seul) : fallback pour ceux qui n'ont pas Twitch dans Clerk. L'API `pages/api/profile/update.ts` rejette une modif manuelle si `twitchUserId` est set.
@@ -197,7 +202,7 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
 | `lib/clerk.ts` | `syncClerkUser*` (3 variantes) + extracteurs Twitch SDK/Webhook |
 | `lib/auth/page-auth.ts` | `getCurrentDbUserFromReq` — helper SSR pour récupérer le User DB |
 | `lib/utils/permissions.ts` | `isSiteAdmin`, `isTeamCoach`, `canManageTeam`, `canManageMatch`, `canAddSiteAdmin` |
-| `lib/wizebot.ts` | Inbound verify + outbound credit + normalize/validate Twitch usernames |
+| `lib/wizebot.ts` | Outbound debit/credit Wizebot + normalize/validate Twitch usernames (plus d'inbound) |
 | `lib/utils/betting.ts` | `computeLiveOdds`, `isBettingOpen`, `placeBet`, `settleMatchBets`, `retryFailedCredits` |
 | `lib/utils/validations.ts` | zod schemas (tournamentSchema, etc.) |
 | `lib/utils/bracket-generator.ts` | Génération du bracket d'élimination depuis les standings |
@@ -208,9 +213,11 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
 | `lib/prisma.ts` | Singleton Prisma |
 | `actions/index.ts` | Barrel export des Server Actions |
 | `pages/api/webhooks/clerk.ts` | Sync user.created/updated/deleted + lien Twitch |
-| `pages/api/wizebot/bets.ts` | Endpoint inbound paris Twitch |
+| `pages/api/bets/place.ts` | Endpoint placement pari 1X2 (depuis le site → débit Wizebot → `placeBet`) |
+| `pages/api/markets/place.ts` / `slip.ts` | Endpoints marchés flexibles (score exact, total buts, BTTS, top buteur, MVP, vainqueur) + combinés |
+| `pages/api/admin/bets/retry-failed.ts` | Rejoue les crédits Wizebot tombés en `CREDIT_FAILED` |
 | `pages/api/matches/[id]/submit-result.ts` | Soumission score + trigger `settleMatchBets` |
-| `prisma/schema.prisma` | Modèles : User, Tournament, Group, Team, Player, Match, Standing, MatchBettingPool, Bet, Webhook |
+| `prisma/schema.prisma` | Modèles : User (Clerk + Twitch), Tournament, Group, Team, Player, Match, Standing, MatchBettingPool, Bet, BettingMarket, MarketPool, MarketBet, BetSlip, MatchEvent, Webhook |
 
 ---
 
@@ -303,7 +310,7 @@ Voir `.env.example` pour la liste complète. Sections obligatoires :
 1. **Clerk** : `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET` + URLs sign-in/up.
 2. **Supabase** : `DATABASE_URL` (pooler 6543), `DIRECT_URL` (5432).
 3. **Vercel Blob** : `BLOB_READ_WRITE_TOKEN`.
-4. **Wizebot** : `WIZEBOT_INBOUND_SECRET` (header `x-wizebot-secret`), `WIZEBOT_API_KEY` (outbound), `WIZEBOT_CHANNEL` (lowercase).
+4. **Wizebot** (outbound uniquement) : `WIZEBOT_API_KEY`, `WIZEBOT_CHANNEL` (lowercase). En dev, l'absence des deux mock les appels — pas d'erreur. En prod, c'est requis.
 5. **App** : `NEXT_PUBLIC_APP_URL`.
 
 En dev, l'absence des vars Wizebot mock les appels outbound. En prod, c'est une erreur explicite.
@@ -317,7 +324,7 @@ En dev, l'absence des vars Wizebot mock les appels outbound. En prod, c'est une 
 - Don't fetch data in `useEffect` on mount — pass via `getServerSideProps` props.
 - Don't use **App Router** patterns (`route.ts`, `metadata` export, async page components, `next/navigation`) — this is **Pages Router**.
 - Don't hardcode `'use client'` — Pages Router has no Server Components, the directive is a no-op.
-- Don't store Twitch OAuth tokens or scrape Twitch directly — Clerk handles OAuth, Wizebot handles the chat layer.
+- Don't store Twitch OAuth tokens or scrape Twitch directly — Clerk handles OAuth, Wizebot only acts as the points wallet (debit/credit API).
 - Don't store external URLs in DB if they expire — upload to Vercel Blob first via `saveUploadedFileToBlob`.
 - Don't use `next/image` for user-uploaded team logos — `<img>` only (cost optimization).
 - Don't use native `<select>`, `<input>`, `<dialog>` — use shadcn/ui equivalents.
@@ -325,7 +332,8 @@ En dev, l'absence des vars Wizebot mock les appels outbound. En prod, c'est une 
 - Don't bypass `syncClerkUser*` — it's the bridge that keeps DB ↔ Clerk metadata in sync (role, username, Twitch link). Modifying DB directly without it = Clerk publicMetadata stale.
 - Don't store betting odds — they are computed live from `MatchBettingPool` totals.
 - Don't trust manual changes to `User.role` in Supabase — push to Clerk via `POST /api/admin/users/resync-clerk` then sign out / sign in.
-- Don't expose Wizebot inbound secret or API key client-side — server-only env vars (no `NEXT_PUBLIC_` prefix).
+- Don't expose `WIZEBOT_API_KEY` client-side — server-only env var (no `NEXT_PUBLIC_` prefix).
+- Don't reintroduce a chat-side `!parier` command or an inbound Wizebot webhook — paris se font UNIQUEMENT depuis le site.
 - Don't run `npm run build` unless explicitly asked.
 - Don't add features, refactor, or introduce abstractions beyond what the task requires. Three similar lines is better than a premature abstraction.
 - Don't create planning, decision, or analysis markdown files unless asked. Work from conversation context.

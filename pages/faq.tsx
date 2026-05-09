@@ -42,7 +42,7 @@ const CATEGORIES = [
   { key: 'general', label: 'Général', icon: HelpCircle, accent: 'emerald' as Accent },
   { key: 'tournois', label: 'Tournois', icon: Trophy, accent: 'yellow' as Accent },
   { key: 'twitch', label: 'Twitch & Streams', icon: Tv, accent: 'purple' as Accent },
-  { key: 'paris', label: 'Paris Wizebot', icon: Coins, accent: 'red' as Accent },
+  { key: 'paris', label: 'Paris', icon: Coins, accent: 'red' as Accent },
   { key: 'equipes', label: 'Équipes & Joueurs', icon: Users, accent: 'emerald' as Accent },
 ];
 
@@ -54,7 +54,7 @@ const FAQS: Record<string, Array<{ q: string; a: string }>> = {
     },
     {
       q: "C'est gratuit ?",
-      a: "Oui. L'inscription, la participation, le visionnage des streams et la consultation des stats sont totalement gratuits. Les paris se font avec les points de chaîne Twitch (gratuits).",
+      a: "Oui. L'inscription, la participation, le visionnage des streams et la consultation des stats sont totalement gratuits. Les paris se font avec les points de chaîne Twitch (gratuits, accumulés en regardant les streams).",
     },
     {
       q: "Sur quel jeu se déroulent les matchs ?",
@@ -98,7 +98,7 @@ const FAQS: Record<string, Array<{ q: string; a: string }>> = {
     },
     {
       q: "Pourquoi lier mon compte Twitch ?",
-      a: "Pour participer aux paris mutuels avec tes points de chaîne et pour que tes pseudo et avatar soient synchronisés avec ton profil joueur.",
+      a: "Pour parier sur les matchs avec tes points de chaîne (la monnaie de Wizebot), et pour que tes pseudo et avatar soient synchronisés avec ton profil joueur.",
     },
     {
       q: "Je peux délier mon compte Twitch ?",
@@ -108,23 +108,31 @@ const FAQS: Record<string, Array<{ q: string; a: string }>> = {
   paris: [
     {
       q: "Comment parier sur un match ?",
-      a: "Pendant le stream, tape !parier <équipe> <points> dans le chat Twitch. Exemple : !parier France 500. Les points sont débités de ton solde Twitch via Wizebot.",
+      a: "Tout se passe sur le site. Va sur la page d'un match ouvert (statut SCHEDULED ou LIVE pendant la fenêtre live), choisis HOME / NUL / AWAY, ta mise, et valide. Les points sont débités de ton solde de chaîne Twitch via Wizebot.",
+    },
+    {
+      q: "Avec quelle monnaie je parie ?",
+      a: "Avec tes points de chaîne Twitch, gérés par Wizebot. Pas de carte bleue, pas d'argent réel — c'est de la monnaie virtuelle Twitch, identique à celle que tu accumules en regardant les streams.",
+    },
+    {
+      q: "Pourquoi dois-je lier mon Twitch pour parier ?",
+      a: "Parce que c'est sur ton compte Twitch (via Wizebot) que les points sont débités à la mise et crédités au gain. Sans lien Twitch, on ne sait pas où prendre / déposer les points.",
     },
     {
       q: "Comment sont calculées les cotes ?",
-      a: "En pari mutuel : pas de cote fixe. Le ratio se calcule en live à partir du pool total et de la mise sur chaque équipe, avec une marge maison de 5%.",
+      a: "En pari mutuel : pas de cote fixe. Le ratio se calcule en live à partir du pool total et de la mise sur chaque issue, avec une marge maison de 5%.",
     },
     {
       q: "Quand puis-je parier ?",
-      a: "Tant que le match a le statut SCHEDULED et que l'heure du coup d'envoi n'est pas dépassée. Les paris sont automatiquement clôturés au coup d'envoi.",
+      a: "Tant que le match est SCHEDULED avant le coup d'envoi, ou LIVE pendant la fenêtre de live betting (25 minutes après le coup d'envoi). Une fois la fenêtre dépassée, le marché est verrouillé.",
     },
     {
       q: "Quand mes gains sont-ils crédités ?",
-      a: "Automatiquement après la validation du score par l'admin. Si le crédit échoue côté Wizebot, ton pari passe en CREDIT_FAILED et l'admin peut relancer.",
+      a: "Automatiquement après la validation du score par l'admin. Si le crédit Wizebot échoue (réseau down par ex.), ton pari passe en CREDIT_FAILED et un admin peut relancer le crédit depuis le dashboard.",
     },
     {
       q: "Je peux annuler un pari ?",
-      a: "Non. Une fois la commande !parier validée, l'opération est définitive (idempotence garantie par event ID Wizebot).",
+      a: "Non. Une fois validé, l'opération est définitive. Seule exception : si le match est annulé par l'organisation, tous les paris passent en VOID et tes points sont remboursés intégralement.",
     },
   ],
   equipes: [
@@ -200,7 +208,7 @@ export default function FaqPage() {
     <>
       <Head>
         <title>FAQ — CDM 26</title>
-        <meta name="description" content="Foire aux questions CDM 26 : tournoi, équipes, Twitch, paris Wizebot, inscription. Toutes les réponses." />
+        <meta name="description" content="Foire aux questions CDM 26 : tournoi, équipes, Twitch, paris en points de chaîne, inscription. Toutes les réponses." />
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
@@ -227,7 +235,7 @@ export default function FaqPage() {
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Badge className="bg-yellow-500/10 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                <CircleDot className="w-3 h-3 mr-1" /> 22 réponses
+                <CircleDot className="w-3 h-3 mr-1" /> 24 réponses
               </Badge>
               <Badge className="bg-white/5 border-white/15 text-white/70 uppercase tracking-[0.22em] text-[10px] font-mono">
                 Maj 07 Mai 2026

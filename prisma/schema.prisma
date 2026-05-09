@@ -39,7 +39,8 @@ model User {
   role     UserRole @default(GUEST) // Default to GUEST, can upgrade to PARTICIPANT
   clerkId  String   @unique // Clerk user ID
 
-  // Lien Twitch — requis pour parier via Wizebot
+  // Lien Twitch — requis pour parier (les points sont débités/crédités via Wizebot
+  // sur le compte Twitch de l'utilisateur).
   twitchUsername String? @unique // Login Twitch en lowercase, ex: "blaize_viewer42"
   twitchUserId   String? @unique // ID Twitch immuable (résiste aux renommages), fourni par Clerk OAuth
 
@@ -201,7 +202,7 @@ model Match {
 
   playerStats MatchPlayerStats[]
 
-  // Paris (Wizebot)
+  // Paris 1X2 (pari mutuel via Wizebot)
   bettingPool MatchBettingPool?
   bets        Bet[]
 
@@ -305,28 +306,28 @@ model Webhook {
   @@index([isActive])
 }
 
-// =================== PARIS WIZEBOT ===================
+// =================== PARIS ===================
 //
-// Système de paris en pari mutuel avec les points de chaîne Wizebot.
+// Système de paris en pari mutuel.
+//  - Entrée unique : UI cdm26.com (formulaire de pari).
+//  - Monnaie : points de chaîne Twitch gérés par Wizebot — on débite via
+//    l'API Wizebot au placement, on crédite à la résolution.
 //
 // Flow:
-//  1. Viewer chat: !parier <matchId> <HOME|DRAW|AWAY> <points>
-//  2. Wizebot déduit les points et POST sur /api/wizebot/bets
-//     {USER}, {ARG1}, {ARG2}, {ARG3}
-//  3. API valide:
-//     - User.twitchUsername = lookup({USER})
-//     - match.status = SCHEDULED ET now < match.matchDate
-//     - crée le Bet (PENDING), incrémente le pool correspondant
+//  1. User connecté soumet POST /api/bets/place via le formulaire site.
+//  2. API : auth Clerk → check twitchUsername lié → débit Wizebot (points/remove).
+//  3. Si débit OK, on crée le Bet (PENDING) et on incrémente le pool concerné
+//     dans la transaction Prisma. wizebotDebitTxId stocke l'ID de la transac.
 //  4. Frontend recalcule les cotes en direct depuis MatchBettingPool:
-//     coteHome = totalPool / totalHomePool
-//  5. Settlement après match:
-//     - boucle sur Bet PENDING du match
+//     coteHome = totalPool / totalHomePool * (1 - housePct)
+//  5. Settlement à la fin du match :
+//     - boucle sur les Bet PENDING
 //     - winners reçoivent (pointsWagered / poolGagnant) * (totalPool * (1 - housePct))
-//     - API appelle Wizebot pour créditer
-//     - status -> WON / LOST / CREDIT_FAILED si erreur réseau
+//     - on crédite Wizebot (points/add) ; status → WON / LOST / CREDIT_FAILED.
+//     - retryFailedCredits() rejoue les CREDIT_FAILED si Wizebot était down.
 //
-// Verrouillage: pas de flag stocké, calculé dynamiquement à partir
-// du status du match et de matchDate. Quand le match passe en LIVE,
+// Verrouillage: pas de flag stocké, dérivé dynamiquement de match.status et
+// match.matchDate. Quand le match passe en FINISHED / fenêtre LIVE expirée,
 // les paris sont automatiquement bloqués.
 
 enum BetOutcome {
@@ -342,13 +343,6 @@ enum BetStatus {
   VOID // match annulé → mise remboursée
   CANCELED // pari annulé manuellement avant verrouillage
   CREDIT_FAILED // gagné mais le crédit Wizebot a échoué (à rejouer)
-}
-
-// Canal d'origine du pari. Sert au verrou d'exclusivité : un user qui parie via
-// un canal sur un match donné est bloqué sur l'autre canal pour le même match.
-enum BetSource {
-  WIZEBOT // pari placé via le chat Twitch (webhook Wizebot)
-  SITE // pari placé directement depuis l'UI cdm26.com
 }
 
 model MatchBettingPool {
@@ -390,11 +384,7 @@ model Bet {
   pickedTeamId String?    @db.Uuid // null si DRAW, sinon homeTeam ou awayTeam du match
   pickedTeam   Team?      @relation("BetPickedTeam", fields: [pickedTeamId], references: [id], onDelete: SetNull)
 
-  // Canal d'origine — détermine le verrou d'exclusivité par user+match
-  source BetSource @default(WIZEBOT)
-
-  // ID de la transaction Wizebot pour le DÉBIT (paris site uniquement, null pour
-  // les paris WIZEBOT car Wizebot a déjà débité avant d'appeler notre webhook).
+  // ID de la transaction Wizebot pour le DÉBIT au moment du placement.
   wizebotDebitTxId String?
 
   pointsWagered Int
@@ -519,7 +509,6 @@ model MarketBet {
   outcomeKey      String
   pointsWagered   Int
   oddsAtPlacement Decimal       @db.Decimal(7, 3)
-  source          BetSource     @default(SITE)
   status          BetStatus     @default(PENDING)
   actualPayout    Int           @default(0)
   settledAt       DateTime?
@@ -551,7 +540,6 @@ model BetSlip {
   actualPayout    Int       @default(0)
   status          BetStatus @default(PENDING)
   settledAt       DateTime?
-  source          BetSource @default(SITE)
 
   wizebotDebitTxId  String?
   wizebotCreditTxId String?

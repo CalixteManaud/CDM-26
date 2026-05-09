@@ -48,7 +48,7 @@ export function RecentBetsFeed({ bets, variant = 'page' }: { bets: Bet[]; varian
           / pas encore de paris
         </div>
         <div className="text-xs text-white/30 mt-2 font-mono">
-          tape <span className="text-yellow-400">!parier</span> dans le chat Twitch
+          place ton pari depuis la page d&apos;un match
         </div>
       </div>
     );

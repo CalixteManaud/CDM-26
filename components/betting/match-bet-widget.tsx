@@ -34,9 +34,7 @@ type Props = {
   recentBets: Bet[];
   /** twitchUsername de l'user courant (null si non lié, undefined si pas connecté) */
   userTwitchUsername?: string | null;
-  /** True si l'user a déjà parié via le chat Twitch sur ce match */
-  blockedByTwitch?: boolean;
-  /** True si l'user a déjà parié via le site sur ce match */
+  /** True si l'user a déjà placé un pari sur ce match */
   alreadyBetSite?: boolean;
 };
 
@@ -44,7 +42,6 @@ export function MatchBetWidget({
   match,
   recentBets,
   userTwitchUsername = null,
-  blockedByTwitch = false,
   alreadyBetSite = false,
 }: Props) {
   const open = isBettingOpen(match);
@@ -87,20 +84,8 @@ export function MatchBetWidget({
         )}
       </div>
 
-      {!pool || total === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-black/30 p-8 text-center">
-          <div className="text-base font-bold text-white/70">Aucun pari pour l'instant</div>
-          {open ? (
-            <div className="text-xs font-mono uppercase tracking-[0.22em] text-white/40 mt-2">
-              / sois le premier — tape !parier dans le chat
-            </div>
-          ) : (
-            <div className="text-xs font-mono uppercase tracking-[0.22em] text-white/40 mt-2">
-              / aucun pari n'a été placé sur ce match
-            </div>
-          )}
-        </div>
-      ) : (
+      {/* Pool stats — affiché seulement si quelqu'un a déjà parié */}
+      {pool && total > 0 && (
         <>
           <OddsDisplay
             pool={pool}
@@ -131,47 +116,58 @@ export function MatchBetWidget({
               </span>
             </div>
           </div>
-
-          <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_280px]">
-            {open ? (
-              <PlaceBetForm
-                matchId={match.id}
-                homeShort={match.homeTeam.shortName}
-                awayShort={match.awayTeam.shortName}
-                pool={pool}
-                userTwitchUsername={userTwitchUsername}
-                blockedByTwitch={blockedByTwitch}
-                alreadyBetSite={alreadyBetSite}
-              />
-            ) : (
-              <div className="rounded-xl border border-white/10 bg-black/30 p-5">
-                <div className="text-[11px] font-mono uppercase tracking-[0.3em] font-bold text-white/45 mb-3">
-                  / marché clôturé
-                </div>
-                <p className="text-[11px] text-white/50 leading-relaxed">
-                  Les paris ne sont plus acceptés sur ce match. Settlement automatique à la
-                  soumission du score final.
-                </p>
-              </div>
-            )}
-
-            {recentBets.length > 0 && (
-              <RecentBetsFeed bets={recentBets} variant="widget" />
-            )}
-          </div>
-
-          {open && (
-            <div className="mt-4 rounded-md border border-purple-500/20 bg-purple-500/[0.04] px-4 py-2.5 text-[10px] font-mono uppercase tracking-[0.22em] text-purple-200/70 flex items-center gap-2">
-              <span className="text-purple-300">/</span>
-              alternative — tape{' '}
-              <code className="text-yellow-300 font-mono normal-case tracking-normal text-[11px]">
-                !parier HOME|DRAW|AWAY {'<points>'}
-              </code>
-              dans le chat twitch (un seul canal par match)
-            </div>
-          )}
         </>
       )}
+
+      {/* Placeholder "premier pari" — uniquement si marché ouvert ET vide */}
+      {(!pool || total === 0) && open && (
+        <div className="rounded-xl border border-dashed border-yellow-500/30 bg-yellow-500/[0.03] p-6 text-center">
+          <div className="text-base font-bold text-white/85">Sois le premier à parier sur ce match</div>
+          <div className="text-xs font-mono uppercase tracking-[0.22em] text-white/40 mt-2">
+            / le pool s&apos;ouvrira dès ta première mise — cote = 1.00 (pari mutuel pur jusqu&apos;au prochain parieur)
+          </div>
+        </div>
+      )}
+
+      {/* Placeholder "marché clôturé sans pari" — pari fermé et personne n'a parié */}
+      {(!pool || total === 0) && !open && (
+        <div className="rounded-xl border border-dashed border-white/10 bg-black/30 p-8 text-center">
+          <div className="text-base font-bold text-white/70">Aucun pari pour l&apos;instant</div>
+          <div className="text-xs font-mono uppercase tracking-[0.22em] text-white/40 mt-2">
+            / aucun pari n&apos;a été placé sur ce match
+          </div>
+        </div>
+      )}
+
+      {/* Form de pari + flux récent — toujours rendu si marché ouvert */}
+      <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_280px]">
+        {open ? (
+          <PlaceBetForm
+            matchId={match.id}
+            homeShort={match.homeTeam.shortName}
+            awayShort={match.awayTeam.shortName}
+            pool={pool}
+            userTwitchUsername={userTwitchUsername}
+            alreadyBetSite={alreadyBetSite}
+          />
+        ) : (
+          total > 0 && (
+            <div className="rounded-xl border border-white/10 bg-black/30 p-5">
+              <div className="text-[11px] font-mono uppercase tracking-[0.3em] font-bold text-white/45 mb-3">
+                / marché clôturé
+              </div>
+              <p className="text-[11px] text-white/50 leading-relaxed">
+                Les paris ne sont plus acceptés sur ce match. Settlement automatique à la
+                soumission du score final.
+              </p>
+            </div>
+          )
+        )}
+
+        {recentBets.length > 0 && (
+          <RecentBetsFeed bets={recentBets} variant="widget" />
+        )}
+      </div>
     </Card>
   );
 }
