@@ -1,22 +1,34 @@
-import { SignIn } from '@clerk/nextjs';
+import type { GetServerSideProps } from 'next';
+import Head from 'next/head';
+import { getAuth } from '@clerk/nextjs/server';
+
+import { AuthShell } from '@/components/auth/auth-shell';
+import { SignInForm } from '@/components/auth/sign-in-form';
+
+const DEFAULT_LOGGED_IN_REDIRECT = '/tournaments';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { userId } = getAuth(ctx.req);
+  if (userId) {
+    return { redirect: { destination: DEFAULT_LOGGED_IN_REDIRECT, permanent: false } };
+  }
+  return { props: {} };
+};
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">CDM 26</h1>
-          <p className="text-muted-foreground mt-2">Connectez-vous à votre compte</p>
-        </div>
-        <SignIn
-          appearance={{
-            elements: {
-              rootBox: 'mx-auto',
-              card: 'shadow-lg',
-            },
-          }}
+    <>
+      <Head>
+        <title>Connexion — CDM 26</title>
+        <meta
+          name="description"
+          content="Connecte-toi à CDM 26 pour suivre tes paris, gérer tes équipes et regarder la Coupe du Monde FIFA 26 sur Twitch."
         />
-      </div>
-    </div>
+      </Head>
+
+      <AuthShell mode="sign-in">
+        <SignInForm />
+      </AuthShell>
+    </>
   );
 }

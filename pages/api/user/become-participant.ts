@@ -20,20 +20,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Utilisateur non trouvé' });
     }
 
-    // Check if user is already PARTICIPANT or ADMIN
     if (dbUser.role !== 'GUEST') {
       return res.status(400).json({ error: 'Vous êtes déjà participant ou administrateur' });
     }
 
-    // Upgrade user to PARTICIPANT
+    // Pseudo de joueur — distinct du compte Twitch (qui reste utilisé pour
+    // les paris). Si l'utilisateur n'en saisit pas, on garde celui déjà en DB
+    // (peut venir de Clerk au signup).
+    const { username } = req.body ?? {};
+    const provided = typeof username === 'string' && username.trim().length > 0;
+    const trimmed = provided ? username.trim() : null;
+
+    if (provided && trimmed) {
+      if (trimmed.length < 3 || trimmed.length > 20) {
+        return res.status(400).json({ error: 'Le pseudo doit faire entre 3 et 20 caractères' });
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+        return res.status(400).json({
+          error: 'Le pseudo ne peut contenir que des lettres, chiffres, tirets et underscores',
+        });
+      }
+      const taken = await prisma.user.findFirst({
+        where: { username: trimmed, NOT: { id: dbUser.id } },
+        select: { id: true },
+      });
+      if (taken) {
+        return res.status(400).json({ error: 'Ce pseudo est déjà pris' });
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: dbUser.id },
-      data: { role: 'PARTICIPANT' },
+      data: {
+        role: 'PARTICIPANT',
+        ...(provided && trimmed ? { username: trimmed } : {}),
+      },
     });
 
-    // Sync role to Clerk publicMetadata
     try {
       const client = typeof clerkClient === 'function' ? await clerkClient() : clerkClient;
+      if (provided && trimmed) {
+        await client.users.updateUser(updatedUser.clerkId, { username: trimmed });
+      }
       await client.users.updateUserMetadata(updatedUser.clerkId, {
         publicMetadata: {
           role: 'PARTICIPANT',

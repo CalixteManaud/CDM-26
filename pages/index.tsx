@@ -1,5 +1,7 @@
+import type { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/nextjs';
 import {
@@ -33,12 +35,23 @@ import { NumberTicker } from '@/components/ui/number-ticker';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { Ripple } from '@/components/ui/ripple';
 import Marquee from '@/components/ui/marquee';
-import { ThreeDMarquee } from '@/components/ui/three-d-marquee';
 import { AnimatedTestimonials, type Testimonial } from '@/components/ui/animated-testimonials';
 
 import { HeroCdm26 } from '@/components/landing/hero-cdm26';
 import { TournamentFormatTimeline } from '@/components/landing/tournament-format-timeline';
 import { TeamsOrbit } from '@/components/landing/teams-orbit';
+
+// Lazy-load le 3D marquee (gros transform 3D, animation continue) — ne se monte
+// qu'à l'entrée dans le viewport pour pas peser sur le scroll above-the-fold.
+const ThreeDMarquee = dynamic(
+  () => import('@/components/ui/three-d-marquee').then((m) => m.ThreeDMarquee),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full bg-linear-to-br from-emerald-950/20 via-black to-purple-950/20 animate-pulse" />
+    ),
+  }
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
@@ -55,26 +68,41 @@ const TICKER_ITEMS = [
   'STREAM QUALITY  ·  1080p60',
 ];
 
-const STATS = [
+type StatItem = {
+  code: string;
+  icon: typeof Trophy;
+  value: number;
+  suffix: string;
+  label: string;
+  color: string;
+};
+
+const STATS_MOCK: StatItem[] = [
   { code: 'NTN-32', icon: Trophy, value: 32, suffix: '', label: 'Nations engagées', color: 'text-emerald-400' },
   { code: 'PLY-500', icon: Users, value: 500, suffix: '+', label: 'Joueurs inscrits', color: 'text-yellow-400' },
   { code: 'MTC-150', icon: Swords, value: 150, suffix: '+', label: 'Matchs joués', color: 'text-red-400' },
   { code: 'VWR-12K', icon: Eye, value: 12000, suffix: '+', label: 'Viewers cumulés', color: 'text-purple-400' },
-] as const;
+];
 
 type FixtureStatus = 'LIVE' | 'SOON' | 'FT';
-const FIXTURES: Array<{
+type FixtureItem = {
   home: string;
-  flagH: string;
+  flagH?: string; // emoji (mock uniquement)
+  logoH?: string | null; // URL Vercel Blob (real data)
+  shortH?: string; // fallback initiales si pas de logo ni emoji
   away: string;
-  flagA: string;
+  flagA?: string;
+  logoA?: string | null;
+  shortA?: string;
   scoreH: number | null;
   scoreA: number | null;
   status: FixtureStatus;
   meta: string;
   viewers: number | null;
   group: string;
-}> = [
+};
+
+const FIXTURES_MOCK: FixtureItem[] = [
   { home: 'France', flagH: '🇫🇷', away: 'Brésil', flagA: '🇧🇷', scoreH: 3, scoreA: 1, status: 'LIVE', meta: "78′ · 2nd MT", viewers: 8412, group: 'GROUPE D · J04' },
   { home: 'Allemagne', flagH: '🇩🇪', away: 'Argentine', flagA: '🇦🇷', scoreH: null, scoreA: null, status: 'SOON', meta: 'Ce soir · 21h00', viewers: null, group: 'GROUPE C · J05' },
   { home: 'Maroc', flagH: '🇲🇦', away: 'Espagne', flagA: '🇪🇸', scoreH: 2, scoreA: 2, status: 'FT', meta: 'Terminé · 90+4', viewers: 4128, group: 'GROUPE B · J04' },
@@ -174,7 +202,32 @@ function CornerBracket({ position, color = 'border-white/30' }: { position: 'tl'
   return <span aria-hidden className={`absolute w-4 h-4 ${map[position]} ${color}`} />;
 }
 
-function FixtureCard({ f, index }: { f: (typeof FIXTURES)[number]; index: number }) {
+function TeamFlag({
+  flag,
+  logo,
+  short,
+  alt,
+}: {
+  flag?: string;
+  logo?: string | null;
+  short?: string;
+  alt: string;
+}) {
+  if (logo) {
+    // eslint-disable-next-line @next/next/no-img-element — user-uploaded asset, pas de next/image (cost optim)
+    return <img src={logo} alt={alt} className="w-14 h-14 rounded-full object-cover ring-2 ring-white/15 shadow-lg" />;
+  }
+  if (flag) {
+    return <div className="text-5xl drop-shadow-lg">{flag}</div>;
+  }
+  return (
+    <div className="w-14 h-14 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-sm font-black text-white/80 shadow-lg">
+      {short ?? alt.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
+function FixtureCard({ f, index }: { f: FixtureItem; index: number }) {
   const isLive = f.status === 'LIVE';
   const isFT = f.status === 'FT';
 
@@ -211,7 +264,7 @@ function FixtureCard({ f, index }: { f: (typeof FIXTURES)[number]; index: number
         <div className="px-5 py-9 relative">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div className="flex flex-col items-center gap-2">
-              <div className="text-5xl drop-shadow-lg">{f.flagH}</div>
+              <TeamFlag flag={f.flagH} logo={f.logoH} short={f.shortH} alt={f.home} />
               <div className="text-xs uppercase tracking-[0.18em] text-white/80 font-bold text-center">{f.home}</div>
             </div>
             <div className="flex items-center gap-2 text-5xl md:text-6xl font-black tabular-nums leading-none">
@@ -224,7 +277,7 @@ function FixtureCard({ f, index }: { f: (typeof FIXTURES)[number]; index: number
               </span>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="text-5xl drop-shadow-lg">{f.flagA}</div>
+              <TeamFlag flag={f.flagA} logo={f.logoA} short={f.shortA} alt={f.away} />
               <div className="text-xs uppercase tracking-[0.18em] text-white/80 font-bold text-center">{f.away}</div>
             </div>
           </div>
@@ -252,9 +305,6 @@ function FixtureCard({ f, index }: { f: (typeof FIXTURES)[number]; index: number
           </Link>
         </div>
 
-        {isLive && (
-          <BorderBeam size={130} duration={6} colorFrom="#ef4444" colorTo="#f59e0b" borderWidth={1.5} />
-        )}
       </Card>
     </motion.div>
   );
@@ -325,18 +375,164 @@ function StreamerCard({ s }: { s: (typeof STREAMERS)[number] }) {
             </Button>
           </div>
         </div>
-        {s.live && <BorderBeam size={120} duration={8} colorFrom="#9146ff" colorTo="#f59e0b" borderWidth={1} />}
       </Card>
     </motion.div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SSR — données réelles BDD avec fallback sur les mocks
+// ─────────────────────────────────────────────────────────────────────────────
+
+type Counts = {
+  nations: number;
+  players: number;
+  matches: number;
+};
+
+type CDM26HomeProps = {
+  counts: Counts | null; // null si fallback total → on utilisera STATS_MOCK
+  fixtures: FixtureItem[];
+};
+
+// Mapping status DB → label/meta affiché dans la fixture card
+function mapMatchToFixture(m: {
+  id: string;
+  status: string;
+  matchDate: Date | string;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: { name: string; shortName: string; logo: string | null };
+  awayTeam: { name: string; shortName: string; logo: string | null };
+  group: { name: string } | null;
+  tournament: { name: string };
+}): FixtureItem {
+  const date = m.matchDate instanceof Date ? m.matchDate : new Date(m.matchDate);
+  let status: FixtureStatus;
+  let meta: string;
+
+  if (m.status === 'LIVE') {
+    status = 'LIVE';
+    meta = 'En cours';
+  } else if (m.status === 'FINISHED') {
+    status = 'FT';
+    meta = 'Terminé';
+  } else {
+    status = 'SOON';
+    meta = date.toLocaleString('fr-FR', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  const groupLabel = m.group ? `GROUPE ${m.group.name.toUpperCase()}` : m.tournament.name.toUpperCase();
+
+  return {
+    home: m.homeTeam.name,
+    logoH: m.homeTeam.logo,
+    shortH: m.homeTeam.shortName,
+    away: m.awayTeam.name,
+    logoA: m.awayTeam.logo,
+    shortA: m.awayTeam.shortName,
+    scoreH: m.homeScore,
+    scoreA: m.awayScore,
+    status,
+    meta,
+    viewers: null,
+    group: groupLabel,
+  };
+}
+
+export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () => {
+  try {
+    const { default: prisma } = await import('@/lib/prisma');
+
+    const [teamCount, playerCount, finishedMatches, liveMatches, upcomingMatches, recentMatches] =
+      await Promise.all([
+        prisma.team.count({ where: { disqualified: false } }),
+        prisma.player.count(),
+        prisma.match.count({ where: { status: 'FINISHED' } }),
+        prisma.match.findMany({
+          where: { status: 'LIVE' },
+          include: {
+            homeTeam: { select: { name: true, shortName: true, logo: true } },
+            awayTeam: { select: { name: true, shortName: true, logo: true } },
+            group: { select: { name: true } },
+            tournament: { select: { name: true } },
+          },
+          orderBy: { matchDate: 'desc' },
+          take: 2,
+        }),
+        prisma.match.findMany({
+          where: { status: 'SCHEDULED', matchDate: { gte: new Date() } },
+          include: {
+            homeTeam: { select: { name: true, shortName: true, logo: true } },
+            awayTeam: { select: { name: true, shortName: true, logo: true } },
+            group: { select: { name: true } },
+            tournament: { select: { name: true } },
+          },
+          orderBy: { matchDate: 'asc' },
+          take: 3,
+        }),
+        prisma.match.findMany({
+          where: { status: 'FINISHED' },
+          include: {
+            homeTeam: { select: { name: true, shortName: true, logo: true } },
+            awayTeam: { select: { name: true, shortName: true, logo: true } },
+            group: { select: { name: true } },
+            tournament: { select: { name: true } },
+          },
+          orderBy: { matchDate: 'desc' },
+          take: 3,
+        }),
+      ]);
+
+    const counts: Counts | null =
+      teamCount > 0 || playerCount > 0 || finishedMatches > 0
+        ? { nations: teamCount, players: playerCount, matches: finishedMatches }
+        : null;
+
+    // Fixtures : on priorise LIVE → SOON → FT pour avoir un mix visuel.
+    const merged = [...liveMatches, ...upcomingMatches, ...recentMatches]
+      .slice(0, 3)
+      .map(mapMatchToFixture);
+
+    const fixtures: FixtureItem[] = merged.length > 0 ? merged : FIXTURES_MOCK;
+
+    return {
+      props: JSON.parse(JSON.stringify({ counts, fixtures })) as CDM26HomeProps,
+    };
+  } catch (error) {
+    console.error('[landing] getServerSideProps failed, falling back to mocks:', error);
+    return {
+      props: {
+        counts: null,
+        fixtures: FIXTURES_MOCK,
+      },
+    };
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CDM26Home() {
+export default function CDM26Home({ counts, fixtures }: CDM26HomeProps) {
   const { isSignedIn } = useUser();
+
+  // Stats : on reconstitue côté client pour préserver les références icônes
+  // (un LucideIcon ne survit pas à JSON.stringify côté SSR).
+  const stats: StatItem[] = counts
+    ? [
+        { code: `NTN-${counts.nations}`, icon: Trophy, value: counts.nations, suffix: '', label: 'Nations engagées', color: 'text-emerald-400' },
+        { code: `PLY-${counts.players}`, icon: Users, value: counts.players, suffix: '', label: 'Joueurs inscrits', color: 'text-yellow-400' },
+        { code: `MTC-${counts.matches}`, icon: Swords, value: counts.matches, suffix: '', label: 'Matchs joués', color: 'text-red-400' },
+        { code: 'VWR-12K', icon: Eye, value: 12000, suffix: '+', label: 'Viewers cumulés', color: 'text-purple-400' },
+      ]
+    : STATS_MOCK;
 
   return (
     <>
@@ -401,7 +597,7 @@ export default function CDM26Home() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-y border-white/10">
-              {STATS.map((s) => (
+              {stats.map((s) => (
                 <div key={s.code} className="px-6 py-10 first:pl-0 md:first:pl-6 relative group">
                   <div className="text-[10px] text-white/40 uppercase tracking-[0.3em] mb-3 flex items-center gap-1.5 font-mono">
                     <s.icon className="w-3 h-3" />
@@ -441,7 +637,7 @@ export default function CDM26Home() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-5">
-              {FIXTURES.map((f, i) => (
+              {fixtures.map((f, i) => (
                 <FixtureCard key={i} f={f} index={i} />
               ))}
             </div>
@@ -660,10 +856,8 @@ export default function CDM26Home() {
               {/* LEFT — Mock stream player */}
               <div className="lg:col-span-7 relative">
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-purple-500/30 group shadow-2xl shadow-purple-500/20">
-                  {/* Ripple background */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Ripple mainCircleSize={180} numCircles={6} />
-                  </div>
+                  {/* Static glow background (replaces Ripple — was 6 animated circles) */}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(145,70,255,0.22),transparent_65%)]" />
                   {/* Pitch gradient atmosphere */}
                   <div className="absolute inset-0 bg-linear-to-tr from-emerald-950/30 via-transparent to-purple-900/30 pointer-events-none" />
                   {/* Live badge */}
@@ -899,9 +1093,9 @@ export default function CDM26Home() {
 
         {/* ───── 11. FINAL CTA ───── */}
         <section className="relative bg-black py-32 md:py-40 overflow-hidden">
-          {/* Ripple bg */}
+          {/* Ripple bg (reduced 9→5 circles for perf) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <Ripple mainCircleSize={350} numCircles={9} />
+            <Ripple mainCircleSize={350} numCircles={5} />
           </div>
           {/* Aurora bottom */}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-aurora opacity-40 pointer-events-none" />

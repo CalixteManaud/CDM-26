@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Gérer les événements user.created et user.updated
   if (eventType === 'user.created' || eventType === 'user.updated') {
-    const { id, email_addresses, first_name, last_name, username } = evt.data;
+    const { id, email_addresses, first_name, last_name, username, image_url } = evt.data;
 
     const email = email_addresses[0]?.email_address;
     if (!email) {
@@ -67,25 +67,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const name = `${first_name || ''} ${last_name || ''}`.trim() || username || 'User';
+    const normalizedUsername = username && username.trim().length > 0 ? username.trim() : null;
+    const avatar = image_url || null;
 
     // Extraction OAuth Twitch (si l'utilisateur s'est connecté avec Twitch)
     const twitch = extractTwitchFromClerkWebhook(evt.data);
 
     try {
-      // Créer ou mettre à jour l'utilisateur dans la base de données
-      const dbUser = await prisma.user.upsert({
-        where: { clerkId: id },
-        update: {
-          email,
-          name,
-        },
-        create: {
-          clerkId: id,
-          email,
-          name,
-          role: UserRole.GUEST, // Rôle par défaut (GUEST)
-        },
-      });
+      // Créer ou mettre à jour l'utilisateur dans la base de données.
+      // username peut être déjà pris par un autre user (P2002) — on retombe
+      // alors sur un upsert sans username pour ne pas bloquer le sync.
+      let dbUser;
+      try {
+        dbUser = await prisma.user.upsert({
+          where: { clerkId: id },
+          update: {
+            email,
+            name,
+            ...(normalizedUsername !== null ? { username: normalizedUsername } : {}),
+            avatar,
+          },
+          create: {
+            clerkId: id,
+            email,
+            name,
+            username: normalizedUsername,
+            avatar,
+            role: UserRole.GUEST, // Rôle par défaut (GUEST)
+          },
+        });
+      } catch (upsertError) {
+        const code = (upsertError as { code?: string })?.code;
+        if (code === 'P2002' && normalizedUsername !== null) {
+          console.warn(
+            `[clerk webhook] Conflit unique username pour ${email} → "${normalizedUsername}". Skip username.`
+          );
+          dbUser = await prisma.user.upsert({
+            where: { clerkId: id },
+            update: { email, name, avatar },
+            create: {
+              clerkId: id,
+              email,
+              name,
+              avatar,
+              role: UserRole.GUEST,
+            },
+          });
+        } else {
+          throw upsertError;
+        }
+      }
 
       // Synchroniser le lien Twitch dans une étape séparée pour gérer
       // proprement les conflits (un autre user a déjà ce twitchUsername).

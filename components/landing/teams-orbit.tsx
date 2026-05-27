@@ -82,14 +82,14 @@ export function TeamsOrbit() {
             </motion.div>
 
             {/* Inner orbit */}
-            <OrbitingCircles iconSize={44} radius={130} duration={28}>
+            <OrbitingCircles iconSize={44} radius={130} duration={50}>
               {FLAGS_INNER.map((f) => (
                 <FlagBadge key={f} flag={f} size={44} />
               ))}
             </OrbitingCircles>
 
             {/* Outer orbit (reverse) */}
-            <OrbitingCircles iconSize={36} radius={220} duration={42} reverse>
+            <OrbitingCircles iconSize={36} radius={220} duration={75} reverse>
               {FLAGS_OUTER.map((f) => (
                 <FlagBadge key={f} flag={f} size={36} />
               ))}

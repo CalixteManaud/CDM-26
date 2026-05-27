@@ -1,22 +1,34 @@
-import { SignUp } from '@clerk/nextjs';
+import type { GetServerSideProps } from 'next';
+import Head from 'next/head';
+import { getAuth } from '@clerk/nextjs/server';
+
+import { AuthShell } from '@/components/auth/auth-shell';
+import { SignUpForm } from '@/components/auth/sign-up-form';
+
+const DEFAULT_LOGGED_IN_REDIRECT = '/tournaments';
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { userId } = getAuth(ctx.req);
+  if (userId) {
+    return { redirect: { destination: DEFAULT_LOGGED_IN_REDIRECT, permanent: false } };
+  }
+  return { props: {} };
+};
 
 export default function SignUpPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">CDM 26</h1>
-          <p className="text-muted-foreground mt-2">Créez votre compte</p>
-        </div>
-        <SignUp
-          appearance={{
-            elements: {
-              rootBox: 'mx-auto',
-              card: 'shadow-lg',
-            },
-          }}
+    <>
+      <Head>
+        <title>Inscription — CDM 26</title>
+        <meta
+          name="description"
+          content="Crée ton compte CDM 26 pour intégrer une nation, parier sur les matchs FIFA 26 et viser le sacre mondial sur Twitch."
         />
-      </div>
-    </div>
+      </Head>
+
+      <AuthShell mode="sign-up">
+        <SignUpForm />
+      </AuthShell>
+    </>
   );
 }

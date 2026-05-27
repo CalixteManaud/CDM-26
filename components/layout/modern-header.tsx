@@ -243,7 +243,7 @@ export function ModernHeader() {
                 <div className="flex items-center gap-2 text-black">
                   <AlertCircle className="w-4 h-4" />
                   <span className="text-sm font-black tracking-tight uppercase">
-                    Mode invité — Deviens participant pour intégrer une nation
+                    Mode invité — Deviens Joueur pour intégrer une nation
                   </span>
                 </div>
                 <BecomeParticipant />

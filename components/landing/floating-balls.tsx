@@ -3,13 +3,10 @@
 import { motion } from 'framer-motion';
 
 const BALLS = [
-  { left: '8%', top: '18%', size: 56, delay: 0, duration: 7 },
-  { left: '82%', top: '12%', size: 40, delay: 1.4, duration: 9 },
-  { left: '15%', top: '70%', size: 72, delay: 0.6, duration: 8 },
-  { left: '70%', top: '78%', size: 48, delay: 2.1, duration: 10 },
-  { left: '50%', top: '40%', size: 32, delay: 0.9, duration: 6 },
-  { left: '35%', top: '88%', size: 28, delay: 1.8, duration: 11 },
-  { left: '92%', top: '55%', size: 36, delay: 0.3, duration: 9 },
+  { left: '8%', top: '18%', size: 56, delay: 0, duration: 9 },
+  { left: '82%', top: '12%', size: 40, delay: 1.4, duration: 11 },
+  { left: '15%', top: '70%', size: 72, delay: 0.6, duration: 10 },
+  { left: '70%', top: '78%', size: 48, delay: 2.1, duration: 12 },
 ];
 
 function SoccerBall({ size }: { size: number }) {
