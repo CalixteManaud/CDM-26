@@ -248,6 +248,110 @@ export async function archiveTournament(id: string, archive: boolean) {
 }
 
 /**
+ * Importe les équipes (et leurs joueurs + coach) d'un tournoi source vers un
+ * tournoi cible vide. Admin uniquement. Non destructif côté source.
+ *
+ * Précondition : le tournoi cible ne doit avoir aucune équipe (sinon doublons
+ * potentiels sur `Player.@@unique([teamId, jerseyNumber])` et confusion sur les
+ * groupes). Les Team clonées sont assignées à `groupId = null` — l'admin doit
+ * ensuite faire la répartition dans les groupes du tournoi cible.
+ */
+export async function importTeamsFromTournament(targetId: string, sourceId: string) {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return { success: false, error: 'Non authentifié' };
+    }
+
+    const dbUser = await syncClerkUser();
+    if (!dbUser || dbUser.role !== 'ADMIN') {
+      return { success: false, error: 'Permissions insuffisantes' };
+    }
+
+    if (targetId === sourceId) {
+      return { success: false, error: 'Le tournoi source et cible doivent être différents' };
+    }
+
+    const [target, source] = await Promise.all([
+      prisma.tournament.findUnique({
+        where: { id: targetId },
+        select: { id: true, _count: { select: { teams: true } } },
+      }),
+      prisma.tournament.findUnique({
+        where: { id: sourceId },
+        include: {
+          teams: {
+            include: {
+              players: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    if (!target) return { success: false, error: 'Tournoi cible introuvable' };
+    if (!source) return { success: false, error: 'Tournoi source introuvable' };
+
+    if (target._count.teams > 0) {
+      return {
+        success: false,
+        error: 'Le tournoi cible doit être vide avant l\'import (aucune équipe)',
+      };
+    }
+
+    if (source.teams.length === 0) {
+      return { success: false, error: 'Le tournoi source ne contient aucune équipe' };
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      let teamsCreated = 0;
+      let playersCreated = 0;
+
+      for (const srcTeam of source.teams) {
+        const newTeam = await tx.team.create({
+          data: {
+            name: srcTeam.name,
+            shortName: srcTeam.shortName,
+            logo: srcTeam.logo,
+            coachUserId: srcTeam.coachUserId,
+            tournamentId: targetId,
+            // groupId: null → l'admin assignera ensuite dans les groupes du target
+          },
+        });
+        teamsCreated++;
+
+        if (srcTeam.players.length > 0) {
+          await tx.player.createMany({
+            data: srcTeam.players.map((p) => ({
+              jerseyNumber: p.jerseyNumber,
+              position: p.position,
+              userId: p.userId,
+              teamId: newTeam.id,
+            })),
+          });
+          playersCreated += srcTeam.players.length;
+        }
+      }
+
+      return { teamsCreated, playersCreated };
+    });
+
+    revalidatePath(`/tournaments/${targetId}`);
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Error importing teams:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error && error.message.includes('Unique')
+          ? 'Conflit lors de la copie (un joueur a déjà ce numéro dans une équipe existante)'
+          : "Erreur lors de l'import des équipes",
+    };
+  }
+}
+
+/**
  * Marque la phase de poules comme terminée
  */
 export async function completeGroupStage(tournamentId: string) {

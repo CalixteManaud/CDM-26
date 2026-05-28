@@ -37,6 +37,7 @@ import { TeamsList } from '@/components/tournament/teams-list';
 import { GenerateMatchesButton } from '@/components/tournament/generate-matches-button';
 import { CompleteGroupStageButton } from '@/components/tournament/complete-group-stage-button';
 import { TournamentStatisticsView } from '@/components/tournament/tournament-statistics';
+import { ImportTeamsDialog } from '@/components/tournament/import-teams-dialog';
 import { useUser } from '@clerk/nextjs';
 import type { TournamentStatistics } from '@/lib/utils/tournament-stats';
 
@@ -439,7 +440,15 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
 
               {/* TEAMS */}
               <TabsContent value="teams" className="mt-0">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                  {isAdmin && !isArchived && teamsCount === 0 && (
+                    <div className="flex justify-end">
+                      <ImportTeamsDialog
+                        targetTournamentId={tournament.id}
+                        onDone={handleRefresh}
+                      />
+                    </div>
+                  )}
                   <TeamsList teams={tournament.teams || []} />
                 </motion.div>
               </TabsContent>
