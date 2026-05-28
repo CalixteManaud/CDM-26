@@ -16,16 +16,39 @@
 import prisma from '@/lib/prisma';
 import { BetOutcome, BetStatus } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints } from '@/lib/wizebot';
-import { computeLiveOdds, isBettingOpen } from './odds';
+import { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS } from './odds';
 
 // Helpers purs ré-exportés pour les imports serveur déjà en place.
 // Les composants client doivent importer directement depuis `@/lib/utils/odds`
 // (ce fichier-ci pull Prisma + wizebot et fuiterait dans le bundle browser).
-export { computeLiveOdds, isBettingOpen };
+export { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS };
 export type { LiveOdds } from './odds';
 
-const MIN_BET_POINTS = 1;
-const MAX_BET_POINTS = 1_000_000;
+// Concurrence max sur les crédits Wizebot au settlement. 10 workers en parallèle
+// × ~300ms par appel = ~30s pour settle 1000 paris (vs 5 min en séquentiel).
+const SETTLEMENT_CONCURRENCY = 10;
+
+/**
+ * Run `tasks` avec une concurrence bornée (~p-limit minimal, sans dep externe).
+ * Aucun task ne throw — chaque fn() est attendue de gérer sa propre erreur et
+ * retourner un résultat structuré (cf. ok/error patterns dans wizebot.ts).
+ */
+async function runWithConcurrency<T>(
+  tasks: Array<() => Promise<T>>,
+  concurrency: number
+): Promise<T[]> {
+  const results = new Array<T>(tasks.length);
+  let cursor = 0;
+  async function worker() {
+    while (true) {
+      const i = cursor++;
+      if (i >= tasks.length) return;
+      results[i] = await tasks[i]();
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, worker));
+  return results;
+}
 
 export class BettingError extends Error {
   constructor(message: string, public code: string) {
@@ -100,11 +123,21 @@ export async function placeBet(params: {
           ? 'totalDrawPool'
           : 'totalAwayPool';
 
-    // Détecter si c'est le 1er pari de cet utilisateur sur ce match
+    // Détecter si c'est le 1er pari de cet utilisateur sur ce match ET vérifier
+    // qu'il ne tente pas de changer de camp (règle "no switching sides" : une
+    // fois la première mise posée sur un outcome, on ne peut que cumuler dessus,
+    // pas répartir sur les autres issues).
     const userPriorBet = await tx.bet.findFirst({
       where: { userId, matchId },
-      select: { id: true },
+      select: { id: true, outcome: true },
     });
+
+    if (userPriorBet && userPriorBet.outcome !== outcome) {
+      throw new BettingError(
+        'Tu as déjà parié sur une autre issue de ce match — impossible de changer de camp. Tu peux uniquement augmenter ta mise sur ton choix initial.',
+        'OUTCOME_LOCKED'
+      );
+    }
 
     const updatedPool = await tx.matchBettingPool.update({
       where: { id: pool.id },
@@ -280,12 +313,14 @@ export async function settleMatchBets(params: {
     }
   );
 
-  // Crédits Wizebot HORS transaction (réseau lent + on ne veut pas rollback la DB).
-  let winners = 0;
-  let creditFailed = 0;
-  for (const w of winnersData) {
+  // Crédits Wizebot HORS transaction, en parallèle borné (~30s pour 1000 paris
+  // à concurrence 10, vs ~5min en séquentiel). Chaque worker met à jour son
+  // Bet indépendamment — pas de transaction globale (réseau lent + on ne veut
+  // pas rollback la DB si Wizebot tombe au milieu).
+  type CreditResult = 'won' | 'refunded' | 'failed';
+
+  const winnerTasks = winnersData.map((w) => async (): Promise<CreditResult> => {
     if (!w.twitchUsername) {
-      // Cas improbable (le user a parié donc twitchUsername était set).
       await prisma.bet.update({
         where: { id: w.betId },
         data: {
@@ -293,37 +328,29 @@ export async function settleMatchBets(params: {
           wizebotCreditError: 'twitchUsername absent au moment du settlement',
         },
       });
-      creditFailed++;
-      continue;
+      return 'failed';
     }
-
     const credit = await creditWizebotPoints({
       twitchUsername: w.twitchUsername,
       amount: w.payout,
       reason: `CDM 26 — pari gagné (${matchId})`,
     });
-
     if (credit.ok) {
       await prisma.bet.update({
         where: { id: w.betId },
         data: { wizebotCreditTxId: credit.txId, wizebotCreditError: null },
       });
-      winners++;
-    } else {
-      await prisma.bet.update({
-        where: { id: w.betId },
-        data: {
-          status: BetStatus.CREDIT_FAILED,
-          wizebotCreditError: credit.error,
-        },
-      });
-      creditFailed++;
+      return 'won';
     }
-  }
+    await prisma.bet.update({
+      where: { id: w.betId },
+      data: { status: BetStatus.CREDIT_FAILED, wizebotCreditError: credit.error },
+    });
+    return 'failed';
+  });
 
-  let refunded = 0;
-  for (const r of refundData) {
-    if (!r.twitchUsername) continue;
+  const refundTasks = refundData.map((r) => async (): Promise<CreditResult> => {
+    if (!r.twitchUsername) return 'failed';
     const credit = await creditWizebotPoints({
       twitchUsername: r.twitchUsername,
       amount: r.payout,
@@ -334,17 +361,27 @@ export async function settleMatchBets(params: {
         where: { id: r.betId },
         data: { wizebotCreditTxId: credit.txId },
       });
-      refunded++;
-    } else {
-      await prisma.bet.update({
-        where: { id: r.betId },
-        data: {
-          status: BetStatus.CREDIT_FAILED,
-          wizebotCreditError: credit.error,
-        },
-      });
-      creditFailed++;
+      return 'refunded';
     }
+    await prisma.bet.update({
+      where: { id: r.betId },
+      data: { status: BetStatus.CREDIT_FAILED, wizebotCreditError: credit.error },
+    });
+    return 'failed';
+  });
+
+  const allResults = await runWithConcurrency(
+    [...winnerTasks, ...refundTasks],
+    SETTLEMENT_CONCURRENCY
+  );
+
+  let winners = 0;
+  let refunded = 0;
+  let creditFailed = 0;
+  for (const r of allResults) {
+    if (r === 'won') winners++;
+    else if (r === 'refunded') refunded++;
+    else creditFailed++;
   }
 
   return {

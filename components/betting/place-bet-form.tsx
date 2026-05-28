@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { computeLiveOdds } from '@/lib/utils/odds';
 import { cn } from '@/lib/utils';
+import { useLiveMatchPool } from '@/hooks/use-live-match-pool';
+import { MAX_BET_POINTS } from '@/lib/utils/odds';
 
 type Pool = {
   totalHomePool: number;
@@ -68,9 +70,22 @@ export function PlaceBetForm({
   const [points, setPoints] = useState<number>(100);
   const [isPending, startTransition] = useTransition();
 
-  const odds = pool
-    ? computeLiveOdds(pool)
-    : { home: null, draw: null, away: null };
+  // Live pool : polling 5s sur /api/matches/[id]/pool. L'endpoint est cache CDN
+  // (max-age=2 + stale-while-revalidate=4) → Vercel absorbe la charge même à 1k
+  // clients. On prend en priorité la data live, fallback sur le snapshot SSR.
+  const { data: live } = useLiveMatchPool(matchId);
+  const activePool = live?.pool ?? pool;
+  const totalPool = live
+    ? live.pool.totalPool
+    : pool
+      ? pool.totalHomePool + pool.totalDrawPool + pool.totalAwayPool
+      : 0;
+
+  const odds = live
+    ? live.odds
+    : activePool
+      ? computeLiveOdds(activePool)
+      : { home: null, draw: null, away: null };
   const oddsByOutcome: Record<Outcome, number | null> = {
     HOME: odds.home,
     DRAW: odds.draw,
@@ -163,8 +178,16 @@ export function PlaceBetForm({
       className="rounded-xl border border-white/10 bg-black/30 p-5 space-y-4"
     >
       <div>
-        <div className="text-[11px] font-mono uppercase tracking-[0.3em] font-bold text-emerald-400 mb-3">
-          / placer un pari
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[11px] font-mono uppercase tracking-[0.3em] font-bold text-emerald-400">
+            / placer un pari
+          </div>
+          {live && (
+            <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-300/80">
+              <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              live · {totalPool.toLocaleString('fr-FR')} pts
+            </div>
+          )}
         </div>
 
         {/* Outcome picker */}
@@ -206,9 +229,16 @@ export function PlaceBetForm({
             id="bet-points"
             type="number"
             min={1}
-            max={1_000_000}
+            max={MAX_BET_POINTS}
             value={points}
-            onChange={(e) => setPoints(Math.max(1, Number.parseInt(e.target.value || '0', 10) || 0))}
+            onChange={(e) =>
+              setPoints(
+                Math.min(
+                  MAX_BET_POINTS,
+                  Math.max(1, Number.parseInt(e.target.value || '0', 10) || 0)
+                )
+              )
+            }
             className="bg-white/[0.02] border-white/15 text-white tabular-nums font-bold"
           />
           <div className="flex gap-1">

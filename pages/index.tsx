@@ -144,7 +144,7 @@ const TESTIMONIALS: Testimonial[] = [
 const CHAT_LINES = [
   { user: 'KylianFan10', msg: "OOOH QUEL BUT 🔥🔥", color: 'text-emerald-400' },
   { user: 'BrazilianGod', msg: 'on va revenir, restez calmes', color: 'text-yellow-400' },
-  { user: 'Mod_Akira', msg: 'rappel : on parie sur cdm26.com/paris', color: 'text-red-400' },
+  { user: 'Mod_Akira', msg: 'rappel : on parie sur cdm.rgtcity.fr/paris', color: 'text-red-400' },
   { user: 'cdm26_bot', msg: 'Pool actuel : 142,000 pts · cote France 1.42', color: 'text-purple-400' },
   { user: 'StreamQueen', msg: 'meilleur match du tournoi sans débat', color: 'text-emerald-400' },
   { user: 'Bratislav', msg: 'NEYMAR EN DESSOUS DE LA BARRE 😭', color: 'text-yellow-400' },
@@ -931,7 +931,7 @@ export default function CDM26Home({ counts, fixtures }: CDM26HomeProps) {
                     href="/paris"
                     className="text-purple-300 font-mono bg-purple-500/10 border border-purple-500/30 px-1.5 py-0.5 rounded text-sm hover:border-purple-400/50 transition"
                   >
-                    cdm26.com/paris
+                    cdm.rgtcity.fr/paris
                   </Link>{' '}
                   avec tes points de chaîne, soutiens ta nation, monte au classement des parieurs.
                 </p>

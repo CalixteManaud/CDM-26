@@ -142,3 +142,89 @@ export async function canAddSiteAdmin(): Promise<boolean> {
   const count = await countSiteAdmins();
   return count < 5; // Max 5 site admins
 }
+
+/**
+ * Détermine si un user peut placer un pari sur un tournoi donné.
+ *
+ * Bloqué pour :
+ *  - ADMIN (ils valident les paris et donnent les résultats — conflit d'intérêt)
+ *  - PLAYER inscrit dans une équipe de ce tournoi (info privilégiée)
+ *  - COACH d'une équipe de ce tournoi (info privilégiée)
+ *
+ * Retourne `{ ok: true }` si autorisé, sinon `{ ok: false, reason }` avec un code
+ * explicite que l'API route peut traduire en message FR.
+ */
+export type BetRefusal = 'ADMIN' | 'PLAYER' | 'COACH';
+
+export async function canUserBetOnTournament(
+  userId: string,
+  tournamentId: string
+): Promise<{ ok: true } | { ok: false; reason: BetRefusal }> {
+  const [user, isPlayer, isCoach] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+    prisma.player.findFirst({
+      where: { userId, team: { tournamentId } },
+      select: { id: true },
+    }),
+    prisma.team.findFirst({
+      where: { tournamentId, coachUserId: userId },
+      select: { id: true },
+    }),
+  ]);
+
+  if (user?.role === 'ADMIN') return { ok: false, reason: 'ADMIN' };
+  if (isPlayer) return { ok: false, reason: 'PLAYER' };
+  if (isCoach) return { ok: false, reason: 'COACH' };
+  return { ok: true };
+}
+
+/**
+ * Variante "par match" — résout d'abord le tournamentId.
+ */
+export async function canUserBetOnMatch(
+  userId: string,
+  matchId: string
+): Promise<{ ok: true } | { ok: false; reason: BetRefusal | 'NOT_FOUND' }> {
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: { tournamentId: true },
+  });
+  if (!match) return { ok: false, reason: 'NOT_FOUND' };
+  return canUserBetOnTournament(userId, match.tournamentId);
+}
+
+/**
+ * Variante "par marché" — gère à la fois les marchés liés à un match
+ * (score exact, total buts, BTTS) et les marchés tournoi-wide (vainqueur,
+ * top buteur, MVP).
+ */
+export async function canUserBetOnMarket(
+  userId: string,
+  marketId: string
+): Promise<{ ok: true } | { ok: false; reason: BetRefusal | 'NOT_FOUND' }> {
+  const market = await prisma.bettingMarket.findUnique({
+    where: { id: marketId },
+    select: {
+      tournamentId: true,
+      match: { select: { tournamentId: true } },
+    },
+  });
+  if (!market) return { ok: false, reason: 'NOT_FOUND' };
+  const tournamentId = market.tournamentId ?? market.match?.tournamentId;
+  if (!tournamentId) return { ok: false, reason: 'NOT_FOUND' };
+  return canUserBetOnTournament(userId, tournamentId);
+}
+
+/**
+ * Helper pour produire un message FR lisible à partir d'un refus.
+ */
+export function betRefusalMessage(reason: BetRefusal): string {
+  switch (reason) {
+    case 'ADMIN':
+      return "Les administrateurs ne peuvent pas parier — ils valident les paris et donnent les résultats.";
+    case 'PLAYER':
+      return "Les joueurs inscrits dans le tournoi ne peuvent pas parier sur leurs propres compétitions.";
+    case 'COACH':
+      return "Les coachs ne peuvent pas parier sur le tournoi de leur équipe.";
+  }
+}

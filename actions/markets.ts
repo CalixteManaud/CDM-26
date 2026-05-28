@@ -134,7 +134,7 @@ export async function getAllOpenMarkets() {
 // =================== Validation helpers ===================
 
 const MIN_STAKE = 50;
-const MAX_STAKE = 100_000;
+const MAX_STAKE = 50_000;
 
 function validateStake(amount: number): string | null {
   if (!Number.isFinite(amount) || !Number.isInteger(amount)) return 'Mise invalide';
@@ -354,6 +354,21 @@ export async function placeMarketBet(input: PlaceMarketBetInput) {
     return { success: false, error: 'Outcome inconnu pour ce marché', code: 'BAD_OUTCOME' };
   }
 
+  // Règle "no switching sides" : si l'user a déjà parié sur ce marché avec un
+  // autre outcomeKey, on refuse. Il peut uniquement cumuler sur son choix initial.
+  const priorBet = await prisma.marketBet.findFirst({
+    where: { userId: input.userId, marketId: input.marketId },
+    select: { outcomeKey: true },
+  });
+  if (priorBet && priorBet.outcomeKey !== input.outcomeKey) {
+    return {
+      success: false,
+      error:
+        "Tu as déjà parié sur une autre issue de ce marché — impossible de changer de camp. Tu peux uniquement augmenter ta mise sur ton choix initial.",
+      code: 'OUTCOME_LOCKED',
+    };
+  }
+
   // Cote au moment du placement (snapshot informatif)
   const oddsMap = computeMarketOdds(market.pools, Number(market.housePercentage));
   const snapshotOdds = oddsMap[input.outcomeKey] ?? 1.01;
@@ -495,6 +510,26 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
   }
 
   const potentialPayout = Math.floor(input.totalStake * combinedOdds);
+
+  // Règle "no switching sides" : aucune jambe ne doit cibler un marché où l'user
+  // a déjà parié sur un autre outcomeKey (simple ou combiné précédent).
+  const priorOnAnyMarket = await prisma.marketBet.findMany({
+    where: { userId: input.userId, marketId: { in: dedupMarketIds } },
+    select: { marketId: true, outcomeKey: true },
+  });
+  for (const leg of input.legs) {
+    const conflict = priorOnAnyMarket.find(
+      (b) => b.marketId === leg.marketId && b.outcomeKey !== leg.outcomeKey
+    );
+    if (conflict) {
+      return {
+        success: false,
+        error:
+          "Tu as déjà parié sur une autre issue de l'un des marchés du combiné — impossible de changer de camp.",
+        code: 'OUTCOME_LOCKED',
+      };
+    }
+  }
 
   // 2. Débit Wizebot pour la mise totale
   const debit = await debitWizebotPoints({

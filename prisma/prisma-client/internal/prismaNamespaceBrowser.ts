@@ -110,6 +110,7 @@ export const TournamentScalarFieldEnum = {
   playersPerTeam: 'playersPerTeam',
   groupCount: 'groupCount',
   groupStageComplete: 'groupStageComplete',
+  archivedAt: 'archivedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

@@ -17,10 +17,13 @@ import {
   UserRound,
   CircleDot,
   Tv,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 import {
   getTournamentById,
@@ -42,6 +45,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 type MatchStage = 'GROUP' | 'PLAYOFF' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'FINAL';
 type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED';
@@ -82,6 +97,7 @@ type Tournament = {
   startDate: string;
   groupCount: number;
   groupStageComplete: boolean;
+  archivedAt: string | null;
   teams?: Team[];
   groups?: GroupLite[];
 };
@@ -228,8 +244,11 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
   const startDate = new Date(tournament.startDate);
   const now = new Date();
   const isUpcoming = startDate > now;
+  const isArchived = !!tournament.archivedAt;
 
-  const status: { label: string; tone: 'upcoming' | 'live' | 'final' } = isUpcoming
+  const status: { label: string; tone: 'upcoming' | 'live' | 'final' | 'archived' } = isArchived
+    ? { label: 'Archivé', tone: 'archived' }
+    : isUpcoming
     ? { label: 'À venir', tone: 'upcoming' }
     : tournament.groupStageComplete
     ? { label: 'Phase finale', tone: 'final' }
@@ -280,15 +299,25 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
               <MetaItem icon={Users} label="Équipes" value={String(teamsCount)} accent="yellow" />
               <MetaItem icon={Trophy} label="Groupes" value={String(tournament.groupCount)} accent="red" />
               <MetaItem icon={CircleDot} label="ID" value={tournament.id.slice(0, 8).toUpperCase()} accent="purple" mono />
-              <a
-                href="https://www.twitch.tv/blaize"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-mono uppercase tracking-[0.22em] hover:bg-purple-500/15 transition"
-              >
-                <Tv className="w-3 h-3" />
-                Twitch live
-              </a>
+              <div className="ml-auto flex items-center gap-2">
+                {isAdmin && (
+                  <ArchiveTournamentButton
+                    tournamentId={tournament.id}
+                    isArchived={isArchived}
+                    tournamentName={tournament.name}
+                    onDone={handleRefresh}
+                  />
+                )}
+                <a
+                  href="https://www.twitch.tv/blaize"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px] font-mono uppercase tracking-[0.22em] hover:bg-purple-500/15 transition"
+                >
+                  <Tv className="w-3 h-3" />
+                  Twitch live
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -387,7 +416,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
                     <BracketView matches={knockoutMatches} />
                   ) : (
                     <div className="space-y-6">
-                      {isAdmin && tournament.groupStageComplete && (
+                      {isAdmin && !isArchived && tournament.groupStageComplete && (
                         <GenerateMatchesButton
                           tournamentId={tournament.id}
                           type="knockout"
@@ -418,10 +447,10 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
               {/* MATCHES */}
               <TabsContent value="matches" className="mt-0">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  {isAdmin && matches.filter((m) => m.stage === 'GROUP').length === 0 && (
+                  {isAdmin && !isArchived && matches.filter((m) => m.stage === 'GROUP').length === 0 && (
                     <GenerateMatchesButton tournamentId={tournament.id} type="group" />
                   )}
-                  {isAdmin && !tournament.groupStageComplete && groupMatches.length > 0 && (
+                  {isAdmin && !isArchived && !tournament.groupStageComplete && groupMatches.length > 0 && (
                     <CompleteGroupStageButton
                       tournamentId={tournament.id}
                       allGroupMatchesFinished={allGroupMatchesFinished}
@@ -476,9 +505,17 @@ function StatusPill({
   tone,
   children,
 }: {
-  tone: 'upcoming' | 'live' | 'final';
+  tone: 'upcoming' | 'live' | 'final' | 'archived';
   children: React.ReactNode;
 }) {
+  if (tone === 'archived') {
+    return (
+      <Badge className="bg-white/5 border-white/15 text-white/60 px-4 py-1.5 uppercase tracking-[0.22em] text-[11px] font-mono font-black gap-2">
+        <Archive className="w-3 h-3" />
+        {children}
+      </Badge>
+    );
+  }
   if (tone === 'live') {
     return (
       <Badge className="bg-red-500/10 border-red-500/30 text-red-300 px-4 py-1.5 uppercase tracking-[0.22em] text-[11px] font-mono font-black gap-2">
@@ -585,5 +622,88 @@ function EmptyTabState({
       <h3 className="text-2xl md:text-3xl font-black mb-2 text-white tracking-tight">{title}</h3>
       <p className="text-white/55 max-w-md mx-auto">{description}</p>
     </Card>
+  );
+}
+
+function ArchiveTournamentButton({
+  tournamentId,
+  isArchived,
+  tournamentName,
+  onDone,
+}: {
+  tournamentId: string;
+  isArchived: boolean;
+  tournamentName: string;
+  onDone: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const Icon = isArchived ? ArchiveRestore : Archive;
+  const label = isArchived ? 'Désarchiver' : 'Archiver';
+  const title = isArchived ? 'Désarchiver ce tournoi ?' : 'Archiver ce tournoi ?';
+  const description = isArchived
+    ? `« ${tournamentName} » sera de nouveau visible dans la listing principale.`
+    : `« ${tournamentName} » sera déplacé vers l'historique. Les données (matchs, classements, paris) sont conservées et le tournoi pourra être désarchivé à tout moment.`;
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/tournaments/${tournamentId}/archive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archive: !isArchived }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error ?? "Erreur lors de l'opération");
+        return;
+      }
+      toast.success(isArchived ? 'Tournoi désarchivé' : 'Tournoi archivé');
+      setOpen(false);
+      onDone();
+    } catch (error) {
+      console.error('Archive toggle failed:', error);
+      toast.error('Erreur réseau');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-auto px-3 py-1.5 rounded-full border-white/15 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/30 text-[10px] font-mono uppercase tracking-[0.22em]"
+        >
+          <Icon className="w-3 h-3 mr-1.5" />
+          {label}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={loading}>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                {isArchived ? 'Désarchivage…' : 'Archivage…'}
+              </>
+            ) : (
+              <>
+                <Icon className="w-3.5 h-3.5 mr-1.5" />
+                {isArchived ? 'Confirmer' : 'Archiver'}
+              </>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

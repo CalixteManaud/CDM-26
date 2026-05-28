@@ -66,6 +66,11 @@ model Tournament {
   groupCount         Int
   groupStageComplete Boolean  @default(false)
 
+  // Archive — null = actif (visible dans listing courant) ; date set = dans
+  // l'historique. Pas une suppression, on garde toute la donnée (matchs,
+  // standings, paris settlés). Toggle via /api/tournaments/[id]/archive.
+  archivedAt DateTime?
+
   // Relations
   teams     Team[]
   groups    Group[]
@@ -77,6 +82,8 @@ model Tournament {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([archivedAt])
 }
 
 model Group {
@@ -309,7 +316,7 @@ model Webhook {
 // =================== PARIS ===================
 //
 // Système de paris en pari mutuel.
-//  - Entrée unique : UI cdm26.com (formulaire de pari).
+//  - Entrée unique : UI cdm.rgtcity.fr (formulaire de pari).
 //  - Monnaie : points de chaîne Twitch gérés par Wizebot — on débite via
 //    l'API Wizebot au placement, on crédite à la résolution.
 //

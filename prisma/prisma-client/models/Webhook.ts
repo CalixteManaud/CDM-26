@@ -564,10 +564,6 @@ export type WebhookUpdateeventsInput = {
   push?: $Enums.WebhookEventType | $Enums.WebhookEventType[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 
 
 export type WebhookSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{

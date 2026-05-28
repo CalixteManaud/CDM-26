@@ -152,14 +152,27 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
 - La route est dans la whitelist `isPublicRoute` du `proxy.ts`.
 
 ### Site betting (`lib/wizebot.ts` + `lib/utils/betting.ts` + `actions/markets.ts`)
-- **Entrée unique** : UI cdm26.com (formulaire `PlaceBetForm` → POST `/api/bets/place` pour le 1X2, et POST `/api/markets/place` / `/api/markets/slip` pour les marchés flexibles). **Plus de commande `!parier` dans le chat** — l'inbound Wizebot a été supprimé.
+- **Entrée unique** : UI cdm.rgtcity.fr (formulaire `PlaceBetForm` → POST `/api/bets/place` pour le 1X2, et POST `/api/markets/place` / `/api/markets/slip` pour les marchés flexibles). **Plus de commande `!parier` dans le chat** — l'inbound Wizebot a été supprimé.
 - **Monnaie** : points de chaîne Twitch gérés par Wizebot.
   - **Débit** : `debitWizebotPoints({ twitchUsername, amount, reason })` est appelé par l'API route AVANT la création du Bet. Si le débit échoue (solde insuffisant, réseau), l'API renvoie une erreur et aucun pari n'est créé.
   - **Crédit** : `creditWizebotPoints({ twitchUsername, amount, reason })` crédite les gagnants au settlement.
-  - **Mocké en dev** si la config manque (`WIZEBOT_API_KEY`, `WIZEBOT_CHANNEL`), **erreur explicite en prod**.
+  - **Mocké en dev** si la config manque (`WIZEBOT_API_KEY`), **erreur explicite en prod**.
 - **Twitch lié obligatoire** : un user qui veut parier DOIT avoir `User.twitchUsername` set (sinon les API routes renvoient `NO_TWITCH_LINK`). Le lien est posé via Clerk OAuth ou saisie manuelle sur `/profile`.
 - **Pari mutuel** : aucune cote stockée. Les odds sont calculées dynamiquement depuis `MatchBettingPool` via `computeLiveOdds(pool)` — formule `(total / poolX) × (1 - housePercentage/100)`.
 - **Verrouillage** : `isBettingOpen(match)` = `SCHEDULED && now < matchDate` OU `LIVE && now < matchDate + 25min` (fenêtre live betting). Pas de flag stocké.
+- **Qui peut parier** : tout user authentifié avec Twitch lié, SAUF :
+  - `User.role === 'ADMIN'` (ils valident les résultats — conflit d'intérêt)
+  - Tout `Player` inscrit dans une équipe du tournoi concerné (info privilégiée)
+  - Tout `Team.coachUserId` d'une équipe du tournoi concerné
+  - Check centralisé dans `lib/utils/permissions.ts` : `canUserBetOnMatch`, `canUserBetOnMarket`, `canUserBetOnTournament`. Toutes les API routes (`bets/place`, `markets/place`, `markets/slip`) appellent ces helpers avant le débit Wizebot.
+- **Limite par pari** : `MAX_BET_POINTS = 50_000` (1X2 et marchés). Constantes exportées par `lib/utils/betting.ts` et `actions/markets.ts` — ajuste-les là pour propager partout.
+- **No switching sides** : une fois qu'un user a parié sur un outcome d'un match (1X2) ou d'un marché flexible, il ne peut **plus changer de camp** — il peut uniquement cumuler sur son choix initial. Enforced dans `placeBet` (code `OUTCOME_LOCKED`), `placeMarketBet` et `placeBetSlip` (check par jambe).
+- **Rate limit** : `lib/rate-limit.ts` → `rateLimitBet(userId)` = 10 paris/min/user, appliqué dans les 3 API routes de placement. En mémoire process par défaut (suffit en dev / lambda solo) ; pour la prod multi-instance Vercel, brancher Upstash KV (instructions dans le fichier).
+- **Wizebot resilience** : `lib/wizebot.ts` wrap tous les `fetch` dans `wizebotFetch()` qui apporte timeout 8s + 1 retry exponentiel sur 5xx / erreurs réseau. **Pas de retry sur 4xx** (risque de double-débit).
+- **Settlement parallèle** : `settleMatchBets` exécute les crédits/refunds Wizebot avec une concurrence bornée (`runWithConcurrency` à 10 workers, dans `lib/utils/betting.ts`). 1000 paris settlent en ~30s au lieu de ~5min séquentiel. Pas de dep externe.
+- **Live polling** : endpoint `pages/api/matches/[id]/pool.ts` retourne pool + cotes, avec `Cache-Control: public, max-age=2, stale-while-revalidate=4` (Vercel CDN absorbe 95% du trafic à 1000 clients). Hook React `hooks/use-live-match-pool.ts` poll toutes les 5s, pause sur onglet inactif, force un refresh à la reprise focus. Branché dans `components/betting/place-bet-form.tsx` (cotes + pool total qui se mettent à jour sans reload). Pour passer à Realtime plus tard, garder la même interface du hook et swap l'implémentation.
+- **Cron Vercel** : `vercel.json` déclare un cron toutes les 5 min sur `/api/admin/bets/retry-failed`. La route accepte deux modes : POST avec admin Clerk (déclenchement manuel) OU GET avec `Authorization: Bearer $CRON_SECRET` (déclenchement Vercel). Sans `CRON_SECRET` en prod, les GET sont rejetés.
+- **Constantes de limites** : `MIN_BET_POINTS` / `MAX_BET_POINTS` sont dans `lib/utils/odds.ts` (client-safe, pas de Prisma). `lib/utils/betting.ts` les ré-exporte pour les call-sites serveur déjà en place.
 - **Idempotence Wizebot** : `Bet.wizebotEventId` reste `@unique` (legacy — utilisable pour des retry futurs). En pratique le débit Wizebot est synchrone, on n'en a plus besoin pour bloquer les doublons.
 - **Settlement** : `settleMatchBets({matchId, outcome})` est appelé fire-and-forget depuis `pages/api/matches/[id]/submit-result.ts`. Si le crédit Wizebot échoue, le bet est marqué `CREDIT_FAILED` et `retryFailedCredits()` peut le rejouer plus tard via `pages/api/admin/bets/retry-failed.ts`.
 
@@ -310,7 +323,7 @@ Voir `.env.example` pour la liste complète. Sections obligatoires :
 1. **Clerk** : `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET` + URLs sign-in/up.
 2. **Supabase** : `DATABASE_URL` (pooler 6543), `DIRECT_URL` (5432).
 3. **Vercel Blob** : `BLOB_READ_WRITE_TOKEN`.
-4. **Wizebot** (outbound uniquement) : `WIZEBOT_API_KEY`, `WIZEBOT_CHANNEL` (lowercase). En dev, l'absence des deux mock les appels — pas d'erreur. En prod, c'est requis.
+4. **Wizebot** (outbound uniquement) : `WIZEBOT_API_KEY` — clé API [W] de la doc Wizebot. Elle scope déjà au channel (PAS besoin d'un `WIZEBOT_CHANNEL` séparé). Voyage dans le PATH de l'URL côté Wizebot, donc à protéger comme un secret. En dev, l'absence mock les appels — pas d'erreur. En prod, c'est requis. Doc : https://support.wizebot.tv/docs/api_currency
 5. **App** : `NEXT_PUBLIC_APP_URL`.
 
 En dev, l'absence des vars Wizebot mock les appels outbound. En prod, c'est une erreur explicite.

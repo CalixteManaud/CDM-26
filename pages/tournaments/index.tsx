@@ -15,6 +15,7 @@ import {
   ChevronRight,
   CircleDot,
   Tv,
+  Archive,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -35,17 +36,20 @@ type Tournament = {
   startDate: string;
   groupCount: number;
   groupStageComplete: boolean;
+  archivedAt: string | null;
   _count?: { teams: number };
 };
 
 type ActionResult<T> = { success: boolean; data?: T; error?: string };
 type PageProps = { tournaments: Tournament[] };
-type FilterId = 'all' | 'active' | 'upcoming';
+type FilterId = 'all' | 'active' | 'upcoming' | 'archived';
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
   // Dynamic import volontaire : empêche Prisma/Clerk-server de fuiter dans le bundle client (Pages Router).
+  // includeArchived=true → on récupère tout pour pouvoir afficher les compteurs
+  // et le tab Historique. Le filtrage par état se fait côté client.
   const { getTournaments } = await import('@/actions/tournaments');
-  const result = (await getTournaments()) as ActionResult<Tournament[]>;
+  const result = (await getTournaments({ includeArchived: true })) as ActionResult<Tournament[]>;
   return {
     props: {
       tournaments: result.success && result.data ? JSON.parse(JSON.stringify(result.data)) : [],
@@ -83,24 +87,29 @@ export default function TournamentsPage(props: InferGetServerSidePropsType<typeo
 
   useEffect(() => {
     const q = router.query.filter;
-    if (q === 'upcoming' || q === 'active' || q === 'all') setFilter(q);
+    if (q === 'upcoming' || q === 'active' || q === 'all' || q === 'archived') setFilter(q);
   }, [router.query.filter]);
 
   const now = new Date();
 
   const counts = useMemo(() => {
-    const active = tournaments.filter((t) => {
+    const activeTournaments = tournaments.filter((t) => !t.archivedAt);
+    const active = activeTournaments.filter((t) => {
       const d = new Date(t.startDate);
       return d <= now && !t.groupStageComplete;
     }).length;
-    const upcoming = tournaments.filter((t) => new Date(t.startDate) > now).length;
-    const totalTeams = tournaments.reduce((acc, t) => acc + (t._count?.teams ?? 0), 0);
-    return { all: tournaments.length, active, upcoming, totalTeams };
+    const upcoming = activeTournaments.filter((t) => new Date(t.startDate) > now).length;
+    const archived = tournaments.filter((t) => !!t.archivedAt).length;
+    const totalTeams = activeTournaments.reduce((acc, t) => acc + (t._count?.teams ?? 0), 0);
+    return { all: activeTournaments.length, active, upcoming, archived, totalTeams };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tournaments]);
 
   const filtered = tournaments.filter((t) => {
     const d = new Date(t.startDate);
+    const isArchived = !!t.archivedAt;
+    if (filter === 'archived') return isArchived;
+    if (isArchived) return false; // archives exclues des autres tabs
     if (filter === 'all') return true;
     if (filter === 'active') return d <= now && !t.groupStageComplete;
     if (filter === 'upcoming') return d > now;
@@ -193,6 +202,12 @@ export default function TournamentsPage(props: InferGetServerSidePropsType<typeo
                       Compétitions <span className="text-gradient-worldcup">à venir</span>
                     </>
                   )}
+                  {filter === 'archived' && (
+                    <>
+                      <span className="italic font-light text-white/40">L&apos;</span>
+                      <span className="text-gradient-worldcup">historique</span>
+                    </>
+                  )}
                 </h2>
                 <p className="text-white/50 mt-3 font-mono text-sm uppercase tracking-[0.22em]">
                   {filtered.length} {filtered.length > 1 ? 'résultats' : 'résultat'}
@@ -218,6 +233,18 @@ export default function TournamentsPage(props: InferGetServerSidePropsType<typeo
                     className="rounded-full px-5 py-2 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-black text-white/60"
                   >
                     À venir
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="archived"
+                    className="rounded-full px-5 py-2 text-[11px] font-black uppercase tracking-[0.18em] data-[state=active]:bg-white data-[state=active]:text-black text-white/60 flex items-center gap-1.5"
+                  >
+                    <Archive className="w-3 h-3" />
+                    Historique
+                    {counts.archived > 0 && (
+                      <span className="ml-1 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-white/15 text-[9px] font-mono tabular-nums">
+                        {counts.archived}
+                      </span>
+                    )}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -278,9 +305,12 @@ function TournamentCard({
 }) {
   const startDate = new Date(tournament.startDate);
   const isUpcoming = startDate > now;
+  const isArchived = !!tournament.archivedAt;
   const teamCount = tournament._count?.teams ?? 0;
 
-  const status: { label: string; tone: 'upcoming' | 'live' | 'final' } = isUpcoming
+  const status: { label: string; tone: 'upcoming' | 'live' | 'final' | 'archived' } = isArchived
+    ? { label: 'Archivé', tone: 'archived' }
+    : isUpcoming
     ? { label: 'À venir', tone: 'upcoming' }
     : tournament.groupStageComplete
     ? { label: 'Phase finale', tone: 'final' }
@@ -301,7 +331,13 @@ function TournamentCard({
       <Link href={`/tournaments/${tournament.id}`} className="block h-full">
         <Card
           className={`relative overflow-hidden h-full p-0 bg-linear-to-b ${
-            isLive ? 'from-red-950/30' : isFinal ? 'from-purple-950/30' : 'from-white/3'
+            isArchived
+              ? 'from-white/2 grayscale-[0.4] opacity-80'
+              : isLive
+              ? 'from-red-950/30'
+              : isFinal
+              ? 'from-purple-950/30'
+              : 'from-white/3'
           } to-transparent border-white/10 group-hover:border-white/30 transition-all duration-300`}
         >
           {/* Top status strip */}
@@ -366,10 +402,10 @@ function TournamentCard({
             <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white group-hover:translate-x-1 transition" />
           </div>
 
-          {isLive && (
+          {!isArchived && isLive && (
             <BorderBeam size={150} duration={7} colorFrom="#ef4444" colorTo="#f59e0b" borderWidth={1.5} />
           )}
-          {isFinal && (
+          {!isArchived && isFinal && (
             <BorderBeam size={150} duration={9} colorFrom="#a855f7" colorTo="#facc15" borderWidth={1.5} />
           )}
         </Card>
@@ -382,9 +418,17 @@ function StatusInline({
   tone,
   children,
 }: {
-  tone: 'upcoming' | 'live' | 'final';
+  tone: 'upcoming' | 'live' | 'final' | 'archived';
   children: React.ReactNode;
 }) {
+  if (tone === 'archived') {
+    return (
+      <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-white/40 font-mono">
+        <Archive className="w-3 h-3" />
+        {children}
+      </span>
+    );
+  }
   if (tone === 'live') {
     return (
       <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-red-400 font-mono">
@@ -410,21 +454,26 @@ function StatusInline({
 }
 
 function EmptyState({ filter, isAdmin }: { filter: FilterId; isAdmin: boolean }) {
+  const isArchive = filter === 'archived';
   const message =
     filter === 'all'
       ? "Aucun tournoi n'est encore disponible. Lance la première compétition de la saison."
       : filter === 'active'
       ? 'Aucune compétition en cours pour le moment. Les prochaines journées arrivent vite.'
-      : 'Pas de tournoi planifié dans le futur. Reviens bientôt ou crée-en un.';
+      : filter === 'upcoming'
+      ? 'Pas de tournoi planifié dans le futur. Reviens bientôt ou crée-en un.'
+      : "L'historique est vide. Les tournois archivés apparaîtront ici une fois la compétition clôturée.";
 
   return (
     <Card className="relative overflow-hidden bg-white/2 border-white/10 py-20 text-center">
       <div className="relative inline-flex p-5 rounded-2xl bg-white/5 border border-white/10 mb-6 mx-auto">
-        <Trophy className="w-12 h-12 text-white/40" />
+        {isArchive ? <Archive className="w-12 h-12 text-white/40" /> : <Trophy className="w-12 h-12 text-white/40" />}
       </div>
-      <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">Aucun tournoi trouvé</h3>
+      <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">
+        {isArchive ? 'Historique vide' : 'Aucun tournoi trouvé'}
+      </h3>
       <p className="text-white/55 max-w-md mx-auto mb-8 px-4">{message}</p>
-      {isAdmin && (
+      {isAdmin && !isArchive && (
         <Link href="/tournaments/new" className="inline-flex">
           <Button size="lg" className="bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs px-6">
             <Plus className="w-4 h-4 mr-1.5" />

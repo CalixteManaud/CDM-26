@@ -15,13 +15,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserById } from '@/lib/clerk';
 import prisma from '@/lib/prisma';
-import { placeBet, BettingError } from '@/lib/utils/betting';
+import { placeBet, BettingError, MIN_BET_POINTS, MAX_BET_POINTS } from '@/lib/utils/betting';
 import { debitWizebotPoints } from '@/lib/wizebot';
 import { BetOutcome } from '@/prisma/prisma-client/enums';
 import { isBettingOpen } from '@/lib/utils/odds';
-
-const MIN_POINTS = 1;
-const MAX_POINTS = 1_000_000;
+import { canUserBetOnMatch, betRefusalMessage } from '@/lib/utils/permissions';
+import { rateLimitBet } from '@/lib/rate-limit';
 
 function parseOutcome(raw: unknown): BetOutcome | null {
   if (typeof raw !== 'string') return null;
@@ -51,6 +50,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  // 1 bis. Rate limit : 10 paris/min/user (anti-spam / anti-bot)
+  const rl = await rateLimitBet(dbUser.id);
+  if (!rl.success) {
+    res.setHeader('Retry-After', Math.ceil((rl.resetAt - Date.now()) / 1000));
+    return res.status(429).json({
+      error: 'Trop de paris en peu de temps — patiente quelques secondes.',
+      code: 'RATE_LIMITED',
+    });
+  }
+
   // 2. Body validation
   const body = (req.body ?? {}) as {
     matchId?: unknown;
@@ -64,11 +73,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!matchId || !outcome || !Number.isFinite(points)) {
     return res.status(400).json({ error: 'matchId, outcome (HOME|DRAW|AWAY) et points requis' });
   }
-  if (!Number.isInteger(points) || points < MIN_POINTS) {
-    return res.status(400).json({ error: `Mise minimum: ${MIN_POINTS} pt`, code: 'MIN_BET' });
+  if (!Number.isInteger(points) || points < MIN_BET_POINTS) {
+    return res.status(400).json({ error: `Mise minimum: ${MIN_BET_POINTS} pt`, code: 'MIN_BET' });
   }
-  if (points > MAX_POINTS) {
-    return res.status(400).json({ error: `Mise maximum: ${MAX_POINTS} pts`, code: 'MAX_BET' });
+  if (points > MAX_BET_POINTS) {
+    return res
+      .status(400)
+      .json({ error: `Mise maximum: ${MAX_BET_POINTS.toLocaleString('fr-FR')} pts`, code: 'MAX_BET' });
   }
 
   // 3. Pré-check (évite un débit Wizebot pour rien)
@@ -79,6 +90,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!match) return res.status(404).json({ error: 'Match introuvable', code: 'MATCH_NOT_FOUND' });
   if (!isBettingOpen(match)) {
     return res.status(400).json({ error: 'Les paris sont fermés sur ce match', code: 'BETTING_CLOSED' });
+  }
+
+  // 3 bis. Permission de parier (bloque admin / joueur du tournoi / coach)
+  const permission = await canUserBetOnMatch(dbUser.id, matchId);
+  if (!permission.ok) {
+    if (permission.reason === 'NOT_FOUND') {
+      return res.status(404).json({ error: 'Match introuvable', code: 'MATCH_NOT_FOUND' });
+    }
+    return res
+      .status(403)
+      .json({ error: betRefusalMessage(permission.reason), code: `FORBIDDEN_${permission.reason}` });
   }
 
   // 4. Débit Wizebot

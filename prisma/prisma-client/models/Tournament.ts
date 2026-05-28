@@ -46,6 +46,7 @@ export type TournamentMinAggregateOutputType = {
   playersPerTeam: number | null
   groupCount: number | null
   groupStageComplete: boolean | null
+  archivedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -58,6 +59,7 @@ export type TournamentMaxAggregateOutputType = {
   playersPerTeam: number | null
   groupCount: number | null
   groupStageComplete: boolean | null
+  archivedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -70,6 +72,7 @@ export type TournamentCountAggregateOutputType = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete: number
+  archivedAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -96,6 +99,7 @@ export type TournamentMinAggregateInputType = {
   playersPerTeam?: true
   groupCount?: true
   groupStageComplete?: true
+  archivedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -108,6 +112,7 @@ export type TournamentMaxAggregateInputType = {
   playersPerTeam?: true
   groupCount?: true
   groupStageComplete?: true
+  archivedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -120,6 +125,7 @@ export type TournamentCountAggregateInputType = {
   playersPerTeam?: true
   groupCount?: true
   groupStageComplete?: true
+  archivedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -219,6 +225,7 @@ export type TournamentGroupByOutputType = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete: boolean
+  archivedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: TournamentCountAggregateOutputType | null
@@ -254,6 +261,7 @@ export type TournamentWhereInput = {
   playersPerTeam?: Prisma.IntFilter<"Tournament"> | number
   groupCount?: Prisma.IntFilter<"Tournament"> | number
   groupStageComplete?: Prisma.BoolFilter<"Tournament"> | boolean
+  archivedAt?: Prisma.DateTimeNullableFilter<"Tournament"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   teams?: Prisma.TeamListRelationFilter
@@ -271,6 +279,7 @@ export type TournamentOrderByWithRelationInput = {
   playersPerTeam?: Prisma.SortOrder
   groupCount?: Prisma.SortOrder
   groupStageComplete?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   teams?: Prisma.TeamOrderByRelationAggregateInput
@@ -291,6 +300,7 @@ export type TournamentWhereUniqueInput = Prisma.AtLeast<{
   playersPerTeam?: Prisma.IntFilter<"Tournament"> | number
   groupCount?: Prisma.IntFilter<"Tournament"> | number
   groupStageComplete?: Prisma.BoolFilter<"Tournament"> | boolean
+  archivedAt?: Prisma.DateTimeNullableFilter<"Tournament"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Tournament"> | Date | string
   teams?: Prisma.TeamListRelationFilter
@@ -308,6 +318,7 @@ export type TournamentOrderByWithAggregationInput = {
   playersPerTeam?: Prisma.SortOrder
   groupCount?: Prisma.SortOrder
   groupStageComplete?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.TournamentCountOrderByAggregateInput
@@ -328,6 +339,7 @@ export type TournamentScalarWhereWithAggregatesInput = {
   playersPerTeam?: Prisma.IntWithAggregatesFilter<"Tournament"> | number
   groupCount?: Prisma.IntWithAggregatesFilter<"Tournament"> | number
   groupStageComplete?: Prisma.BoolWithAggregatesFilter<"Tournament"> | boolean
+  archivedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Tournament"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Tournament"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Tournament"> | Date | string
 }
@@ -340,6 +352,7 @@ export type TournamentCreateInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTournamentInput
@@ -357,6 +370,7 @@ export type TournamentUncheckedCreateInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTournamentInput
@@ -374,6 +388,7 @@ export type TournamentUpdateInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTournamentNestedInput
@@ -391,6 +406,7 @@ export type TournamentUncheckedUpdateInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTournamentNestedInput
@@ -408,6 +424,7 @@ export type TournamentCreateManyInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -420,6 +437,7 @@ export type TournamentUpdateManyMutationInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -432,6 +450,7 @@ export type TournamentUncheckedUpdateManyInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -444,6 +463,7 @@ export type TournamentCountOrderByAggregateInput = {
   playersPerTeam?: Prisma.SortOrder
   groupCount?: Prisma.SortOrder
   groupStageComplete?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -462,6 +482,7 @@ export type TournamentMaxOrderByAggregateInput = {
   playersPerTeam?: Prisma.SortOrder
   groupCount?: Prisma.SortOrder
   groupStageComplete?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -474,6 +495,7 @@ export type TournamentMinOrderByAggregateInput = {
   playersPerTeam?: Prisma.SortOrder
   groupCount?: Prisma.SortOrder
   groupStageComplete?: Prisma.SortOrder
+  archivedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -504,6 +526,10 @@ export type IntFieldUpdateOperationsInput = {
 
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type TournamentCreateNestedOneWithoutGroupsInput = {
@@ -586,6 +612,7 @@ export type TournamentCreateWithoutGroupsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTournamentInput
@@ -602,6 +629,7 @@ export type TournamentUncheckedCreateWithoutGroupsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTournamentInput
@@ -634,6 +662,7 @@ export type TournamentUpdateWithoutGroupsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTournamentNestedInput
@@ -650,6 +679,7 @@ export type TournamentUncheckedUpdateWithoutGroupsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTournamentNestedInput
@@ -666,6 +696,7 @@ export type TournamentCreateWithoutTeamsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.GroupCreateNestedManyWithoutTournamentInput
@@ -682,6 +713,7 @@ export type TournamentUncheckedCreateWithoutTeamsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.GroupUncheckedCreateNestedManyWithoutTournamentInput
@@ -714,6 +746,7 @@ export type TournamentUpdateWithoutTeamsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.GroupUpdateManyWithoutTournamentNestedInput
@@ -730,6 +763,7 @@ export type TournamentUncheckedUpdateWithoutTeamsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.GroupUncheckedUpdateManyWithoutTournamentNestedInput
@@ -746,6 +780,7 @@ export type TournamentCreateWithoutMatchesInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTournamentInput
@@ -762,6 +797,7 @@ export type TournamentUncheckedCreateWithoutMatchesInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTournamentInput
@@ -794,6 +830,7 @@ export type TournamentUpdateWithoutMatchesInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTournamentNestedInput
@@ -810,6 +847,7 @@ export type TournamentUncheckedUpdateWithoutMatchesInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTournamentNestedInput
@@ -826,6 +864,7 @@ export type TournamentCreateWithoutStandingsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTournamentInput
@@ -842,6 +881,7 @@ export type TournamentUncheckedCreateWithoutStandingsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTournamentInput
@@ -874,6 +914,7 @@ export type TournamentUpdateWithoutStandingsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTournamentNestedInput
@@ -890,6 +931,7 @@ export type TournamentUncheckedUpdateWithoutStandingsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTournamentNestedInput
@@ -906,6 +948,7 @@ export type TournamentCreateWithoutBettingMarketsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTournamentInput
@@ -922,6 +965,7 @@ export type TournamentUncheckedCreateWithoutBettingMarketsInput = {
   playersPerTeam: number
   groupCount: number
   groupStageComplete?: boolean
+  archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTournamentInput
@@ -954,6 +998,7 @@ export type TournamentUpdateWithoutBettingMarketsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTournamentNestedInput
@@ -970,6 +1015,7 @@ export type TournamentUncheckedUpdateWithoutBettingMarketsInput = {
   playersPerTeam?: Prisma.IntFieldUpdateOperationsInput | number
   groupCount?: Prisma.IntFieldUpdateOperationsInput | number
   groupStageComplete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTournamentNestedInput
@@ -1053,6 +1099,7 @@ export type TournamentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   playersPerTeam?: boolean
   groupCount?: boolean
   groupStageComplete?: boolean
+  archivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   teams?: boolean | Prisma.Tournament$teamsArgs<ExtArgs>
@@ -1071,6 +1118,7 @@ export type TournamentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   playersPerTeam?: boolean
   groupCount?: boolean
   groupStageComplete?: boolean
+  archivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["tournament"]>
@@ -1083,6 +1131,7 @@ export type TournamentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   playersPerTeam?: boolean
   groupCount?: boolean
   groupStageComplete?: boolean
+  archivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["tournament"]>
@@ -1095,11 +1144,12 @@ export type TournamentSelectScalar = {
   playersPerTeam?: boolean
   groupCount?: boolean
   groupStageComplete?: boolean
+  archivedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TournamentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "startDate" | "teamsPerGroup" | "playersPerTeam" | "groupCount" | "groupStageComplete" | "createdAt" | "updatedAt", ExtArgs["result"]["tournament"]>
+export type TournamentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "startDate" | "teamsPerGroup" | "playersPerTeam" | "groupCount" | "groupStageComplete" | "archivedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["tournament"]>
 export type TournamentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   teams?: boolean | Prisma.Tournament$teamsArgs<ExtArgs>
   groups?: boolean | Prisma.Tournament$groupsArgs<ExtArgs>
@@ -1128,6 +1178,7 @@ export type $TournamentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     playersPerTeam: number
     groupCount: number
     groupStageComplete: boolean
+    archivedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["tournament"]>
@@ -1565,6 +1616,7 @@ export interface TournamentFieldRefs {
   readonly playersPerTeam: Prisma.FieldRef<"Tournament", 'Int'>
   readonly groupCount: Prisma.FieldRef<"Tournament", 'Int'>
   readonly groupStageComplete: Prisma.FieldRef<"Tournament", 'Boolean'>
+  readonly archivedAt: Prisma.FieldRef<"Tournament", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Tournament", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Tournament", 'DateTime'>
 }

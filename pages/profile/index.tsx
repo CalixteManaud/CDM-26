@@ -1,6 +1,6 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import {
@@ -18,6 +18,8 @@ import {
   Loader2,
   ChevronRight,
   CircleDot,
+  Coins,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -31,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
+import { NumberTicker } from '@/components/ui/number-ticker';
 
 type User = {
   id: string;
@@ -97,6 +100,35 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
   const [showManualTwitch, setShowManualTwitch] = useState<boolean>(
     !props.user.twitchUserId && !!props.user.twitchUsername
   );
+
+  const [balance, setBalance] = useState<number | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
+
+  const fetchBalance = async () => {
+    if (!props.user.twitchUsername) return;
+    setBalanceLoading(true);
+    setBalanceError(null);
+    try {
+      const res = await fetch('/api/profile/balance');
+      const json: { balance?: number; error?: string } = await res.json();
+      if (!res.ok) {
+        setBalanceError(json.error ?? 'Impossible de récupérer le solde');
+      } else if (typeof json.balance === 'number') {
+        setBalance(json.balance);
+      }
+    } catch {
+      setBalanceError('Erreur réseau');
+    } finally {
+      setBalanceLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (props.user.twitchUsername) {
+      fetchBalance();
+    }
+  }, [props.user.twitchUsername]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -276,6 +308,15 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
                     Points Wizebot
                   </Badge>
                 </div>
+
+                {props.user.twitchUsername && (
+                  <PointsBalanceCard
+                    balance={balance}
+                    loading={balanceLoading}
+                    error={balanceError}
+                    onRefresh={fetchBalance}
+                  />
+                )}
 
                 <TwitchLinkCard
                   user={props.user}
@@ -559,6 +600,58 @@ function TwitchLinkCard({
           ou saisir mon username Twitch manuellement
         </button>
       )}
+    </div>
+  );
+}
+
+function PointsBalanceCard({
+  balance,
+  loading,
+  error,
+  onRefresh,
+}: {
+  balance: number | null;
+  loading: boolean;
+  error: string | null;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="rounded-xl p-5 border border-yellow-500/30 bg-linear-to-br from-yellow-950/30 via-black to-amber-950/20 mb-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+            <Coins className="w-5 h-5 text-yellow-400" />
+          </div>
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-yellow-400/70 mb-0.5">
+              Points de chaîne
+            </div>
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-yellow-400/60" />
+                <span className="text-sm text-white/50 font-mono">Chargement…</span>
+              </div>
+            ) : error ? (
+              <span className="text-sm text-red-400 font-mono">{error}</span>
+            ) : balance !== null ? (
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                  <NumberTicker value={balance} />
+                </span>
+                <span className="text-sm font-bold text-yellow-400/80">pts</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={loading}
+          className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:border-yellow-500/40 transition disabled:opacity-40"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
     </div>
   );
 }

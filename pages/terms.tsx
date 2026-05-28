@@ -87,7 +87,7 @@ const ARTICLES = [
     title: "Paris — pari mutuel",
     accent: 'yellow' as Accent,
     body: [
-      "Les paris se placent uniquement depuis le site cdm26.com, sur la page d'un match ouvert.",
+      "Les paris se placent uniquement depuis le site cdm.rgtcity.fr, sur la page d'un match ouvert.",
       "Les mises sont débitées sur tes points de chaîne Twitch (gérés par Wizebot) — aucune valeur monétaire réelle.",
       "Le système est en pari mutuel : les cotes sont calculées dynamiquement selon le pool, avec une marge maison de 5%.",
       "Une fois validé, le pari est définitif. Aucun remboursement n'est possible (sauf match annulé → mise remboursée intégralement).",

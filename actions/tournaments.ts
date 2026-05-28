@@ -7,11 +7,16 @@ import { tournamentSchema, type TournamentInput } from '@/lib/utils/validations'
 import { syncClerkUser } from '@/lib/clerk';
 
 /**
- * Récupère tous les tournois
+ * Récupère tous les tournois.
+ *
+ * Par défaut, ramène uniquement les tournois actifs (non archivés).
+ * Passer `{ includeArchived: true }` pour récupérer les archivés en plus
+ * (utilisé par la listing page qui doit afficher tous les compteurs).
  */
-export async function getTournaments() {
+export async function getTournaments(options?: { includeArchived?: boolean }) {
   try {
     const tournaments = await prisma.tournament.findMany({
+      where: options?.includeArchived ? undefined : { archivedAt: null },
       include: {
         groups: true,
         _count: {
@@ -203,6 +208,42 @@ export async function deleteTournament(id: string) {
   } catch (error) {
     console.error('Error deleting tournament:', error);
     return { success: false, error: 'Erreur lors de la suppression du tournoi' };
+  }
+}
+
+/**
+ * Archive ou désarchive un tournoi (Admin uniquement).
+ * Non destructif : on positionne juste archivedAt (= now ou null).
+ */
+export async function archiveTournament(id: string, archive: boolean) {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return { success: false, error: 'Non authentifié' };
+    }
+
+    const dbUser = await syncClerkUser();
+    if (!dbUser || dbUser.role !== 'ADMIN') {
+      return { success: false, error: 'Permissions insuffisantes' };
+    }
+
+    const tournament = await prisma.tournament.update({
+      where: { id },
+      data: { archivedAt: archive ? new Date() : null },
+    });
+
+    revalidatePath('/tournaments');
+    revalidatePath(`/tournaments/${id}`);
+
+    return { success: true, data: tournament };
+  } catch (error) {
+    console.error('Error toggling tournament archive:', error);
+    return {
+      success: false,
+      error: archive
+        ? "Erreur lors de l'archivage du tournoi"
+        : 'Erreur lors de la désarchivage du tournoi',
+    };
   }
 }
 

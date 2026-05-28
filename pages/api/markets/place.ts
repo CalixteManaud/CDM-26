@@ -9,6 +9,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserById } from '@/lib/clerk';
+import { canUserBetOnMarket, betRefusalMessage } from '@/lib/utils/permissions';
+import { rateLimitBet } from '@/lib/rate-limit';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -25,6 +27,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({
       error: 'Lie ton compte Twitch sur ton profil pour parier.',
       code: 'NO_TWITCH_LINK',
+    });
+  }
+
+  const rl = await rateLimitBet(dbUser.id);
+  if (!rl.success) {
+    res.setHeader('Retry-After', Math.ceil((rl.resetAt - Date.now()) / 1000));
+    return res.status(429).json({
+      error: 'Trop de paris en peu de temps — patiente quelques secondes.',
+      code: 'RATE_LIMITED',
     });
   }
 
@@ -46,6 +57,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ error: 'marketId, outcomeKey et points requis', code: 'BAD_INPUT' });
   }
 
+  // Permission de parier (bloque admin / joueur / coach du tournoi concerné)
+  const permission = await canUserBetOnMarket(dbUser.id, marketId);
+  if (!permission.ok) {
+    if (permission.reason === 'NOT_FOUND') {
+      return res.status(404).json({ error: 'Marché introuvable', code: 'NOT_FOUND' });
+    }
+    return res
+      .status(403)
+      .json({ error: betRefusalMessage(permission.reason), code: `FORBIDDEN_${permission.reason}` });
+  }
+
   const { placeMarketBet } = await import('@/actions/markets');
   const result = await placeMarketBet({
     userId: dbUser.id,
@@ -63,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? 400
         : result.code === 'NOT_FOUND'
         ? 404
-        : result.code === 'BAD_OUTCOME'
+        : result.code === 'BAD_OUTCOME' || result.code === 'OUTCOME_LOCKED'
         ? 400
         : 500;
     return res.status(status).json({ error: result.error, code: result.code });
