@@ -74,6 +74,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const twitch = extractTwitchFromClerkWebhook(evt.data);
 
     try {
+      // === Réconciliation par email (DB partagée Dev/Prod Clerk) ===
+      // Cas typique : même DB Supabase pour dev + prod, mais 2 instances Clerk
+      // distinctes → chaque instance émet un clerkId différent pour le même
+      // email. Sans réconciliation, le webhook prod créerait une row GUEST en
+      // doublon de la row ADMIN dev, et l'app perdrait le role.
+      const existingByEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingByEmail && existingByEmail.clerkId !== id) {
+        const existingByClerkId = await prisma.user.findUnique({ where: { clerkId: id } });
+        if (existingByClerkId && existingByClerkId.id !== existingByEmail.id) {
+          // Row fresh déjà créée par un webhook précédent — on la supprime pour
+          // libérer le unique constraint sur clerkId. Si elle a des relations
+          // métier (rare pour une row qui vient d'être créée), on abandonne la
+          // réconciliation pour éviter une cascade destructive.
+          try {
+            await prisma.user.delete({ where: { id: existingByClerkId.id } });
+          } catch (delErr) {
+            console.warn(
+              `[clerk webhook] Cannot reconcile ${email}: duplicate row has relations`,
+              delErr
+            );
+          }
+        }
+        try {
+          await prisma.user.update({
+            where: { id: existingByEmail.id },
+            data: {
+              clerkId: id,
+              ...(normalizedUsername !== null ? { username: normalizedUsername } : {}),
+            },
+          });
+          console.log(
+            `🔄 Reconciled ${email}: clerkId ${existingByEmail.clerkId} → ${id}`
+          );
+        } catch (reconcileErr) {
+          const code = (reconcileErr as { code?: string })?.code;
+          if (code === 'P2002') {
+            await prisma.user.update({
+              where: { id: existingByEmail.id },
+              data: { clerkId: id },
+            });
+            console.log(
+              `🔄 Reconciled ${email}: clerkId transferred (username skipped)`
+            );
+          } else {
+            throw reconcileErr;
+          }
+        }
+      }
+
       // Créer ou mettre à jour l'utilisateur dans la base de données.
       // username peut être déjà pris par un autre user (P2002) — on retombe
       // alors sur un upsert sans username pour ne pas bloquer le sync.
