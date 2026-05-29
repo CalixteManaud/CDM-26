@@ -249,25 +249,25 @@ export async function archiveTournament(id: string, archive: boolean) {
 
 /**
  * Importe les équipes (et leurs joueurs + coach) d'un tournoi source vers un
- * tournoi cible vide. Admin uniquement. Non destructif côté source.
+ * tournoi cible vide. Non destructif côté source.
+ *
+ * Si `teamIds` est fourni, seules ces équipes-là sont importées (sinon toutes).
  *
  * Précondition : le tournoi cible ne doit avoir aucune équipe (sinon doublons
  * potentiels sur `Player.@@unique([teamId, jerseyNumber])` et confusion sur les
  * groupes). Les Team clonées sont assignées à `groupId = null` — l'admin doit
  * ensuite faire la répartition dans les groupes du tournoi cible.
+ *
+ * NOTE : pas de check `currentUser()` ici — `currentUser()` ne marche pas en
+ * Pages Router API route context (besoin du request scope RSC). L'auth admin
+ * est validée en amont par l'API route appelante (`pages/api/.../import-teams`).
  */
-export async function importTeamsFromTournament(targetId: string, sourceId: string) {
+export async function importTeamsFromTournament(
+  targetId: string,
+  sourceId: string,
+  teamIds?: string[]
+) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      return { success: false, error: 'Non authentifié' };
-    }
-
-    const dbUser = await syncClerkUser();
-    if (!dbUser || dbUser.role !== 'ADMIN') {
-      return { success: false, error: 'Permissions insuffisantes' };
-    }
-
     if (targetId === sourceId) {
       return { success: false, error: 'Le tournoi source et cible doivent être différents' };
     }
@@ -303,11 +303,20 @@ export async function importTeamsFromTournament(targetId: string, sourceId: stri
       return { success: false, error: 'Le tournoi source ne contient aucune équipe' };
     }
 
+    const filteredTeams =
+      teamIds && teamIds.length > 0
+        ? source.teams.filter((t) => teamIds.includes(t.id))
+        : source.teams;
+
+    if (filteredTeams.length === 0) {
+      return { success: false, error: 'Aucune équipe sélectionnée à importer' };
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       let teamsCreated = 0;
       let playersCreated = 0;
 
-      for (const srcTeam of source.teams) {
+      for (const srcTeam of filteredTeams) {
         const newTeam = await tx.team.create({
           data: {
             name: srcTeam.name,
@@ -336,7 +345,10 @@ export async function importTeamsFromTournament(targetId: string, sourceId: stri
       return { teamsCreated, playersCreated };
     });
 
-    revalidatePath(`/tournaments/${targetId}`);
+    // Pas de revalidatePath ici : il vient du cache App Router et lève
+    // "Invariant: static generation store missing" quand l'action est appelée
+    // depuis une API route Pages Router. Le client refresh via `onDone` dans
+    // le dialog d'import.
 
     return { success: true, data: result };
   } catch (error) {
@@ -348,6 +360,84 @@ export async function importTeamsFromTournament(targetId: string, sourceId: stri
           ? 'Conflit lors de la copie (un joueur a déjà ce numéro dans une équipe existante)'
           : "Erreur lors de l'import des équipes",
     };
+  }
+}
+
+/**
+ * Applique un tirage au sort : assigne chaque équipe à un groupe en une transaction.
+ *
+ * Préconditions :
+ *  - Tournoi non archivé.
+ *  - Aucun match `GROUP` ne doit déjà exister (sinon les assignations seraient
+ *    incohérentes avec le calendrier déjà généré).
+ *  - Chaque `teamId` et `groupId` doit appartenir au tournoi cible.
+ *
+ * Auth déléguée à l'API route (cf. `currentUser()` ne marche pas en Pages Router).
+ */
+export async function applyTournamentDraw(
+  tournamentId: string,
+  assignments: Array<{ teamId: string; groupId: string }>
+) {
+  try {
+    if (!Array.isArray(assignments) || assignments.length === 0) {
+      return { success: false, error: 'Aucune assignation fournie' };
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      select: {
+        id: true,
+        archivedAt: true,
+        groups: { select: { id: true } },
+        teams: { select: { id: true } },
+      },
+    });
+
+    if (!tournament) return { success: false, error: 'Tournoi introuvable' };
+    if (tournament.archivedAt) {
+      return { success: false, error: 'Tournoi archivé — désarchive-le d\'abord' };
+    }
+
+    const existingMatches = await prisma.match.count({
+      where: { tournamentId, stage: 'GROUP' },
+    });
+    if (existingMatches > 0) {
+      return {
+        success: false,
+        error: 'Des matchs de poules existent déjà — supprime-les avant de relancer un tirage.',
+      };
+    }
+
+    const validGroupIds = new Set(tournament.groups.map((g) => g.id));
+    const validTeamIds = new Set(tournament.teams.map((t) => t.id));
+    const seenTeamIds = new Set<string>();
+
+    for (const { teamId, groupId } of assignments) {
+      if (!validTeamIds.has(teamId)) {
+        return { success: false, error: `Équipe ${teamId} hors du tournoi` };
+      }
+      if (!validGroupIds.has(groupId)) {
+        return { success: false, error: `Groupe ${groupId} hors du tournoi` };
+      }
+      if (seenTeamIds.has(teamId)) {
+        return { success: false, error: 'Une équipe est assignée plusieurs fois' };
+      }
+      seenTeamIds.add(teamId);
+    }
+
+    await prisma.$transaction(
+      assignments.map((a) =>
+        prisma.team.update({
+          where: { id: a.teamId },
+          data: { groupId: a.groupId },
+        })
+      )
+    );
+
+    return { success: true, data: { teamsAssigned: assignments.length } };
+  } catch (error) {
+    console.error('Error applying draw:', error);
+    return { success: false, error: 'Erreur lors de l\'application du tirage' };
   }
 }
 

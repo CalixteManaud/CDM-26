@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const tournamentId = req.query.id as string;
-    const { type } = req.body;
+    const { type, startDate, intervalHours } = req.body ?? {};
 
     if (!tournamentId) {
       return res.status(400).json({ error: 'Tournament ID requis' });
@@ -35,13 +35,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Générer les matchs selon le type
     if (type === 'group') {
-      const result = await generateGroupMatches(tournamentId);
+      const opts: { startDate?: string; intervalHours?: number } = {};
+      if (typeof startDate === 'string' && startDate) opts.startDate = startDate;
+      if (typeof intervalHours === 'number' && Number.isFinite(intervalHours)) {
+        opts.intervalHours = intervalHours;
+      }
+
+      const result = await generateGroupMatches(tournamentId, opts);
+      const skipped = result.diagnostics.skippedGroupNames;
+      const skipNote =
+        skipped.length > 0 ? ` · ${skipped.length} groupe(s) ignoré(s) : ${skipped.join(', ')}` : '';
       return res.status(200).json({
         success: true,
         data: {
           matchesCreated: result.matchesCreated,
           groups: result.groups,
-          message: `${result.matchesCreated} matchs de groupe créés avec succès pour ${result.groups} groupes`,
+          diagnostics: result.diagnostics,
+          message: `${result.matchesCreated} matchs créés sur ${result.groups} groupe(s)${skipNote}`,
         },
       });
     } else {

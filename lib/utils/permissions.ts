@@ -147,21 +147,22 @@ export async function canAddSiteAdmin(): Promise<boolean> {
  * Détermine si un user peut placer un pari sur un tournoi donné.
  *
  * Bloqué pour :
- *  - ADMIN (ils valident les paris et donnent les résultats — conflit d'intérêt)
  *  - PLAYER inscrit dans une équipe de ce tournoi (info privilégiée)
  *  - COACH d'une équipe de ce tournoi (info privilégiée)
+ *
+ * Les ADMIN peuvent parier (les paris sont en pari mutuel — pas de conflit
+ * d'intérêt direct, et la maison ne joue pas contre les parieurs).
  *
  * Retourne `{ ok: true }` si autorisé, sinon `{ ok: false, reason }` avec un code
  * explicite que l'API route peut traduire en message FR.
  */
-export type BetRefusal = 'ADMIN' | 'PLAYER' | 'COACH';
+export type BetRefusal = 'PLAYER' | 'COACH';
 
 export async function canUserBetOnTournament(
   userId: string,
   tournamentId: string
 ): Promise<{ ok: true } | { ok: false; reason: BetRefusal }> {
-  const [user, isPlayer, isCoach] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+  const [isPlayer, isCoach] = await Promise.all([
     prisma.player.findFirst({
       where: { userId, team: { tournamentId } },
       select: { id: true },
@@ -172,7 +173,6 @@ export async function canUserBetOnTournament(
     }),
   ]);
 
-  if (user?.role === 'ADMIN') return { ok: false, reason: 'ADMIN' };
   if (isPlayer) return { ok: false, reason: 'PLAYER' };
   if (isCoach) return { ok: false, reason: 'COACH' };
   return { ok: true };
@@ -220,8 +220,6 @@ export async function canUserBetOnMarket(
  */
 export function betRefusalMessage(reason: BetRefusal): string {
   switch (reason) {
-    case 'ADMIN':
-      return "Les administrateurs ne peuvent pas parier — ils valident les paris et donnent les résultats.";
     case 'PLAYER':
       return "Les joueurs inscrits dans le tournoi ne peuvent pas parier sur leurs propres compétitions.";
     case 'COACH':

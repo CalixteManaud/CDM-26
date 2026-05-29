@@ -134,7 +134,7 @@ export async function getAllOpenMarkets() {
 // =================== Validation helpers ===================
 
 const MIN_STAKE = 50;
-const MAX_STAKE = 50_000;
+const MAX_STAKE = 10_000;
 
 function validateStake(amount: number): string | null {
   if (!Number.isFinite(amount) || !Number.isInteger(amount)) return 'Mise invalide';

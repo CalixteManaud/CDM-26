@@ -16,7 +16,7 @@ export function ParisSubnav({ active }: { active: 'live' | 'mine' | 'leaderboard
   return (
     <div className="border-b border-white/10 bg-black/40 backdrop-blur-sm sticky top-16 z-30">
       <div className="container mx-auto px-4">
-        <ul className="flex items-stretch gap-2 overflow-x-auto">
+        <ul className="flex items-stretch gap-2 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => {
             const Icon = t.icon;
             const isActive = t.href === activeHref;

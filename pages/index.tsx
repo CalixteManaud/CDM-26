@@ -2,6 +2,7 @@ import type { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/nextjs';
 import {
@@ -16,7 +17,6 @@ import {
   Flame,
   Goal,
   MessageCircle,
-  Play,
   Radio,
   Sparkles,
   Swords,
@@ -108,14 +108,37 @@ const FIXTURES_MOCK: FixtureItem[] = [
   { home: 'Maroc', flagH: '🇲🇦', away: 'Espagne', flagA: '🇪🇸', scoreH: 2, scoreA: 2, status: 'FT', meta: 'Terminé · 90+4', viewers: 4128, group: 'GROUPE B · J04' },
 ];
 
-const STREAMERS = [
-  { name: 'BLAIZE', country: '🇫🇷', viewers: 8412, label: 'CDM 26 · GROUPE D · LIVE', live: true, accent: 'from-purple-700/40 via-purple-900/30 to-black' },
-  { name: 'KOOPS', country: '🇧🇷', viewers: 4128, label: 'Highlights · Brésil vs France', live: true, accent: 'from-emerald-700/40 via-emerald-900/30 to-black' },
-  { name: 'ZAHRA', country: '🇲🇦', viewers: 2317, label: 'Co-stream · 8e de finale', live: true, accent: 'from-red-700/40 via-red-900/30 to-black' },
-  { name: 'KAINE', country: '🇦🇷', viewers: 0, label: 'Off — replays disponibles', live: false, accent: 'from-yellow-700/30 via-yellow-900/20 to-black' },
-  { name: 'NOVA', country: '🇩🇪', viewers: 1284, label: 'Tactical breakdown · Live', live: true, accent: 'from-purple-700/40 via-purple-900/30 to-black' },
-  { name: 'SOLEIL', country: '🇪🇸', viewers: 0, label: 'Off — Demain à 19h00', live: false, accent: 'from-emerald-700/30 via-emerald-900/20 to-black' },
+type StreamerItem = {
+  name: string;
+  channel: string;
+  twitchUrl: string;
+  label: string;
+  live: boolean;
+  accent: string;
+};
+
+const STREAMER_ACCENTS = [
+  'from-purple-700/40 via-purple-900/30 to-black',
+  'from-emerald-700/40 via-emerald-900/30 to-black',
+  'from-red-700/40 via-red-900/30 to-black',
+  'from-yellow-700/30 via-yellow-900/20 to-black',
 ];
+
+/**
+ * Extrait le channel Twitch (lowercase) depuis une URL `twitch.tv/<channel>`.
+ * Retourne null si l'URL n'est pas une URL Twitch reconnue.
+ */
+function extractTwitchChannel(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (!u.hostname.includes('twitch.tv')) return null;
+    const seg = u.pathname.split('/').filter(Boolean)[0];
+    return seg ? seg.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
 
 const TESTIMONIALS: Testimonial[] = [
   {
@@ -310,7 +333,34 @@ function FixtureCard({ f, index }: { f: FixtureItem; index: number }) {
   );
 }
 
-function StreamerCard({ s }: { s: (typeof STREAMERS)[number] }) {
+function BlaizeLiveEmbed() {
+  const [parent, setParent] = useState<string | null>(null);
+  useEffect(() => {
+    setParent(window.location.hostname);
+  }, []);
+
+  const src = parent
+    ? `https://player.twitch.tv/?channel=blaize&parent=${parent}&muted=true&autoplay=true`
+    : null;
+
+  return (
+    <div className="absolute inset-0 z-0">
+      {src ? (
+        <iframe
+          src={src}
+          title="Twitch live — blaize"
+          allowFullScreen
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+          className="absolute inset-0 w-full h-full border-0"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-linear-to-br from-purple-950/40 via-black to-black animate-pulse" />
+      )}
+    </div>
+  );
+}
+
+function StreamerCard({ s }: { s: StreamerItem }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -333,7 +383,6 @@ function StreamerCard({ s }: { s: (typeof STREAMERS)[number] }) {
               backgroundImage: 'repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(255,255,255,1) 2px, rgba(255,255,255,1) 3px)',
             }}
           />
-          <div className="absolute right-4 top-4 text-5xl drop-shadow-lg">{s.country}</div>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-24 h-24 rounded-full bg-black/50 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-white text-xl tracking-tighter shadow-2xl">
               {s.name.slice(0, 2)}
@@ -353,26 +402,22 @@ function StreamerCard({ s }: { s: (typeof STREAMERS)[number] }) {
         <div className="p-5">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-black text-white text-xl tracking-tight">{s.name}</h3>
-            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-white/40">{s.country}</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-white/40">@{s.channel}</span>
           </div>
-          <div className="text-sm text-white/60 mb-5 font-mono">{s.label}</div>
+          <div className="text-sm text-white/60 mb-5 font-mono truncate">{s.label}</div>
           <div className="flex items-center justify-between">
-            {s.live ? (
-              <span className="flex items-center gap-1.5 text-xs text-white/70 font-mono">
-                <Eye className="w-3 h-3" />
-                <NumberTicker value={s.viewers} />
-                <span className="text-white/40">viewers</span>
-              </span>
-            ) : (
-              <span className="text-xs text-white/40 font-mono uppercase tracking-widest">— · —</span>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-[10px] uppercase tracking-[0.2em] border-white/20 hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 font-bold"
-            >
-              Twitch <ArrowUpRight className="w-3 h-3 ml-1" />
-            </Button>
+            <span className="text-xs text-white/40 font-mono uppercase tracking-widest">
+              twitch.tv/{s.channel}
+            </span>
+            <a href={s.twitchUrl} target="_blank" rel="noopener noreferrer">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[10px] uppercase tracking-[0.2em] border-white/20 hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 font-bold"
+              >
+                Twitch <ArrowUpRight className="w-3 h-3 ml-1" />
+              </Button>
+            </a>
           </div>
         </div>
       </Card>
@@ -393,6 +438,7 @@ type Counts = {
 type CDM26HomeProps = {
   counts: Counts | null; // null si fallback total → on utilisera STATS_MOCK
   fixtures: FixtureItem[];
+  streamers: StreamerItem[];
 };
 
 // Mapping status DB → label/meta affiché dans la fixture card
@@ -450,8 +496,15 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
   try {
     const { default: prisma } = await import('@/lib/prisma');
 
-    const [teamCount, playerCount, finishedMatches, liveMatches, upcomingMatches, recentMatches] =
-      await Promise.all([
+    const [
+      teamCount,
+      playerCount,
+      finishedMatches,
+      liveMatches,
+      upcomingMatches,
+      recentMatches,
+      streamMatches,
+    ] = await Promise.all([
         prisma.team.count({ where: { disqualified: false } }),
         prisma.player.count(),
         prisma.match.count({ where: { status: 'FINISHED' } }),
@@ -488,6 +541,22 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
           orderBy: { matchDate: 'desc' },
           take: 3,
         }),
+        prisma.match.findMany({
+          where: {
+            twitchUrl: { not: null },
+            status: { in: ['LIVE', 'SCHEDULED', 'FINISHED'] },
+          },
+          select: {
+            status: true,
+            matchDate: true,
+            twitchUrl: true,
+            streamTitle: true,
+            homeTeam: { select: { name: true, shortName: true } },
+            awayTeam: { select: { name: true, shortName: true } },
+          },
+          orderBy: [{ status: 'asc' }, { matchDate: 'desc' }],
+          take: 24,
+        }),
       ]);
 
     const counts: Counts | null =
@@ -502,8 +571,30 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
 
     const fixtures: FixtureItem[] = merged.length > 0 ? merged : FIXTURES_MOCK;
 
+    // Dédup par channel — un même streamer peut couvrir plusieurs matchs.
+    // On garde le match le plus récent (LIVE prioritaire grâce à `orderBy` au-dessus).
+    const seen = new Set<string>();
+    const streamers: StreamerItem[] = [];
+    for (const m of streamMatches) {
+      const channel = extractTwitchChannel(m.twitchUrl);
+      if (!channel || seen.has(channel)) continue;
+      seen.add(channel);
+      const label =
+        m.streamTitle ??
+        `${m.homeTeam.shortName} — ${m.awayTeam.shortName}`;
+      streamers.push({
+        name: channel.toUpperCase(),
+        channel,
+        twitchUrl: m.twitchUrl as string,
+        label,
+        live: m.status === 'LIVE',
+        accent: STREAMER_ACCENTS[streamers.length % STREAMER_ACCENTS.length],
+      });
+      if (streamers.length >= 6) break;
+    }
+
     return {
-      props: JSON.parse(JSON.stringify({ counts, fixtures })) as CDM26HomeProps,
+      props: JSON.parse(JSON.stringify({ counts, fixtures, streamers })) as CDM26HomeProps,
     };
   } catch (error) {
     console.error('[landing] getServerSideProps failed, falling back to mocks:', error);
@@ -511,6 +602,7 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
       props: {
         counts: null,
         fixtures: FIXTURES_MOCK,
+        streamers: [],
       },
     };
   }
@@ -520,7 +612,7 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
 // PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CDM26Home({ counts, fixtures }: CDM26HomeProps) {
+export default function CDM26Home({ counts, fixtures, streamers }: CDM26HomeProps) {
   const { isSignedIn } = useUser();
 
   // Stats : on reconstitue côté client pour préserver les références icônes
@@ -853,54 +945,17 @@ export default function CDM26Home({ counts, fixtures }: CDM26HomeProps) {
 
           <div className="container mx-auto px-4 relative">
             <div className="grid lg:grid-cols-12 gap-10 items-center">
-              {/* LEFT — Mock stream player */}
+              {/* LEFT — Real Twitch live embed */}
               <div className="lg:col-span-7 relative">
-                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-purple-500/30 group shadow-2xl shadow-purple-500/20">
-                  {/* Static glow background (replaces Ripple — was 6 animated circles) */}
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(145,70,255,0.22),transparent_65%)]" />
-                  {/* Pitch gradient atmosphere */}
-                  <div className="absolute inset-0 bg-linear-to-tr from-emerald-950/30 via-transparent to-purple-900/30 pointer-events-none" />
-                  {/* Live badge */}
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.22em] px-3 py-1.5 rounded">
-                    <span className="live-dot bg-white" /> LIVE
+                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-purple-500/30 shadow-2xl shadow-purple-500/20">
+                  <BlaizeLiveEmbed />
+                  {/* Decorative corner brackets — over iframe, ne bloquent pas les clics */}
+                  <div className="pointer-events-none absolute inset-0 z-10">
+                    <CornerBracket position="tl" color="border-purple-500/60" />
+                    <CornerBracket position="tr" color="border-purple-500/60" />
+                    <CornerBracket position="bl" color="border-purple-500/60" />
+                    <CornerBracket position="br" color="border-purple-500/60" />
                   </div>
-                  <div className="absolute top-4 right-4 z-10 bg-black/70 backdrop-blur-md text-white text-xs font-mono px-3 py-1.5 rounded flex items-center gap-1.5 border border-white/10">
-                    <Eye className="w-3 h-3 text-purple-400" /> 8,412 viewers
-                  </div>
-                  {/* Center play */}
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <a
-                      href="https://www.twitch.tv/blaize"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-20 h-20 rounded-full bg-purple-600 hover:bg-purple-500 flex items-center justify-center text-white shadow-2xl shadow-purple-500/50 group-hover:scale-110 transition cursor-pointer"
-                    >
-                      <Play className="w-8 h-8 fill-white translate-x-0.5" />
-                    </a>
-                  </div>
-                  {/* Bottom bar */}
-                  <div className="absolute bottom-0 inset-x-0 p-5 bg-linear-to-t from-black via-black/70 to-transparent z-10">
-                    <div className="flex items-end justify-between gap-4">
-                      <div>
-                        <div className="text-white text-base md:text-lg font-black tracking-tight">
-                          🇫🇷 France — Brésil 🇧🇷
-                        </div>
-                        <div className="text-white/60 text-xs font-mono mt-0.5 uppercase tracking-widest">
-                          twitch.tv/blaize · CDM 26 · Phase de poules
-                        </div>
-                      </div>
-                      <div className="text-3xl font-black tabular-nums text-white hidden sm:block">
-                        <span className="text-red-400">3</span>
-                        <span className="text-white/30 mx-1.5 italic">:</span>
-                        <span>1</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Decorative corner brackets */}
-                  <CornerBracket position="tl" color="border-purple-500/60" />
-                  <CornerBracket position="tr" color="border-purple-500/60" />
-                  <CornerBracket position="bl" color="border-purple-500/60" />
-                  <CornerBracket position="br" color="border-purple-500/60" />
                 </div>
                 {/* Below player — channel info pill */}
                 <div className="mt-4 flex items-center gap-3 flex-wrap">
@@ -1029,7 +1084,7 @@ export default function CDM26Home({ counts, fixtures }: CDM26HomeProps) {
           </div>
         </section>
 
-        {/* ───── 09. STREAMERS GRID ───── */}
+        {/* ───── 09. STREAMERS GRID — dérivé des matchs avec twitchUrl ───── */}
         <section className="relative bg-black border-b border-white/10 py-24 overflow-hidden">
           <div className="container mx-auto px-4 relative">
             <div className="flex items-end justify-between mb-12 flex-wrap gap-6">
@@ -1042,15 +1097,41 @@ export default function CDM26Home({ counts, fixtures }: CDM26HomeProps) {
                 </h2>
               </div>
               <p className="max-w-md text-sm text-white/60 leading-relaxed border-l-2 border-purple-500/30 pl-4">
-                Six créateurs francophones streament les matchs du tournoi en parallèle. Tactiques, highlights, plays décisifs — choisis ton angle de vue.
+                {streamers.length > 0
+                  ? 'Les streamers qui diffusent les matchs du tournoi. Choisis ton angle de vue — chaque chaîne propose sa propre lecture des plays.'
+                  : 'Dès qu’un match aura un stream Twitch lié, le caster apparaîtra ici. Tu es créateur ? Contacte-nous pour rejoindre la grille.'}
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {STREAMERS.map((s) => (
-                <StreamerCard key={s.name} s={s} />
-              ))}
-            </div>
+            {streamers.length > 0 ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {streamers.map((s) => (
+                  <StreamerCard key={s.channel} s={s} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-white/10 bg-white/2 px-8 py-16 text-center">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-[#9146ff]/15 border border-purple-500/30 flex items-center justify-center mb-4">
+                  <Tv className="w-6 h-6 text-purple-400" />
+                </div>
+                <h3 className="text-2xl font-black text-white tracking-tight mb-2">
+                  Le casting arrive bientôt.
+                </h3>
+                <p className="text-sm text-white/55 max-w-md mx-auto leading-relaxed mb-6">
+                  Pas encore de streamers liés à un match. La grille se remplira automatiquement dès qu’un admin associera un stream Twitch à une rencontre.
+                </p>
+                <Link href="/contact">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-purple-500/30 hover:border-purple-500/60 hover:bg-purple-500/10 hover:text-purple-300 text-white font-black uppercase tracking-[0.18em] text-[10px] px-4"
+                  >
+                    <Tv className="w-3 h-3 mr-1.5" />
+                    Postuler caster
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Download, Users } from 'lucide-react';
+import { Loader2, Download, Users, CheckSquare, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,14 @@ type ImportableTournament = {
   _count: { teams: number };
 };
 
+type SourceTeam = {
+  id: string;
+  name: string;
+  shortName: string;
+  logo: string | null;
+  _count: { players: number };
+};
+
 export function ImportTeamsDialog({
   targetTournamentId,
   onDone,
@@ -41,6 +50,11 @@ export function ImportTeamsDialog({
   const [tournaments, setTournaments] = useState<ImportableTournament[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [loadingList, setLoadingList] = useState(false);
+
+  const [teams, setTeams] = useState<SourceTeam[]>([]);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set());
+  const [loadingTeams, setLoadingTeams] = useState(false);
+
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
@@ -56,14 +70,56 @@ export function ImportTeamsDialog({
       .finally(() => setLoadingList(false));
   }, [open, targetTournamentId]);
 
+  useEffect(() => {
+    if (!selectedId) {
+      setTeams([]);
+      setSelectedTeamIds(new Set());
+      return;
+    }
+    setLoadingTeams(true);
+    fetch(`/api/tournaments/${selectedId}/teams-list`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          const list = (json.data ?? []) as SourceTeam[];
+          setTeams(list);
+          setSelectedTeamIds(new Set(list.map((t) => t.id)));
+        } else {
+          toast.error(json.error ?? 'Erreur de chargement des équipes');
+        }
+      })
+      .catch(() => toast.error('Erreur réseau'))
+      .finally(() => setLoadingTeams(false));
+  }, [selectedId]);
+
+  const toggleTeam = (id: string) => {
+    setSelectedTeamIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedTeamIds.size === teams.length) {
+      setSelectedTeamIds(new Set());
+    } else {
+      setSelectedTeamIds(new Set(teams.map((t) => t.id)));
+    }
+  };
+
   const handleImport = async () => {
-    if (!selectedId) return;
+    if (!selectedId || selectedTeamIds.size === 0) return;
     setImporting(true);
     try {
       const res = await fetch(`/api/tournaments/${targetTournamentId}/import-teams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceId: selectedId }),
+        body: JSON.stringify({
+          sourceId: selectedId,
+          teamIds: Array.from(selectedTeamIds),
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
@@ -79,6 +135,7 @@ export function ImportTeamsDialog({
       );
       setOpen(false);
       setSelectedId('');
+      setSelectedTeamIds(new Set());
       onDone();
     } catch (error) {
       console.error('Import failed:', error);
@@ -87,6 +144,8 @@ export function ImportTeamsDialog({
       setImporting(false);
     }
   };
+
+  const allSelected = teams.length > 0 && selectedTeamIds.size === teams.length;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,17 +158,16 @@ export function ImportTeamsDialog({
           Importer depuis un tournoi
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Importer des équipes</DialogTitle>
           <DialogDescription>
-            Clone toutes les équipes (avec joueurs et coach) d&apos;un tournoi précédent vers
-            celui-ci. Les équipes seront créées sans groupe assigné — tu pourras les
-            répartir ensuite.
+            Clone les équipes (avec joueurs et coach) d&apos;un tournoi précédent vers celui-ci.
+            Les équipes seront créées sans groupe assigné — tu pourras les répartir ensuite.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-2">
+        <div className="py-2 space-y-4">
           {loadingList ? (
             <div className="flex items-center justify-center py-8 text-white/60">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -120,26 +178,111 @@ export function ImportTeamsDialog({
               Aucun tournoi source disponible. Crée d&apos;abord un tournoi avec des équipes.
             </div>
           ) : (
-            <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choisir un tournoi source" />
-              </SelectTrigger>
-              <SelectContent>
-                {tournaments.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    <span className="flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{t.name}</span>
-                      <span className="text-white/40 text-xs">
-                        · {t._count.teams} équipe{t._count.teams > 1 ? 's' : ''} ·{' '}
-                        {format(new Date(t.startDate), 'MMM yyyy', { locale: fr })}
-                        {t.archivedAt ? ' · archivé' : ''}
-                      </span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <>
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono uppercase tracking-[0.25em] text-white/55">
+                  Tournoi source
+                </label>
+                <Select value={selectedId} onValueChange={setSelectedId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un tournoi source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tournaments.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        <span className="flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>{t.name}</span>
+                          <span className="text-white/40 text-xs">
+                            · {t._count.teams} équipe{t._count.teams > 1 ? 's' : ''} ·{' '}
+                            {format(new Date(t.startDate), 'MMM yyyy', { locale: fr })}
+                            {t.archivedAt ? ' · archivé' : ''}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedId && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-mono uppercase tracking-[0.25em] text-white/55">
+                      Équipes à importer
+                      {teams.length > 0 && (
+                        <span className="ml-2 text-emerald-300">
+                          {selectedTeamIds.size}/{teams.length}
+                        </span>
+                      )}
+                    </label>
+                    {teams.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={toggleAll}
+                        className="text-[10px] font-mono text-white/55 hover:text-white uppercase tracking-[0.22em] flex items-center gap-1.5"
+                      >
+                        {allSelected ? (
+                          <>
+                            <Square className="w-3 h-3" /> Tout désélectionner
+                          </>
+                        ) : (
+                          <>
+                            <CheckSquare className="w-3 h-3" /> Tout sélectionner
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {loadingTeams ? (
+                    <div className="flex items-center justify-center py-6 text-white/60">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <span className="text-sm">Chargement des équipes…</span>
+                    </div>
+                  ) : teams.length === 0 ? (
+                    <div className="text-center py-6 text-white/60 text-sm">
+                      Aucune équipe dans ce tournoi.
+                    </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto rounded-lg border border-white/10 bg-black/40 divide-y divide-white/5">
+                      {teams.map((t) => {
+                        const checked = selectedTeamIds.has(t.id);
+                        return (
+                          <label
+                            key={t.id}
+                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/2 cursor-pointer transition-colors"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleTeam(t.id)}
+                            />
+                            {t.logo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={t.logo}
+                                alt={t.name}
+                                className="w-7 h-7 rounded-full object-cover ring-1 ring-white/10"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-black text-white/70">
+                                {t.shortName.slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-bold text-white truncate">{t.name}</div>
+                              <div className="text-[10px] font-mono text-white/45 uppercase tracking-[0.2em]">
+                                {t._count.players} joueur{t._count.players > 1 ? 's' : ''}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -147,7 +290,10 @@ export function ImportTeamsDialog({
           <Button variant="outline" onClick={() => setOpen(false)} disabled={importing}>
             Annuler
           </Button>
-          <Button onClick={handleImport} disabled={!selectedId || importing}>
+          <Button
+            onClick={handleImport}
+            disabled={!selectedId || selectedTeamIds.size === 0 || importing}
+          >
             {importing ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -157,6 +303,11 @@ export function ImportTeamsDialog({
               <>
                 <Download className="w-4 h-4 mr-2" />
                 Importer
+                {selectedTeamIds.size > 0 && (
+                  <span className="ml-1.5 text-xs opacity-75">
+                    ({selectedTeamIds.size})
+                  </span>
+                )}
               </>
             )}
           </Button>

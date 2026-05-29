@@ -19,6 +19,7 @@ import {
   Tv,
   Archive,
   ArchiveRestore,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -396,6 +397,21 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
                       const groupStandings = standings
                         .filter((s) => s.team.groupId === group.id)
                         .sort((a, b) => a.position - b.position);
+                      // Avant le 1er match : aucun standing pour ce groupe → on affiche
+                      // la composition (équipes assignées par le tirage au sort)
+                      // pour que l'admin voie immédiatement le résultat du tirage.
+                      if (groupStandings.length === 0) {
+                        const groupTeams = (tournament.teams ?? []).filter(
+                          (t) => t.group?.id === group.id
+                        );
+                        return (
+                          <GroupRoster
+                            key={group.id}
+                            groupName={group.name}
+                            teams={groupTeams}
+                          />
+                        );
+                      }
                       return (
                         <StandingsTable
                           key={group.id}
@@ -449,6 +465,47 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
                       />
                     </div>
                   )}
+                  {isAdmin &&
+                    !isArchived &&
+                    teamsCount > 0 &&
+                    matches.filter((m) => m.stage === 'GROUP').length === 0 &&
+                    !(tournament.teams ?? []).some((t) => t.group?.id) && (
+                      <Link href={`/tournaments/${tournament.id}/draw`} className="block">
+                        <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-purple-950/20 border-white/10 hover:border-emerald-500/40 transition-all p-6 md:p-7 group cursor-pointer">
+                          <div className="grid md:grid-cols-[auto_1fr_auto] gap-5 items-center">
+                            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                              <Sparkles className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-[10px] font-mono uppercase tracking-[0.3em] mb-1.5 text-emerald-400">
+                                § Cérémonie · TIRAGE AU SORT
+                              </div>
+                              <h3 className="text-xl md:text-2xl font-black text-white tracking-tight mb-1.5 leading-tight">
+                                Lancer le tirage au sort
+                              </h3>
+                              <p className="text-sm text-white/60 leading-relaxed">
+                                Cérémonie animée façon UEFA / FIFA — chapeaux, boules, groupes qui s&apos;allument.
+                                Les équipes sont assignées en temps réel.
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              className="bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs px-6 shrink-0"
+                            >
+                              Lancer
+                              <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                            </Button>
+                          </div>
+                          <BorderBeam
+                            size={180}
+                            duration={9}
+                            colorFrom="#10b981"
+                            colorTo="#a855f7"
+                            borderWidth={1}
+                          />
+                        </Card>
+                      </Link>
+                    )}
                   <TeamsList teams={tournament.teams || []} />
                 </motion.div>
               </TabsContent>
@@ -714,5 +771,77 @@ function ArchiveTournamentButton({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+/**
+ * Composition d'un groupe AVANT le 1er match.
+ * Liste plate des équipes assignées (par le tirage au sort), sans stats.
+ * Dès qu'un match du groupe est terminé, ce composant est remplacé par
+ * `<StandingsTable>` qui affiche le vrai classement.
+ */
+function GroupRoster({ groupName, teams }: { groupName: string; teams: Team[] }) {
+  return (
+    <Card className="relative overflow-hidden bg-linear-to-br from-white/3 via-black to-black border-white/10 p-6">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+            <Users className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-emerald-400">
+              § COMPOSITION
+            </div>
+            <h3 className="text-xl md:text-2xl font-black text-white tracking-tight">
+              {groupName}
+            </h3>
+          </div>
+        </div>
+        <Badge className="bg-white/5 border-white/15 text-white/65 uppercase tracking-[0.22em] text-[10px] font-mono">
+          <Hourglass className="w-3 h-3 mr-1" />
+          En attente du 1er match
+        </Badge>
+      </div>
+
+      {teams.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-white/10 bg-white/2 py-10 text-center">
+          <p className="text-sm text-white/55">
+            Aucune équipe assignée à ce groupe. Lance un tirage au sort depuis l&apos;onglet
+            Équipes.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {teams.map((t, i) => (
+            <div
+              key={t.id}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/4 border border-white/10"
+            >
+              <span className="text-[10px] font-mono tabular-nums text-white/35 w-6">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              {t.logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={t.logo}
+                  alt={t.name}
+                  className="w-8 h-8 rounded-full ring-1 ring-white/15 object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white/8 border border-white/15 flex items-center justify-center text-[10px] font-black text-white/80">
+                  {t.shortName.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold text-white truncate">{t.name}</div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/35">
+                  {t.shortName}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }

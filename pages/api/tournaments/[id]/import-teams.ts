@@ -26,13 +26,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const targetId = req.query.id as string;
-    const { sourceId } = req.body as { sourceId?: unknown };
+    const { sourceId, teamIds } = req.body as { sourceId?: unknown; teamIds?: unknown };
 
     if (!targetId || typeof sourceId !== 'string' || !sourceId) {
       return res.status(400).json({ error: 'targetId et sourceId requis' });
     }
 
-    const result = await importTeamsFromTournament(targetId, sourceId);
+    const teamIdsArray =
+      Array.isArray(teamIds) && teamIds.every((id) => typeof id === 'string')
+        ? (teamIds as string[])
+        : undefined;
+
+    const result = await importTeamsFromTournament(targetId, sourceId, teamIdsArray);
     if (!result.success) {
       return res.status(400).json({ error: result.error });
     }

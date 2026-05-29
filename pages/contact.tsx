@@ -55,8 +55,8 @@ const CHANNELS = [
     icon: Mail,
     label: 'E-mail',
     code: 'CH-01',
-    handle: 'support@cdm26.gg',
-    href: 'mailto:support@cdm26.gg',
+    handle: 'devpro@devcorporation.fr',
+    href: 'mailto:devpro@devcorporation.fr',
     desc: 'Réponse sous 24h en jours ouvrés.',
     accent: 'emerald' as Accent,
     cta: 'Envoyer un mail',
@@ -75,8 +75,8 @@ const CHANNELS = [
     icon: TwitterIcon,
     label: 'Twitter',
     code: 'CH-03',
-    handle: '@cdm26',
-    href: '#',
+    handle: '@BlaizeDVM',
+    href: 'https://x.com/BlaizeDVM',
     desc: 'Annonces, highlights, résultats live.',
     accent: 'yellow' as Accent,
     cta: 'Suivre le compte',
@@ -96,7 +96,7 @@ export default function ContactPage() {
     const body = encodeURIComponent(
       `Nom: ${data.get('name')}\nE-mail: ${data.get('email')}\n\n${data.get('message')}`
     );
-    window.location.href = `mailto:support@cdm26.gg?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:devpro@devcorporation.fr?subject=${subject}&body=${body}`;
     setSubmitted(true);
     setLoading(false);
   };
@@ -233,7 +233,7 @@ export default function ContactPage() {
                       </div>
                       <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Ton message est parti !</h3>
                       <p className="text-white/60">Si rien ne s'est ouvert, écris-nous directement à{' '}
-                        <code className="text-emerald-300 font-mono bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">support@cdm26.gg</code>.
+                        <code className="text-emerald-300 font-mono bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">devpro@devcorporation.fr</code>.
                       </p>
                     </div>
                   ) : (
@@ -344,12 +344,12 @@ export default function ContactPage() {
                     Tu es <span className="text-gradient-twitch">caster</span> ou créateur ?
                   </h3>
                   <p className="text-sm text-white/60 leading-relaxed mb-5">
-                    On a un programme partenaires : co-streams, accès anticipé aux brackets, kit graphique CDM 26.
+                    On a un programme partenaires : co-streams, accès anticipé aux brackets, kit graphique CDM 26. Écris-nous directement à l&apos;adresse principale.
                   </p>
-                  <a href="mailto:partners@cdm26.gg" className="inline-flex">
+                  <a href="mailto:devpro@devcorporation.fr?subject=Programme%20partenaires%20CDM%2026" className="inline-flex">
                     <Button size="sm" className="bg-[#9146ff] hover:bg-[#7c3aed] text-white font-black uppercase tracking-[0.18em] text-[10px] px-4">
                       <Mail className="w-3 h-3 mr-1.5" />
-                      partners@cdm26.gg
+                      Contact partenaires
                     </Button>
                   </a>
                 </Card>

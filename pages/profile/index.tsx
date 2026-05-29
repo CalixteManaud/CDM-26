@@ -20,6 +20,8 @@ import {
   CircleDot,
   Coins,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -100,6 +102,8 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
   const [showManualTwitch, setShowManualTwitch] = useState<boolean>(
     !props.user.twitchUserId && !!props.user.twitchUsername
   );
+
+  const [showAccountInfo, setShowAccountInfo] = useState(false);
 
   const [balance, setBalance] = useState<number | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -329,24 +333,62 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
 
               {/* SECTION 03 — INFO COMPTE (read-only) */}
               <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-yellow-950/20 border-white/10 p-7 md:p-8">
-                <div className="flex items-start gap-4 mb-7">
-                  <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
-                    <Shield className="w-5 h-5 text-yellow-400" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-yellow-400 mb-1.5">
-                      § Section 03 — Lecture seule
+                <div className="flex items-start justify-between gap-3 mb-7 flex-wrap">
+                  <div className="flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                      <Shield className="w-5 h-5 text-yellow-400" />
                     </div>
-                    <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
-                      Informations du compte
-                    </h2>
+                    <div>
+                      <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-yellow-400 mb-1.5">
+                        § Section 03 — Lecture seule
+                      </div>
+                      <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
+                        Informations du compte
+                      </h2>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAccountInfo((v) => !v)}
+                    aria-pressed={showAccountInfo}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-black/40 text-[10px] font-mono uppercase tracking-[0.22em] text-white/65 hover:text-white hover:border-yellow-500/40 transition shrink-0"
+                  >
+                    {showAccountInfo ? (
+                      <>
+                        <EyeOff className="w-3.5 h-3.5" />
+                        Masquer
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-3.5 h-3.5" />
+                        Afficher
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <InfoRow icon={UserIcon} label="Nom" value={props.user.name} accent="emerald" />
-                  <InfoRow icon={Mail} label="Email" value={props.user.email} accent="yellow" />
-                  <InfoRow icon={Award} label="Rôle" value={role.label} accent="red" />
+                  <InfoRow
+                    icon={UserIcon}
+                    label="Nom"
+                    value={props.user.name}
+                    accent="emerald"
+                    masked={!showAccountInfo}
+                  />
+                  <InfoRow
+                    icon={Mail}
+                    label="Email"
+                    value={props.user.email}
+                    accent="yellow"
+                    masked={!showAccountInfo}
+                  />
+                  <InfoRow
+                    icon={Award}
+                    label="Rôle"
+                    value={role.label}
+                    accent="red"
+                    masked={!showAccountInfo}
+                  />
                 </div>
               </Card>
 
@@ -405,11 +447,13 @@ function InfoRow({
   label,
   value,
   accent,
+  masked = false,
 }: {
   icon: typeof UserIcon;
   label: string;
   value: string;
   accent: Accent;
+  masked?: boolean;
 }) {
   const s = ACCENT[accent];
   return (
@@ -418,7 +462,14 @@ function InfoRow({
         <Icon className={`w-3 h-3 ${s.text}`} />
         <span className="text-[10px] font-mono text-white/45 uppercase tracking-[0.25em]">{label}</span>
       </div>
-      <p className="text-sm font-black text-white tracking-tight truncate">{value}</p>
+      <p
+        className={`text-sm font-black text-white tracking-tight truncate transition select-none ${
+          masked ? 'blur-sm hover:blur-none' : ''
+        }`}
+        aria-hidden={masked}
+      >
+        {masked ? '••••••••••••' : value}
+      </p>
     </div>
   );
 }

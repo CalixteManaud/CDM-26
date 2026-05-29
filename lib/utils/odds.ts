@@ -10,7 +10,7 @@
 // à la fois côté serveur (API routes, betting.ts) et côté client (PlaceBetForm,
 // etc.) sans risque de tirer Prisma dans le bundle navigateur.
 export const MIN_BET_POINTS = 1;
-export const MAX_BET_POINTS = 50_000;
+export const MAX_BET_POINTS = 10_000;
 
 export type LiveOdds = {
   home: number | null;
