@@ -2,7 +2,7 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/router';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Users,
   Shield,
@@ -100,6 +100,15 @@ const ACCENT: Record<Accent, { text: string; bg: string; border: string }> = {
   purple: { text: 'text-purple-400', bg: 'bg-purple-400', border: 'border-purple-500/30' },
 };
 
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
   const s = ACCENT[accent];
   return (
@@ -115,6 +124,7 @@ function SectionEyebrow({ num, label, accent }: { num: string; label: string; ac
 export default function NewTeamPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const reduce = useReducedMotion();
 
   const [formData, setFormData] = useState<CreateTeamPayload>({
     name: '',
@@ -192,7 +202,18 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <motion.div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent"
+            animate={reduce ? undefined : { opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            aria-hidden
+            className="absolute -top-1/3 right-0 w-2/3 h-[140%] pointer-events-none blur-3xl bg-[radial-gradient(50%_50%_at_70%_30%,rgba(16,185,129,0.13),transparent_70%)]"
+            animate={reduce ? undefined : { opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
               href="/teams"
@@ -202,23 +223,37 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
               Retour aux équipes
             </Link>
 
-            <SectionEyebrow num="NEW" label="Nouvelle nation · CDM 26" accent="emerald" />
-            <h1 className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight">
-              Inscrire <span className="italic font-light text-white/35">une</span>{' '}
-              <span className="text-gradient-worldcup">équipe.</span>
-            </h1>
-            <p className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed">
-              Crée ta nation et deviens coach. Tu pourras gérer l'effectif, les compositions et
-              soumettre les résultats des matchs.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                <CircleDot className="w-3 h-3 mr-1" /> 3 sections
-              </Badge>
-              <Badge className="bg-white/5 border-white/15 text-white/70 uppercase tracking-[0.22em] text-[10px] font-mono">
-                Coach automatique
-              </Badge>
-            </div>
+            <motion.div
+              variants={reduce ? undefined : containerStagger}
+              initial={reduce ? false : 'hidden'}
+              animate={reduce ? undefined : 'show'}
+            >
+              <motion.div variants={reduce ? undefined : fadeUp}>
+                <SectionEyebrow num="NEW" label="Nouvelle nation · CDM 26" accent="emerald" />
+              </motion.div>
+              <motion.h1
+                variants={reduce ? undefined : fadeUp}
+                className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight"
+              >
+                Inscrire <span className="italic font-light text-white/35">une</span>{' '}
+                <span className="text-gradient-worldcup">équipe.</span>
+              </motion.h1>
+              <motion.p
+                variants={reduce ? undefined : fadeUp}
+                className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed"
+              >
+                Crée ta nation et deviens coach. Tu pourras gérer l'effectif, les compositions et
+                soumettre les résultats des matchs.
+              </motion.p>
+              <motion.div variants={reduce ? undefined : fadeUp} className="mt-7 flex flex-wrap items-center gap-3">
+                <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
+                  <CircleDot className="w-3 h-3 mr-1" /> 3 sections
+                </Badge>
+                <Badge className="bg-white/5 border-white/15 text-white/70 uppercase tracking-[0.22em] text-[10px] font-mono">
+                  Coach automatique
+                </Badge>
+              </motion.div>
+            </motion.div>
           </div>
         </section>
 

@@ -1,7 +1,7 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Users,
   Shield,
@@ -19,6 +19,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -140,6 +141,15 @@ const ACCENT: Record<Accent, { text: string; bg: string; border: string }> = {
   purple: { text: 'text-purple-400', bg: 'bg-purple-400', border: 'border-purple-500/30' },
 };
 
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
   const s = ACCENT[accent];
   return (
@@ -160,6 +170,7 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
   const [editShortName, setEditShortName] = useState('');
   const [editLogo, setEditLogo] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const reduce = useReducedMotion();
 
   if (!props.team) {
     return (
@@ -261,10 +272,28 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
-        {/* HERO */}
+        {/* ───────────────────────── HERO ───────────────────────── */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
+          <motion.div
+            aria-hidden
+            className={`absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent ${
+              isFirst ? 'via-yellow-500/70' : 'via-emerald-500/60'
+            } to-transparent`}
+            animate={reduce ? undefined : { opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            aria-hidden
+            className={cn(
+              'absolute -top-1/3 left-0 w-2/3 h-[140%] pointer-events-none blur-3xl',
+              isFirst
+                ? 'bg-[radial-gradient(50%_50%_at_30%_30%,rgba(250,204,21,0.14),transparent_70%)]'
+                : 'bg-[radial-gradient(50%_50%_at_30%_30%,rgba(16,185,129,0.13),transparent_70%)]'
+            )}
+            animate={reduce ? undefined : { opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div className="container mx-auto px-4 py-14 md:py-20 relative">
             <Link
               href="/teams"
@@ -275,14 +304,24 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
             </Link>
 
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
-              <TeamLogoLarge team={team} />
+              <TeamLogoLarge team={team} isFirst={isFirst} reduce={!!reduce} />
 
-              <div className="flex-1 min-w-0">
-                <SectionEyebrow num="EQP" label={`Équipe · ${team.shortName}`} accent="emerald" />
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mt-4 leading-[0.92] tracking-tight">
+              <motion.div
+                variants={reduce ? undefined : containerStagger}
+                initial={reduce ? false : 'hidden'}
+                animate={reduce ? undefined : 'show'}
+                className="flex-1 min-w-0"
+              >
+                <motion.div variants={reduce ? undefined : fadeUp}>
+                  <SectionEyebrow num="EQP" label={`Équipe · ${team.shortName}`} accent="emerald" />
+                </motion.div>
+                <motion.h1
+                  variants={reduce ? undefined : fadeUp}
+                  className="text-4xl md:text-6xl lg:text-7xl font-black mt-4 leading-[0.92] tracking-tight"
+                >
                   <span className="text-gradient-worldcup">{team.name}</span>
-                </h1>
-                <div className="mt-5 flex flex-wrap items-center gap-2">
+                </motion.h1>
+                <motion.div variants={reduce ? undefined : fadeUp} className="mt-5 flex flex-wrap items-center gap-2">
                   <Link href={`/tournaments/${team.tournament.id}`}>
                     <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono cursor-pointer hover:bg-emerald-500/15">
                       <Trophy className="w-3 h-3 mr-1" />
@@ -315,36 +354,51 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
                       Modifier
                     </Button>
                   )}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
-              {standing && <StandingPill position={standing.position} points={standing.points} isFirst={isFirst} />}
+              {standing && (
+                <motion.div
+                  initial={reduce ? false : { opacity: 0, scale: 0.8 }}
+                  animate={reduce ? undefined : { opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, type: 'spring', stiffness: 160, damping: 13 }}
+                >
+                  <StandingPill position={standing.position} points={standing.points} isFirst={isFirst} reduce={!!reduce} />
+                </motion.div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* MINI STATS BAND */}
+        {/* ───────────────────────── MINI STATS ───────────────────────── */}
         {standing && (
           <section className="relative bg-black border-b border-white/10 overflow-hidden">
             <div className="container mx-auto px-4 py-10">
-              <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-white/10 border-y border-white/10">
-                <MiniStatCell code="MJ" label="Joués" value={standing.played} color="text-white" />
-                <MiniStatCell code="V" label="Victoires" value={standing.won} color="text-emerald-400" />
-                <MiniStatCell code="N" label="Nuls" value={standing.drawn} color="text-yellow-400" />
-                <MiniStatCell code="D" label="Défaites" value={standing.lost} color="text-red-400" />
+              <motion.div
+                variants={reduce ? undefined : containerStagger}
+                initial={reduce ? false : 'hidden'}
+                whileInView={reduce ? undefined : 'show'}
+                viewport={{ once: true, margin: '-40px' }}
+                className="grid grid-cols-2 md:grid-cols-5 divide-x divide-white/10 border-y border-white/10"
+              >
+                <MiniStatCell code="MJ" label="Joués" value={standing.played} color="text-white" reduce={!!reduce} />
+                <MiniStatCell code="V" label="Victoires" value={standing.won} color="text-emerald-400" reduce={!!reduce} />
+                <MiniStatCell code="N" label="Nuls" value={standing.drawn} color="text-yellow-400" reduce={!!reduce} />
+                <MiniStatCell code="D" label="Défaites" value={standing.lost} color="text-red-400" reduce={!!reduce} />
                 <MiniStatCell
                   code="DIFF"
                   label="Différence"
                   value={goalDiff}
                   color={goalDiff > 0 ? 'text-emerald-400' : goalDiff < 0 ? 'text-red-400' : 'text-white/65'}
                   prefix={goalDiff > 0 ? '+' : ''}
+                  reduce={!!reduce}
                 />
-              </div>
+              </motion.div>
             </div>
           </section>
         )}
 
-        {/* TEAM STATS + ROSTER */}
+        {/* ───────────────────────── STATS + EFFECTIF ───────────────────────── */}
         <section className="relative bg-black border-b border-white/10 py-16">
           <div className="container mx-auto px-4 space-y-12">
             {/* Team aggregated stats */}
@@ -355,12 +409,18 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
                 <span className="text-gradient-worldcup">collectif.</span>
               </h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                <BigStat icon={Target} label="Buts marqués" code="GLS" value={teamStats.goals} accent="emerald" />
-                <BigStat icon={TrendingUp} label="Passes décisives" code="AST" value={teamStats.assists} accent="purple" />
-                <BigStat icon={SquareYellow} label="Cartons jaunes" code="CJ" value={teamStats.yellowCards} accent="yellow" />
-                <BigStat icon={SquareRed} label="Cartons rouges" code="CR" value={teamStats.redCards} accent="red" />
-              </div>
+              <motion.div
+                variants={reduce ? undefined : containerStagger}
+                initial={reduce ? false : 'hidden'}
+                whileInView={reduce ? undefined : 'show'}
+                viewport={{ once: true, margin: '-40px' }}
+                className="grid grid-cols-2 md:grid-cols-4 gap-5"
+              >
+                <BigStat icon={Target} label="Buts marqués" code="GLS" value={teamStats.goals} accent="emerald" reduce={!!reduce} />
+                <BigStat icon={TrendingUp} label="Passes décisives" code="AST" value={teamStats.assists} accent="purple" reduce={!!reduce} />
+                <BigStat icon={SquareYellow} label="Cartons jaunes" code="CJ" value={teamStats.yellowCards} accent="yellow" reduce={!!reduce} />
+                <BigStat icon={SquareRed} label="Cartons rouges" code="CR" value={teamStats.redCards} accent="red" reduce={!!reduce} />
+              </motion.div>
             </div>
 
             {/* Roster */}
@@ -391,6 +451,7 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
                       player={player}
                       index={index}
                       canManage={props.canManage}
+                      reduce={!!reduce}
                       isDeleting={deleteDialogOpen && selectedPlayer?.id === player.id}
                       onAskDelete={() => {
                         setSelectedPlayer(player);
@@ -510,23 +571,61 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
   );
 }
 
-function TeamLogoLarge({ team }: { team: Team }) {
-  if (team.logo) {
-    return (
-      <div className="relative w-28 h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden ring-1 ring-white/15 bg-white/5 shrink-0 shadow-2xl">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={team.logo} alt={team.name} className="w-full h-full object-cover" />
-      </div>
-    );
-  }
+function TeamLogoLarge({ team, isFirst, reduce }: { team: Team; isFirst: boolean; reduce: boolean }) {
   return (
-    <div className="relative w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-linear-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-3xl md:text-4xl ring-1 ring-white/15 shrink-0 shadow-2xl shadow-emerald-500/20">
-      {team.shortName.substring(0, 2).toUpperCase()}
-    </div>
+    <motion.div
+      initial={reduce ? false : { opacity: 0, scale: 0.85, filter: 'blur(6px)' }}
+      animate={reduce ? undefined : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
+      transition={{ type: 'spring', stiffness: 90, damping: 15 }}
+      className="relative shrink-0"
+    >
+      <motion.div
+        animate={reduce ? undefined : { y: [0, -6, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        className={cn(
+          'relative w-28 h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden bg-white/5 shadow-2xl',
+          isFirst
+            ? 'ring-2 ring-yellow-400/60 shadow-[0_0_40px_-6px_rgba(250,204,21,0.5)]'
+            : 'ring-1 ring-white/15'
+        )}
+      >
+        {team.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={team.logo} alt={team.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-linear-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-3xl md:text-4xl">
+            {team.shortName.substring(0, 2).toUpperCase()}
+          </div>
+        )}
+        {isFirst && (
+          <div className="absolute inset-0 bg-linear-to-t from-yellow-400/20 to-transparent pointer-events-none" />
+        )}
+      </motion.div>
+      {isFirst && (
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 6, scale: 0.6 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 12 }}
+          className="absolute -top-4 left-1/2 -translate-x-1/2"
+        >
+          <Crown className="w-7 h-7 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.7)] fill-yellow-400/30" />
+        </motion.div>
+      )}
+    </motion.div>
   );
 }
 
-function StandingPill({ position, points, isFirst }: { position: number; points: number; isFirst: boolean }) {
+function StandingPill({
+  position,
+  points,
+  isFirst,
+  reduce,
+}: {
+  position: number;
+  points: number;
+  isFirst: boolean;
+  reduce: boolean;
+}) {
   return (
     <Card
       className={`relative overflow-hidden text-center min-w-32 px-5 py-5 bg-white/2 ${
@@ -547,7 +646,7 @@ function StandingPill({ position, points, isFirst }: { position: number; points:
       </div>
       <div className="border-t border-white/10 mt-3 pt-3">
         <div className="text-2xl font-black text-white tabular-nums">
-          <NumberTicker value={points} />
+          {reduce ? points : <NumberTicker value={points} />}
         </div>
         <div className="text-[9px] font-mono text-white/40 uppercase tracking-[0.25em] mt-1">Points</div>
       </div>
@@ -561,22 +660,24 @@ function MiniStatCell({
   value,
   color,
   prefix,
+  reduce,
 }: {
   code: string;
   label: string;
   value: number;
   color: string;
   prefix?: string;
+  reduce: boolean;
 }) {
   return (
-    <div className="px-4 md:px-6 py-6 first:pl-0 md:first:pl-6">
+    <motion.div variants={reduce ? undefined : fadeUp} className="px-4 md:px-6 py-6 first:pl-0 md:first:pl-6">
       <div className="text-[9px] text-white/40 uppercase tracking-[0.3em] mb-2 font-mono">{code}</div>
       <div className={`text-3xl md:text-4xl font-black mb-1 tracking-tighter tabular-nums ${color}`}>
         {prefix ?? ''}
-        <NumberTicker value={value} />
+        {reduce ? value : <NumberTicker value={value} />}
       </div>
       <div className="text-[10px] text-white/65 font-bold uppercase tracking-[0.22em]">{label}</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -586,27 +687,39 @@ function BigStat({
   code,
   value,
   accent,
+  reduce,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   code: string;
   value: number;
   accent: Accent;
+  reduce: boolean;
 }) {
   const s = ACCENT[accent];
   return (
-    <Card className={`relative overflow-hidden bg-white/2 border ${s.border} hover:border-white/30 transition-all p-6`}>
-      <div className="flex items-start justify-between mb-5">
-        <div className={`w-10 h-10 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center`}>
-          <Icon className={`w-4 h-4 ${s.text}`} />
+    <motion.div variants={reduce ? undefined : fadeUp} whileHover={reduce ? undefined : { y: -3 }} className="group relative">
+      <Card className={`relative overflow-hidden bg-white/2 border ${s.border} group-hover:border-white/30 transition-all p-6`}>
+        {!reduce && (
+          <div className="pointer-events-none absolute inset-0 z-20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-linear-to-r from-transparent via-white/[0.07] to-transparent" />
+        )}
+        <div className="flex items-start justify-between mb-5">
+          <div className={`w-10 h-10 rounded-xl bg-white/5 border ${s.border} flex items-center justify-center`}>
+            <Icon className={`w-4 h-4 ${s.text}`} />
+          </div>
+          <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${s.text}`}>{code}</span>
         </div>
-        <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${s.text}`}>{code}</span>
-      </div>
-      <div className={`text-4xl md:text-5xl font-black tabular-nums tracking-tighter mb-1.5 ${s.text}`}>
-        <NumberTicker value={value} />
-      </div>
-      <div className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</div>
-    </Card>
+        <div className={`text-4xl md:text-5xl font-black tabular-nums tracking-tighter mb-1.5 ${s.text}`}>
+          {reduce ? value : <NumberTicker value={value} />}
+        </div>
+        <div className="text-xs font-bold uppercase tracking-wider text-white/80">{label}</div>
+        {!reduce && (
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <BorderBeam size={120} duration={7} colorFrom="#10b981" colorTo="#facc15" borderWidth={1.1} />
+          </div>
+        )}
+      </Card>
+    </motion.div>
   );
 }
 
@@ -621,6 +734,7 @@ function PlayerCard({
   player,
   index,
   canManage,
+  reduce,
   onAskDelete,
   deleteDialogOpen,
   setDeleteDialogOpen,
@@ -631,6 +745,7 @@ function PlayerCard({
   player: Player;
   index: number;
   canManage: boolean;
+  reduce: boolean;
   onAskDelete: () => void;
   deleteDialogOpen: boolean;
   setDeleteDialogOpen: (b: boolean) => void;
@@ -652,14 +767,17 @@ function PlayerCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={reduce ? false : { opacity: 0, y: 18 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
-      transition={{ delay: index * 0.04, duration: 0.4 }}
-      whileHover={{ y: -2 }}
+      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.4 }}
+      whileHover={reduce ? undefined : { y: -3 }}
       className="relative group"
     >
       <Card className="relative overflow-hidden h-full bg-white/2 border-white/10 group-hover:border-white/30 transition-all p-0">
+        {!reduce && (
+          <div className="pointer-events-none absolute inset-0 z-20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-linear-to-r from-transparent via-white/[0.06] to-transparent" />
+        )}
         {/* Top strip */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
           <span className={`text-[10px] font-mono uppercase tracking-[0.25em] ${pos.text}`}>
@@ -675,7 +793,7 @@ function PlayerCard({
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3 min-w-0">
               <div
-                className={`w-12 h-12 rounded-lg bg-linear-to-br ${pos.gradient} flex items-center justify-center text-black font-black text-xl tabular-nums shrink-0 ring-1 ${pos.ring}`}
+                className={`w-12 h-12 rounded-lg bg-linear-to-br ${pos.gradient} flex items-center justify-center text-black font-black text-xl tabular-nums shrink-0 ring-1 ${pos.ring} transition-transform duration-300 group-hover:scale-105`}
               >
                 {player.jerseyNumber}
               </div>
@@ -695,7 +813,7 @@ function PlayerCard({
                   <button
                     type="button"
                     onClick={onAskDelete}
-                    className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100 border border-transparent hover:border-red-500/20"
+                    className="relative z-30 p-1.5 text-red-400 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100 border border-transparent hover:border-red-500/20"
                     aria-label="Retirer le joueur"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -750,4 +868,3 @@ function PlayerStat({ label, value, color }: { label: string; value: number; col
     </div>
   );
 }
-

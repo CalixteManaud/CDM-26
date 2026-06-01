@@ -1,8 +1,8 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Calendar,
   Trophy,
@@ -22,6 +22,9 @@ import {
   ChevronRight,
   CircleDot,
   Tv,
+  Crown,
+  Swords,
+  Radio,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -29,6 +32,7 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useUser } from '@clerk/nextjs';
 
+import { cn } from '@/lib/utils';
 import { PlayerStatsForm } from '@/components/match/player-stats-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +41,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
+import { NumberTicker } from '@/components/ui/number-ticker';
+import { Ripple } from '@/components/ui/ripple';
 import { MatchBetWidget } from '@/components/betting/match-bet-widget';
 import { MatchMarketsList } from '@/components/betting/match-markets-list';
 import type { Market } from '@/components/betting/market-card';
@@ -174,6 +180,8 @@ const ACCENT: Record<Accent, { text: string; bg: string; border: string }> = {
   blue: { text: 'text-blue-400', bg: 'bg-blue-400', border: 'border-blue-500/30' },
 };
 
+type Outcome = 'win' | 'lose' | 'draw' | 'pending';
+
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
   const s = ACCENT[accent];
   return (
@@ -186,11 +194,43 @@ function SectionEyebrow({ num, label, accent }: { num: string; label: string; ac
   );
 }
 
+// Burst de confettis aux couleurs World Cup quand un match se termine sur un
+// vainqueur. Import dynamique de canvas-confetti (déjà en dep) côté client only.
+function useWinnerConfetti(enabled: boolean) {
+  const fired = useRef(false);
+  useEffect(() => {
+    if (!enabled || fired.current) return;
+    fired.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const confetti = (await import('canvas-confetti')).default;
+        if (cancelled) return;
+        const colors = ['#10b981', '#facc15', '#dc2626', '#ffffff'];
+        const end = Date.now() + 1500;
+        const frame = () => {
+          confetti({ particleCount: 5, angle: 60, spread: 62, startVelocity: 58, origin: { x: 0, y: 0.9 }, colors, scalar: 0.9, ticks: 220 });
+          confetti({ particleCount: 5, angle: 120, spread: 62, startVelocity: 58, origin: { x: 1, y: 0.9 }, colors, scalar: 0.9, ticks: 220 });
+          if (Date.now() < end && !cancelled) requestAnimationFrame(frame);
+        };
+        confetti({ particleCount: 90, spread: 100, startVelocity: 45, origin: { y: 0.35 }, colors, scalar: 1.1 });
+        frame();
+      } catch {
+        /* canvas-confetti indisponible — on ignore silencieusement */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled]);
+}
+
 export default function MatchDetailPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
   const { user } = useUser();
   const isAdmin = user?.publicMetadata?.role === 'ADMIN';
   const [isPending, startTransition] = useTransition();
+  const reduce = useReducedMotion();
 
   const [formData, setFormData] = useState({
     homeScore: props.match?.homeScore?.toString() || '',
@@ -211,6 +251,12 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   const isHomeCoach = match?.homeTeam?.coach?.clerkId === user?.id;
   const isAwayCoach = match?.awayTeam?.coach?.clerkId === user?.id;
   const canEditMatch = isAdmin || isHomeCoach || isAwayCoach;
+
+  // Issue du match (avant le early-return : les hooks doivent rester inconditionnels)
+  const finished = match?.status === 'FINISHED' && match.homeScore !== null && match.awayScore !== null;
+  const homeWin = !!finished && (match!.homeScore ?? 0) > (match!.awayScore ?? 0);
+  const awayWin = !!finished && (match!.awayScore ?? 0) > (match!.homeScore ?? 0);
+  useWinnerConfetti(!reduce && (homeWin || awayWin));
 
   if (!match) {
     return (
@@ -323,6 +369,19 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   const isFinished = match.status === 'FINISHED';
   const stage = stageMeta[match.stage] ?? { label: match.stage, code: match.stage.slice(0, 3) };
 
+  const homeOutcome: Outcome = isFinished ? (homeWin ? 'win' : awayWin ? 'lose' : 'draw') : 'pending';
+  const awayOutcome: Outcome = isFinished ? (awayWin ? 'win' : homeWin ? 'lose' : 'draw') : 'pending';
+
+  // Variants d'entrée du hero — désactivées si l'utilisateur préfère moins d'animation
+  const heroContainer: Variants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.12, delayChildren: 0.04 } },
+  };
+  const fadeUp: Variants = {
+    hidden: { opacity: 0, y: 18 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+  };
+
   return (
     <>
       <Head>
@@ -334,14 +393,33 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
-        {/* HERO */}
+        {/* ───────────────────────── HERO ───────────────────────── */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
+          {/* Atmosphère */}
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div
-            className={`absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent ${
-              isLive ? 'via-red-500/70' : 'via-emerald-500/60'
-            } to-transparent`}
+          {/* Halos colorés par camp (vert domicile / rouge extérieur) */}
+          <motion.div
+            aria-hidden
+            className="absolute inset-y-0 left-0 w-2/3 pointer-events-none bg-[radial-gradient(60%_80%_at_0%_50%,rgba(16,185,129,0.18),transparent_70%)]"
+            animate={reduce ? undefined : { opacity: [0.55, 0.9, 0.55] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
           />
+          <motion.div
+            aria-hidden
+            className="absolute inset-y-0 right-0 w-2/3 pointer-events-none bg-[radial-gradient(60%_80%_at_100%_50%,rgba(220,38,38,0.18),transparent_70%)]"
+            animate={reduce ? undefined : { opacity: [0.55, 0.9, 0.55] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+          />
+          {/* Ligne d'énergie supérieure */}
+          <motion.div
+            aria-hidden
+            className={`absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent ${
+              isLive ? 'via-red-500/80' : isFinished ? 'via-yellow-500/70' : 'via-emerald-500/60'
+            } to-transparent`}
+            animate={reduce ? undefined : { opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
           <div className="container mx-auto px-4 py-14 md:py-20 relative">
             <Link
               href={`/tournaments/${match.tournament.id}`}
@@ -351,118 +429,100 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
               Retour au tournoi
             </Link>
 
-            {/* Eyebrow */}
-            <div className="flex flex-wrap items-center gap-3 mb-8">
-              <SectionEyebrow num={stage.code} label={stage.label} accent={isLive ? 'red' : 'emerald'} />
-              <StatusPill status={match.status} />
-              {match.group && (
-                <Badge className="bg-yellow-500/10 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                  <Shield className="w-3 h-3 mr-1" />
-                  {match.group.name}
-                </Badge>
-              )}
-              <Link href={`/tournaments/${match.tournament.id}`}>
-                <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono cursor-pointer hover:bg-emerald-500/15">
-                  <Trophy className="w-3 h-3 mr-1" />
-                  {match.tournament.name}
-                </Badge>
-              </Link>
-            </div>
+            <motion.div variants={reduce ? undefined : heroContainer} initial={reduce ? false : 'hidden'} animate={reduce ? undefined : 'show'}>
+              {/* Eyebrow */}
+              <motion.div variants={reduce ? undefined : fadeUp} className="flex flex-wrap items-center gap-3 mb-10">
+                <SectionEyebrow num={stage.code} label={stage.label} accent={isLive ? 'red' : isFinished ? 'yellow' : 'emerald'} />
+                <StatusPill status={match.status} reduce={!!reduce} />
+                {match.group && (
+                  <Badge className="bg-yellow-500/10 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono">
+                    <Shield className="w-3 h-3 mr-1" />
+                    {match.group.name}
+                  </Badge>
+                )}
+                <Link href={`/tournaments/${match.tournament.id}`}>
+                  <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono cursor-pointer hover:bg-emerald-500/15">
+                    <Trophy className="w-3 h-3 mr-1" />
+                    {match.tournament.name}
+                  </Badge>
+                </Link>
+              </motion.div>
 
-            {/* Match line: home logo / SCORE / away logo */}
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-10 max-w-5xl mx-auto">
-              <Link href={`/teams/${match.homeTeam.id}`} className="group">
-                <div className="flex flex-col items-center md:items-end gap-4 text-center md:text-right">
-                  <TeamLogoXl team={match.homeTeam} />
-                  <div>
-                    <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/40 mb-1">
-                      Domicile
-                    </div>
-                    <div className="font-black text-2xl md:text-4xl text-white tracking-tight leading-tight group-hover:text-emerald-300 transition">
-                      {match.homeTeam.name}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-mono text-white/45 uppercase tracking-[0.3em] mt-1">
-                      {match.homeTeam.shortName}
-                    </div>
-                  </div>
-                </div>
-              </Link>
+              {/* Affiche : logo domicile / SCORE / logo extérieur */}
+              <motion.div
+                variants={reduce ? undefined : fadeUp}
+                className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-10 max-w-5xl mx-auto"
+              >
+                <TeamColumn team={match.homeTeam} align="right" side="home" outcome={homeOutcome} reduce={!!reduce} />
+                <HeroScore status={match.status} homeScore={match.homeScore} awayScore={match.awayScore} reduce={!!reduce} />
+                <TeamColumn team={match.awayTeam} align="left" side="away" outcome={awayOutcome} reduce={!!reduce} />
+              </motion.div>
 
-              <ScoreDisplay status={match.status} homeScore={match.homeScore} awayScore={match.awayScore} />
-
-              <Link href={`/teams/${match.awayTeam.id}`} className="group">
-                <div className="flex flex-col items-center md:items-start gap-4 text-center md:text-left">
-                  <TeamLogoXl team={match.awayTeam} />
-                  <div>
-                    <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/40 mb-1">
-                      Extérieur
-                    </div>
-                    <div className="font-black text-2xl md:text-4xl text-white tracking-tight leading-tight group-hover:text-emerald-300 transition">
-                      {match.awayTeam.name}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-mono text-white/45 uppercase tracking-[0.3em] mt-1">
-                      {match.awayTeam.shortName}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
-
-            {/* Date strip */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-[11px] font-mono uppercase tracking-[0.3em] text-white/45">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3 h-3 text-emerald-400" />
-                {format(date, 'EEEE d MMMM yyyy', { locale: fr })}
-              </span>
-              <span className="text-white/20">·</span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3 h-3 text-yellow-400" />
-                <span className="font-black tabular-nums text-white/85">{format(date, 'HH:mm')}</span>
-              </span>
-              <span className="text-white/20">·</span>
-              <span># {match.id.slice(0, 8).toUpperCase()}</span>
-            </div>
+              {/* Bandeau date */}
+              <motion.div
+                variants={reduce ? undefined : fadeUp}
+                className="mt-12 flex flex-wrap items-center justify-center gap-4 text-[11px] font-mono uppercase tracking-[0.3em] text-white/45"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3 text-emerald-400" />
+                  {format(date, 'EEEE d MMMM yyyy', { locale: fr })}
+                </span>
+                <span className="text-white/20">·</span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-yellow-400" />
+                  <span className="font-black tabular-nums text-white/85">{format(date, 'HH:mm')}</span>
+                </span>
+                <span className="text-white/20">·</span>
+                <span># {match.id.slice(0, 8).toUpperCase()}</span>
+              </motion.div>
+            </motion.div>
           </div>
         </section>
 
-        {/* CONTENT */}
+        {/* ───────────────────────── CONTENU ───────────────────────── */}
         <section className="relative bg-black border-b border-white/10 py-14">
           <div className="container mx-auto px-4 max-w-4xl space-y-6">
             {/* DQ banner */}
             {isDisqualified && (
-              <Card className="relative overflow-hidden bg-red-950/20 border-red-500/30 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-11 h-11 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
-                    <AlertTriangle className="w-5 h-5 text-red-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-red-400 mb-1.5">
-                      § Match suspendu · DISQUALIFICATION
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 16 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card className="relative overflow-hidden bg-red-950/20 border-red-500/30 p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-red-400" />
                     </div>
-                    <h3 className="text-xl md:text-2xl font-black text-white tracking-tight mb-2 leading-tight">
-                      Équipe disqualifiée
-                    </h3>
-                    <p className="text-sm text-white/70 mb-2 leading-relaxed">
-                      {match.homeTeam.disqualified ? (
-                        <>
-                          <strong className="text-white">{match.homeTeam.name}</strong> a été disqualifiée
-                          {match.homeTeam.disqualificationReason && <> : {match.homeTeam.disqualificationReason}</>}
-                        </>
-                      ) : (
-                        <>
-                          <strong className="text-white">{match.awayTeam.name}</strong> a été disqualifiée
-                          {match.awayTeam.disqualificationReason && <> : {match.awayTeam.disqualificationReason}</>}
-                        </>
-                      )}
-                    </p>
-                    <p className="text-xs text-white/55 leading-relaxed">
-                      Des matchs de barrage ont été créés entre les 4 meilleurs 3èmes pour déterminer
-                      l'équipe de remplacement. Ce match sera mis à jour automatiquement une fois les
-                      barrages terminés.
-                    </p>
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-red-400 mb-1.5">
+                        § Match suspendu · DISQUALIFICATION
+                      </div>
+                      <h3 className="text-xl md:text-2xl font-black text-white tracking-tight mb-2 leading-tight">
+                        Équipe disqualifiée
+                      </h3>
+                      <p className="text-sm text-white/70 mb-2 leading-relaxed">
+                        {match.homeTeam.disqualified ? (
+                          <>
+                            <strong className="text-white">{match.homeTeam.name}</strong> a été disqualifiée
+                            {match.homeTeam.disqualificationReason && <> : {match.homeTeam.disqualificationReason}</>}
+                          </>
+                        ) : (
+                          <>
+                            <strong className="text-white">{match.awayTeam.name}</strong> a été disqualifiée
+                            {match.awayTeam.disqualificationReason && <> : {match.awayTeam.disqualificationReason}</>}
+                          </>
+                        )}
+                      </p>
+                      <p className="text-xs text-white/55 leading-relaxed">
+                        Des matchs de barrage ont été créés entre les 4 meilleurs 3èmes pour déterminer
+                        l'équipe de remplacement. Ce match sera mis à jour automatiquement une fois les
+                        barrages terminés.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             )}
 
             {/* Live polling pendant le match — refresh cotes + feed toutes les 12s */}
@@ -783,75 +843,247 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   );
 }
 
-function TeamLogoXl({ team }: { team: TeamSide }) {
-  if (team.logo) {
-    return (
-      <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden ring-1 ring-white/15 bg-white/5 shadow-2xl shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={team.logo} alt={team.name} className="w-full h-full object-cover" />
-      </div>
-    );
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero sub-components
+// ─────────────────────────────────────────────────────────────────────────────
+
+function TeamColumn({
+  team,
+  align,
+  side,
+  outcome,
+  reduce,
+}: {
+  team: TeamSide;
+  align: 'left' | 'right';
+  side: 'home' | 'away';
+  outcome: Outcome;
+  reduce: boolean;
+}) {
+  const dir = align === 'right' ? -1 : 1;
+  const isWin = outcome === 'win';
+  const isLose = outcome === 'lose';
+
+  const variants: Variants = {
+    hidden: { opacity: 0, x: dir * 60, filter: 'blur(8px)' },
+    show: {
+      opacity: 1,
+      x: 0,
+      filter: 'blur(0px)',
+      transition: { type: 'spring', stiffness: 80, damping: 15 },
+    },
+  };
+
   return (
-    <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-linear-to-br from-emerald-500 via-yellow-500 to-red-500 flex items-center justify-center text-black font-black text-3xl md:text-4xl ring-1 ring-white/15 shadow-2xl shadow-emerald-500/20 shrink-0">
-      {team.shortName.substring(0, 2).toUpperCase()}
-    </div>
+    <motion.div variants={reduce ? undefined : variants}>
+      <Link href={`/teams/${team.id}`} className="group block">
+        <div
+          className={cn(
+            'flex flex-col gap-4',
+            align === 'right'
+              ? 'items-center md:items-end text-center md:text-right'
+              : 'items-center md:items-start text-center md:text-left',
+          )}
+        >
+          <div className="relative">
+            {isWin && (
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 8, scale: 0.6 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.6, type: 'spring', stiffness: 200, damping: 12 }}
+                className="absolute -top-7 left-1/2 -translate-x-1/2 z-10"
+              >
+                <Crown className="w-7 h-7 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.7)] fill-yellow-400/30" />
+              </motion.div>
+            )}
+            <TeamLogoXl team={team} side={side} glow={isWin} dim={isLose} reduce={reduce} />
+          </div>
+          <div className={cn(isLose && 'opacity-60')}>
+            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/40 mb-1">
+              {align === 'right' ? 'Domicile' : 'Extérieur'}
+            </div>
+            <div
+              className={cn(
+                'font-black text-2xl md:text-4xl tracking-tight leading-tight transition',
+                isWin ? 'text-yellow-200' : 'text-white group-hover:text-emerald-300',
+              )}
+            >
+              {team.name}
+            </div>
+            <div className="text-[10px] md:text-xs font-mono text-white/45 uppercase tracking-[0.3em] mt-1">
+              {team.shortName}
+            </div>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
 
-function ScoreDisplay({
+function TeamLogoXl({
+  team,
+  side,
+  glow,
+  dim,
+  reduce,
+}: {
+  team: TeamSide;
+  side: 'home' | 'away';
+  glow?: boolean;
+  dim?: boolean;
+  reduce: boolean;
+}) {
+  const ringGlow = glow
+    ? 'ring-2 ring-yellow-400/70 shadow-[0_0_40px_-4px_rgba(250,204,21,0.55)]'
+    : 'ring-1 ring-white/15 shadow-2xl';
+  const fallbackGradient =
+    side === 'home'
+      ? 'from-emerald-500 via-emerald-400 to-yellow-500 shadow-emerald-500/20'
+      : 'from-red-500 via-rose-500 to-purple-500 shadow-red-500/20';
+
+  const float = reduce
+    ? undefined
+    : { y: [0, side === 'home' ? -8 : -6, 0] };
+
+  return (
+    <motion.div
+      animate={float}
+      transition={{ duration: side === 'home' ? 5 : 5.6, repeat: Infinity, ease: 'easeInOut' }}
+      whileHover={reduce ? undefined : { scale: 1.05, rotate: side === 'home' ? -2 : 2 }}
+      className={cn(
+        'relative w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-white/5 transition-all',
+        ringGlow,
+        dim && 'grayscale opacity-50',
+      )}
+    >
+      {team.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={team.logo} alt={team.name} className="w-full h-full object-cover" />
+      ) : (
+        <div
+          className={cn(
+            'w-full h-full bg-linear-to-br flex items-center justify-center text-black font-black text-3xl md:text-4xl',
+            fallbackGradient,
+          )}
+        >
+          {team.shortName.substring(0, 2).toUpperCase()}
+        </div>
+      )}
+      {glow && (
+        <div className="absolute inset-0 bg-linear-to-t from-yellow-400/20 to-transparent pointer-events-none" />
+      )}
+    </motion.div>
+  );
+}
+
+function HeroScore({
   status,
   homeScore,
   awayScore,
+  reduce,
 }: {
   status: string;
   homeScore: number | null;
   awayScore: number | null;
+  reduce: boolean;
 }) {
+  const scoreVariant: Variants = {
+    hidden: { opacity: 0, scale: 0.6 },
+    show: { opacity: 1, scale: 1, transition: { delay: 0.25, type: 'spring', stiffness: 150, damping: 12 } },
+  };
+
   if (status === 'FINISHED' && homeScore !== null && awayScore !== null) {
     return (
-      <div className="flex flex-col items-center">
+      <motion.div variants={reduce ? undefined : scoreVariant} className="flex flex-col items-center">
         <div className="flex items-center gap-2 md:gap-5 text-5xl md:text-8xl font-black tabular-nums text-white tracking-tighter leading-none">
-          <span>{homeScore}</span>
+          {reduce ? (
+            <span>{homeScore}</span>
+          ) : (
+            <NumberTicker value={homeScore} delay={0.45} className="text-white !tracking-tighter drop-shadow-[0_0_22px_rgba(255,255,255,0.18)]" />
+          )}
           <span className="text-white/15 italic text-3xl md:text-6xl">:</span>
-          <span>{awayScore}</span>
+          {reduce ? (
+            <span>{awayScore}</span>
+          ) : (
+            <NumberTicker value={awayScore} delay={0.6} className="text-white !tracking-tighter drop-shadow-[0_0_22px_rgba(255,255,255,0.18)]" />
+          )}
         </div>
-        <div className="text-[10px] uppercase tracking-[0.35em] text-white/45 mt-3 font-mono">
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 6 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="text-[10px] uppercase tracking-[0.35em] text-yellow-300/80 mt-3 font-mono inline-flex items-center gap-1.5"
+        >
+          <Trophy className="w-3 h-3" />
           Score final · FT
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
+
   if (status === 'LIVE') {
     return (
-      <div className="flex flex-col items-center">
-        <div className="flex items-center gap-2 md:gap-5 text-5xl md:text-8xl font-black tabular-nums text-red-400 tracking-tighter leading-none drop-shadow-[0_0_24px_rgba(239,68,68,0.35)]">
+      <motion.div variants={reduce ? undefined : scoreVariant} className="relative flex flex-col items-center">
+        {/* Ondes rouges derrière le score (Ripple recoloré via --foreground) */}
+        {!reduce && (
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] pointer-events-none"
+            style={{ '--foreground': '#ef4444' } as React.CSSProperties}
+          >
+            <Ripple mainCircleSize={120} mainCircleOpacity={0.22} numCircles={6} className="mask-[radial-gradient(circle,white,transparent_75%)]" />
+          </div>
+        )}
+        <motion.div
+          animate={reduce ? undefined : { scale: [1, 1.04, 1] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          className="relative flex items-center gap-2 md:gap-5 text-5xl md:text-8xl font-black tabular-nums text-red-400 tracking-tighter leading-none drop-shadow-[0_0_28px_rgba(239,68,68,0.45)]"
+        >
           <span>{homeScore ?? 0}</span>
           <span className="text-red-500/40 italic text-3xl md:text-6xl animate-pulse">:</span>
           <span>{awayScore ?? 0}</span>
-        </div>
-        <div className="text-[10px] uppercase tracking-[0.35em] text-red-300 mt-3 inline-flex items-center gap-1.5 font-mono font-black">
+        </motion.div>
+        <div className="relative text-[10px] uppercase tracking-[0.35em] text-red-300 mt-3 inline-flex items-center gap-1.5 font-mono font-black">
           <span className="live-dot" />
+          <Radio className="w-3 h-3" />
           En direct
         </div>
-      </div>
+      </motion.div>
     );
   }
+
   return (
-    <div className="flex flex-col items-center">
-      <div className="text-3xl md:text-6xl font-black italic text-white/30 tracking-wider">VS</div>
-      <div className="text-[10px] uppercase tracking-[0.35em] text-white/40 mt-3 font-mono">À venir</div>
-    </div>
+    <motion.div variants={reduce ? undefined : scoreVariant} className="relative flex flex-col items-center">
+      {!reduce && (
+        <motion.div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 md:w-36 md:h-36 rounded-full border border-white/10 bg-[conic-gradient(from_0deg,transparent,rgba(16,185,129,0.25),transparent_40%)]"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'linear' }}
+        />
+      )}
+      <div className="relative flex items-center gap-2 text-3xl md:text-6xl font-black italic text-white/30 tracking-wider">
+        <Swords className="w-7 h-7 md:w-11 md:h-11 text-white/30" />
+        <span>VS</span>
+      </div>
+      <div className="relative text-[10px] uppercase tracking-[0.35em] text-white/40 mt-3 font-mono inline-flex items-center gap-1.5">
+        <Hourglass className="w-3 h-3 text-blue-300" />
+        À venir
+      </div>
+    </motion.div>
   );
 }
 
-function StatusPill({ status }: { status: string }) {
+function StatusPill({ status, reduce }: { status: string; reduce: boolean }) {
+  const pulse = reduce ? undefined : { boxShadow: ['0 0 0 0 rgba(239,68,68,0)', '0 0 0 4px rgba(239,68,68,0.12)', '0 0 0 0 rgba(239,68,68,0)'] };
+
   if (status === 'LIVE') {
     return (
-      <Badge className="bg-red-500/10 border-red-500/30 text-red-300 px-3 py-1 uppercase tracking-[0.22em] text-[10px] font-mono font-black gap-2">
-        <span className="live-dot" />
-        LIVE
-      </Badge>
+      <motion.span animate={pulse} transition={{ duration: 1.8, repeat: Infinity }} className="inline-flex rounded-full">
+        <Badge className="bg-red-500/10 border-red-500/30 text-red-300 px-3 py-1 uppercase tracking-[0.22em] text-[10px] font-mono font-black gap-2">
+          <span className="live-dot" />
+          LIVE
+        </Badge>
+      </motion.span>
     );
   }
   if (status === 'FINISHED') {

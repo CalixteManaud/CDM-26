@@ -1,7 +1,7 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Calendar,
   Trophy,
@@ -13,11 +13,14 @@ import {
   ChevronRight,
   CircleDot,
   Tv,
+  Swords,
+  Radio,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { NumberTicker } from '@/components/ui/number-ticker';
+import Marquee from '@/components/ui/marquee';
 
 type StatusFilter = 'all' | 'SCHEDULED' | 'LIVE' | 'FINISHED';
 type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED';
@@ -112,6 +116,15 @@ const ACCENT: Record<Accent, { text: string; bg: string; border: string }> = {
   blue: { text: 'text-blue-400', bg: 'bg-blue-400', border: 'border-blue-500/30' },
 };
 
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
   const s = ACCENT[accent];
   return (
@@ -127,6 +140,7 @@ function SectionEyebrow({ num, label, accent }: { num: string; label: string; ac
 export default function MatchesPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [tournamentFilter, setTournamentFilter] = useState<string>('all');
+  const reduce = useReducedMotion();
 
   const tournaments = useMemo(() => {
     const map = new Map<string, Tournament>();
@@ -151,6 +165,11 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
       finished: byStatus.FINISHED ?? 0,
     };
   }, [props.matches]);
+
+  const liveMatches = useMemo(
+    () => props.matches.filter((m) => m.status === 'LIVE'),
+    [props.matches]
+  );
 
   const filteredMatches = useMemo(() => {
     return props.matches.filter((m) => {
@@ -178,49 +197,107 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
-        {/* HERO */}
+        {/* ───────────────────────── HERO ───────────────────────── */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-red-500/60 to-transparent" />
+          <motion.div
+            aria-hidden
+            className={`absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent ${
+              counts.live > 0 ? 'via-red-500/70' : 'via-emerald-500/60'
+            } to-transparent`}
+            animate={reduce ? undefined : { opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* Halo d'ambiance — rouge si live en cours, sinon vert pelouse */}
+          <motion.div
+            aria-hidden
+            className={cn(
+              'absolute -top-1/3 right-0 w-2/3 h-[140%] pointer-events-none blur-3xl',
+              counts.live > 0
+                ? 'bg-[radial-gradient(50%_50%_at_70%_30%,rgba(220,38,38,0.16),transparent_70%)]'
+                : 'bg-[radial-gradient(50%_50%_at_70%_30%,rgba(16,185,129,0.14),transparent_70%)]'
+            )}
+            animate={reduce ? undefined : { opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
           <div className="container mx-auto px-4 py-20 md:py-24 relative">
-            <div className="flex items-end justify-between flex-wrap gap-8">
-              <div>
-                <SectionEyebrow num="MTC" label="Calendrier · FIFA 26" accent="red" />
-                <h1 className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight">
-                  Tous les <span className="text-gradient-worldcup">matchs.</span>
-                  <br />
-                  <span className="italic font-light text-white/35">Tous les soirs.</span>
-                </h1>
-                <p className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed">
-                  Le calendrier complet — phase de poules, élimination directe, scores live et
-                  streams Twitch officiels.
-                </p>
-                <div className="mt-7 flex flex-wrap items-center gap-3">
-                  {counts.live > 0 ? (
-                    <Badge className="bg-red-500/10 border-red-500/30 text-red-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                      <span className="live-dot mr-1.5" />
-                      {counts.live} match{counts.live > 1 ? 's' : ''} live
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                      <CircleDot className="w-3 h-3 mr-1" /> Saison 2026
-                    </Badge>
-                  )}
-                  <Badge className="bg-purple-500/10 border-purple-500/30 text-purple-300 uppercase tracking-[0.22em] text-[10px] font-mono">
-                    <Tv className="w-3 h-3 mr-1" /> Streams Twitch
+            <motion.div
+              variants={reduce ? undefined : containerStagger}
+              initial={reduce ? false : 'hidden'}
+              animate={reduce ? undefined : 'show'}
+            >
+              <motion.div variants={reduce ? undefined : fadeUp}>
+                <SectionEyebrow num="MTC" label="Calendrier · FIFA 26" accent={counts.live > 0 ? 'red' : 'emerald'} />
+              </motion.div>
+              <motion.h1
+                variants={reduce ? undefined : fadeUp}
+                className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight"
+              >
+                Tous les <span className="text-gradient-worldcup">matchs.</span>
+                <br />
+                <span className="italic font-light text-white/35">Tous les soirs.</span>
+              </motion.h1>
+              <motion.p
+                variants={reduce ? undefined : fadeUp}
+                className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed"
+              >
+                Le calendrier complet — phase de poules, élimination directe, scores live et
+                streams Twitch officiels.
+              </motion.p>
+              <motion.div variants={reduce ? undefined : fadeUp} className="mt-7 flex flex-wrap items-center gap-3">
+                {counts.live > 0 ? (
+                  <button
+                    onClick={() => setStatusFilter('LIVE')}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-300 uppercase tracking-[0.22em] text-[10px] font-mono px-3 py-1 hover:bg-red-500/20 transition"
+                  >
+                    <span className="live-dot mr-0.5" />
+                    {counts.live} match{counts.live > 1 ? 's' : ''} live · voir
+                  </button>
+                ) : (
+                  <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
+                    <CircleDot className="w-3 h-3 mr-1" /> Saison 2026
                   </Badge>
-                </div>
-              </div>
-            </div>
+                )}
+                <Badge className="bg-purple-500/10 border-purple-500/30 text-purple-300 uppercase tracking-[0.22em] text-[10px] font-mono">
+                  <Tv className="w-3 h-3 mr-1" /> Streams Twitch
+                </Badge>
+              </motion.div>
+
+              {/* Ticker live façon broadcast */}
+              {counts.live > 0 && (
+                <motion.div
+                  variants={reduce ? undefined : fadeUp}
+                  className="relative mt-10 rounded-xl border border-red-500/25 bg-red-950/15 overflow-hidden"
+                >
+                  <div className="absolute left-0 inset-y-0 z-10 flex items-center gap-1.5 px-3.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] font-mono">
+                    <Radio className="w-3 h-3" />
+                    Live
+                  </div>
+                  <div className="absolute right-0 inset-y-0 z-10 w-16 bg-linear-to-l from-black to-transparent pointer-events-none" />
+                  <Marquee className="[--duration:26s] py-2.5 pl-[5.5rem]" pauseOnHover>
+                    {liveMatches.map((m) => (
+                      <LiveTickerItem key={m.id} match={m} />
+                    ))}
+                  </Marquee>
+                </motion.div>
+              )}
+            </motion.div>
           </div>
         </section>
 
-        {/* STATS BAND */}
+        {/* ───────────────────────── STATS ───────────────────────── */}
         <section className="relative bg-black overflow-hidden border-b border-white/10">
           <div className="container mx-auto px-4 py-12">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-y border-white/10">
-              <StatCell code="MTC-TOT" label="Total" value={counts.total} icon={Calendar} accent="emerald" />
-              <StatCell code="SCH-NXT" label="À venir" value={counts.scheduled} icon={Hourglass} accent="blue" />
+            <motion.div
+              variants={reduce ? undefined : containerStagger}
+              initial={reduce ? false : 'hidden'}
+              whileInView={reduce ? undefined : 'show'}
+              viewport={{ once: true, margin: '-40px' }}
+              className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-y border-white/10"
+            >
+              <StatCell code="MTC-TOT" label="Total" value={counts.total} icon={Calendar} accent="emerald" reduce={!!reduce} />
+              <StatCell code="SCH-NXT" label="À venir" value={counts.scheduled} icon={Hourglass} accent="blue" reduce={!!reduce} />
               <StatCell
                 code="LIV-NOW"
                 label="En cours"
@@ -228,13 +305,14 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
                 icon={Flame}
                 accent="red"
                 pulse={counts.live > 0}
+                reduce={!!reduce}
               />
-              <StatCell code="FIN-DON" label="Terminés" value={counts.finished} icon={CheckCircle2} accent="yellow" />
-            </div>
+              <StatCell code="FIN-DON" label="Terminés" value={counts.finished} icon={CheckCircle2} accent="yellow" reduce={!!reduce} />
+            </motion.div>
           </div>
         </section>
 
-        {/* FILTERS + LIST */}
+        {/* ───────────────────────── FILTRES + LISTE ───────────────────────── */}
         <section className="relative bg-black border-b border-white/10 py-16">
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between gap-6 flex-wrap mb-10">
@@ -338,8 +416,8 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
                     <div key={tournamentId} className="space-y-6">
                       <Link href={`/tournaments/${tournamentId}`}>
                         <motion.div
-                          initial={{ opacity: 0, y: 12 }}
-                          whileInView={{ opacity: 1, y: 0 }}
+                          initial={reduce ? false : { opacity: 0, y: 12 }}
+                          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl cursor-pointer bg-white/3 border border-white/10 hover:border-white/30 transition-all group"
                         >
@@ -382,7 +460,7 @@ export default function MatchesPage(props: InferGetServerSidePropsType<typeof ge
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {list.map((m, idx) => (
-                                <MatchCard key={m.id} match={m} idx={idx} />
+                                <MatchCard key={m.id} match={m} idx={idx} reduce={!!reduce} />
                               ))}
                             </div>
                           </div>
@@ -407,6 +485,7 @@ function StatCell({
   icon: Icon,
   accent,
   pulse,
+  reduce,
 }: {
   code: string;
   label: string;
@@ -414,35 +493,51 @@ function StatCell({
   icon: typeof Trophy;
   accent: Accent;
   pulse?: boolean;
+  reduce: boolean;
 }) {
   const s = ACCENT[accent];
   return (
-    <div className={`px-4 md:px-6 py-8 first:pl-0 md:first:pl-6 ${pulse ? 'relative' : ''}`}>
+    <motion.div
+      variants={reduce ? undefined : fadeUp}
+      className={cn('px-4 md:px-6 py-8 first:pl-0 md:first:pl-6 relative', pulse && 'bg-red-500/[0.04]')}
+    >
+      {pulse && (
+        <motion.span
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          animate={reduce ? undefined : { boxShadow: ['inset 0 0 0 0 rgba(239,68,68,0)', 'inset 0 0 24px -6px rgba(239,68,68,0.45)', 'inset 0 0 0 0 rgba(239,68,68,0)'] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
       <div className="text-[10px] text-white/40 uppercase tracking-[0.3em] mb-3 flex items-center gap-1.5 font-mono">
         <Icon className={`w-3 h-3 ${pulse ? 'animate-pulse' : ''}`} />
         {code}
       </div>
       <div className={`text-4xl md:text-6xl font-black mb-2 tracking-tighter tabular-nums ${s.text}`}>
-        <NumberTicker value={value} />
+        {reduce ? value : <NumberTicker value={value} />}
       </div>
       <div className="text-xs md:text-sm text-white/70 font-bold uppercase tracking-wider">{label}</div>
-    </div>
+    </motion.div>
   );
 }
 
-function MatchCard({ match, idx }: { match: Match; idx: number }) {
+function MatchCard({ match, idx, reduce }: { match: Match; idx: number; reduce: boolean }) {
   const date = new Date(match.matchDate);
   const isLive = match.status === 'LIVE';
   const isFinished = match.status === 'FINISHED';
   const isCanceled = match.status === 'CANCELED';
+  const homeScore = match.homeScore ?? null;
+  const awayScore = match.awayScore ?? null;
+  const homeWin = isFinished && homeScore != null && awayScore != null && homeScore > awayScore;
+  const awayWin = isFinished && homeScore != null && awayScore != null && awayScore > homeScore;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={reduce ? false : { opacity: 0, y: 18 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
-      transition={{ delay: idx * 0.04, duration: 0.4 }}
-      whileHover={{ y: -2 }}
+      transition={{ delay: Math.min(idx * 0.04, 0.3), duration: 0.4 }}
+      whileHover={reduce ? undefined : { y: -3 }}
       className="relative group"
     >
       <Link href={`/matches/${match.id}`} className="block h-full">
@@ -451,6 +546,11 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
             isLive ? 'from-red-950/30' : 'from-white/3'
           } to-transparent border-white/10 group-hover:border-white/30 transition-all duration-300`}
         >
+          {/* Sheen diagonal au hover */}
+          {!reduce && (
+            <div className="pointer-events-none absolute inset-0 z-20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-linear-to-r from-transparent via-white/[0.07] to-transparent" />
+          )}
+
           {/* Top status strip */}
           <div className="flex items-center justify-between px-5 py-2.5 border-b border-white/10">
             <span className="flex items-center gap-1.5 text-[10px] font-mono text-white/45 uppercase tracking-[0.22em]">
@@ -467,9 +567,9 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
           <div className="px-5 py-5">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <TeamMiniLogo team={match.homeTeam} />
-                <div className="min-w-0">
-                  <div className="font-black text-white text-sm truncate tracking-tight leading-tight">
+                <TeamMiniLogo team={match.homeTeam} dim={awayWin} />
+                <div className={cn('min-w-0', awayWin && 'opacity-55')}>
+                  <div className={cn('font-black text-sm truncate tracking-tight leading-tight', homeWin ? 'text-emerald-200' : 'text-white')}>
                     {match.homeTeam.name}
                   </div>
                   <div className="text-[10px] font-mono text-white/45 uppercase tracking-[0.22em]">
@@ -479,37 +579,48 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
               </div>
 
               <div className="px-2">
-                {isFinished && match.homeScore != null && match.awayScore != null ? (
-                  <div className="flex items-center gap-1.5 text-3xl font-black tabular-nums text-white leading-none">
-                    <span>{match.homeScore}</span>
+                {isFinished && homeScore != null && awayScore != null ? (
+                  <div className="flex items-center gap-1.5 text-3xl font-black tabular-nums leading-none">
+                    <span className={homeWin ? 'text-white' : 'text-white/40'}>
+                      {reduce ? homeScore : <NumberTicker value={homeScore} className={homeWin ? 'text-white' : 'text-white/40'} />}
+                    </span>
                     <span className="text-white/20 text-xl italic">:</span>
-                    <span>{match.awayScore}</span>
+                    <span className={awayWin ? 'text-white' : 'text-white/40'}>
+                      {reduce ? awayScore : <NumberTicker value={awayScore} delay={0.1} className={awayWin ? 'text-white' : 'text-white/40'} />}
+                    </span>
                   </div>
                 ) : isLive ? (
-                  <div className="flex items-center gap-1.5 text-3xl font-black tabular-nums text-red-400 leading-none">
-                    <span>{match.homeScore ?? 0}</span>
+                  <motion.div
+                    animate={reduce ? undefined : { scale: [1, 1.05, 1] }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                    className="flex items-center gap-1.5 text-3xl font-black tabular-nums text-red-400 leading-none drop-shadow-[0_0_14px_rgba(239,68,68,0.4)]"
+                  >
+                    <span>{homeScore ?? 0}</span>
                     <span className="text-red-500/40 text-xl italic animate-pulse">:</span>
-                    <span>{match.awayScore ?? 0}</span>
-                  </div>
+                    <span>{awayScore ?? 0}</span>
+                  </motion.div>
                 ) : isCanceled ? (
                   <div className="text-sm font-mono uppercase tracking-[0.22em] text-white/30 line-through">
                     Annulé
                   </div>
                 ) : (
-                  <div className="text-base md:text-lg font-black text-white/30 italic tracking-wider">VS</div>
+                  <div className="flex items-center gap-1 text-base md:text-lg font-black text-white/30 italic tracking-wider">
+                    <Swords className="w-4 h-4" />
+                    VS
+                  </div>
                 )}
               </div>
 
               <div className="flex items-center gap-2.5 min-w-0 justify-end text-right">
-                <div className="min-w-0">
-                  <div className="font-black text-white text-sm truncate tracking-tight leading-tight">
+                <div className={cn('min-w-0', homeWin && 'opacity-55')}>
+                  <div className={cn('font-black text-sm truncate tracking-tight leading-tight', awayWin ? 'text-emerald-200' : 'text-white')}>
                     {match.awayTeam.name}
                   </div>
                   <div className="text-[10px] font-mono text-white/45 uppercase tracking-[0.22em]">
                     {match.awayTeam.shortName}
                   </div>
                 </div>
-                <TeamMiniLogo team={match.awayTeam} />
+                <TeamMiniLogo team={match.awayTeam} dim={homeWin} />
               </div>
             </div>
           </div>
@@ -529,8 +640,15 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
             <ChevronRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition" />
           </div>
 
-          {isLive && (
+          {/* BorderBeam : rouge permanent en live, vert→or révélé au hover sinon */}
+          {isLive ? (
             <BorderBeam size={140} duration={5} colorFrom="#ef4444" colorTo="#f59e0b" borderWidth={1.5} />
+          ) : (
+            !reduce && (
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <BorderBeam size={130} duration={7} colorFrom="#10b981" colorTo="#facc15" borderWidth={1.2} />
+              </div>
+            )
           )}
         </Card>
       </Link>
@@ -538,18 +656,39 @@ function MatchCard({ match, idx }: { match: Match; idx: number }) {
   );
 }
 
-function TeamMiniLogo({ team }: { team: Team }) {
-  if (team.logo) {
-    return (
-      <div className="w-10 h-10 rounded-lg overflow-hidden ring-1 ring-white/10 bg-white/5 shrink-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={team.logo} alt={team.name} loading="lazy" className="w-full h-full object-cover" />
-      </div>
-    );
-  }
+function LiveTickerItem({ match }: { match: Match }) {
   return (
-    <div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs shrink-0 ring-1 ring-white/10">
-      {team.shortName.substring(0, 2).toUpperCase()}
+    <Link
+      href={`/matches/${match.id}`}
+      className="flex items-center gap-2.5 text-xs font-mono whitespace-nowrap text-white/80 hover:text-white transition-colors"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+      <span className="font-black uppercase tracking-[0.15em]">{match.homeTeam.shortName}</span>
+      <span className="font-black tabular-nums text-red-300">{match.homeScore ?? 0}</span>
+      <span className="text-white/30">–</span>
+      <span className="font-black tabular-nums text-red-300">{match.awayScore ?? 0}</span>
+      <span className="font-black uppercase tracking-[0.15em]">{match.awayTeam.shortName}</span>
+      <span className="text-white/20 ml-1">·</span>
+    </Link>
+  );
+}
+
+function TeamMiniLogo({ team, dim }: { team: Team; dim?: boolean }) {
+  return (
+    <div
+      className={cn(
+        'w-10 h-10 rounded-lg overflow-hidden ring-1 ring-white/10 bg-white/5 shrink-0 transition-transform duration-300 group-hover:scale-105',
+        dim && 'grayscale opacity-50'
+      )}
+    >
+      {team.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={team.logo} alt={team.name} loading="lazy" className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-linear-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-black text-xs">
+          {team.shortName.substring(0, 2).toUpperCase()}
+        </div>
+      )}
     </div>
   );
 }
@@ -594,4 +733,3 @@ function EmptyState() {
     </Card>
   );
 }
-
