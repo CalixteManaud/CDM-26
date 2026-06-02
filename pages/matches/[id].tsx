@@ -51,6 +51,7 @@ import { MatchStatusSwitcher } from '@/components/match/match-status-switcher';
 import { MatchEventComposer } from '@/components/match/match-event-composer';
 import { MatchEventFeed } from '@/components/match/match-event-feed';
 import type { MatchEvent as MatchEventRow } from '@/components/match/match-event-feed';
+import { StreamEmbed } from '@/components/match/stream-embed';
 
 type Player = {
   id: string;
@@ -367,6 +368,9 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   const date = new Date(match.matchDate);
   const isLive = match.status === 'LIVE';
   const isFinished = match.status === 'FINISHED';
+  const isScheduled = match.status === 'SCHEDULED';
+  // Player embarqué uniquement si le match est live ou à venir et qu'un stream existe
+  const canEmbedStream = (isLive || isScheduled) && !!(match.twitchUrl || match.youtubeUrl);
   const stage = stageMeta[match.stage] ?? { label: match.stage, code: match.stage.slice(0, 3) };
 
   const homeOutcome: Outcome = isFinished ? (homeWin ? 'win' : awayWin ? 'lose' : 'draw') : 'pending';
@@ -772,7 +776,10 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                     </div>
                   </form>
                 ) : hasStreamLinks ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                    {canEmbedStream && (
+                      <StreamEmbed twitchUrl={match.twitchUrl} youtubeUrl={match.youtubeUrl} live={isLive} />
+                    )}
                     {match.streamTitle && (
                       <p className="text-sm text-white/85 italic border-l-2 border-purple-500/40 pl-4 leading-relaxed">
                         « {match.streamTitle} »

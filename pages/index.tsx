@@ -57,15 +57,14 @@ const ThreeDMarquee = dynamic(
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TICKER_ITEMS = [
-  '🇫🇷 FRANCE 3 — 1 BRAZIL 🇧🇷  ·  90+2′',
-  'GROUPE D  ·  JOURNÉE 04',
-  'CE SOIR 21h00  ·  🇩🇪 ALLEMAGNE — ARGENTINE 🇦🇷',
-  'PEAK VIEWERS  ·  12,847',
-  'TWITCH.TV/BLAIZE  ·  ON AIR',
-  'POOL DE PARIS OUVERT  ·  142,000 PTS',
-  'COMING UP  ·  HUITIÈMES DE FINALE',
-  'STREAM QUALITY  ·  1080p60',
+// Fallback affiché uniquement si la base est vide (aucun match/équipe encore).
+// Copy de marque — pas de faux scores/viewers.
+const TICKER_FALLBACK = [
+  'CDM 26 · LE MONDIAL FIFA 26 SUR TWITCH',
+  'FORME TA NATION · JOUE LES ÉLIMINATOIRES',
+  'PHASE DE POULES · BRACKET À ÉLIMINATION DIRECTE',
+  'PARIS EN PARI MUTUEL · POINTS DE CHAÎNE WIZEBOT',
+  'DIFFUSÉ EN DIRECT SUR TWITCH',
 ];
 
 type StatItem = {
@@ -439,6 +438,7 @@ type CDM26HomeProps = {
   counts: Counts | null; // null si fallback total → on utilisera STATS_MOCK
   fixtures: FixtureItem[];
   streamers: StreamerItem[];
+  ticker: string[]; // vide → on utilisera TICKER_FALLBACK
 };
 
 // Mapping status DB → label/meta affiché dans la fixture card
@@ -504,6 +504,8 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
       upcomingMatches,
       recentMatches,
       streamMatches,
+      matchPoolAgg,
+      marketPoolAgg,
     ] = await Promise.all([
         prisma.team.count({ where: { disqualified: false } }),
         prisma.player.count(),
@@ -557,6 +559,10 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
           orderBy: [{ status: 'asc' }, { matchDate: 'desc' }],
           take: 24,
         }),
+        prisma.matchBettingPool.aggregate({
+          _sum: { totalHomePool: true, totalDrawPool: true, totalAwayPool: true },
+        }),
+        prisma.marketPool.aggregate({ _sum: { totalPool: true } }),
       ]);
 
     const counts: Counts | null =
@@ -593,8 +599,46 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
       if (streamers.length >= 6) break;
     }
 
+    // ── Ticker broadcast : 100% data réelle ──
+    const fmtKickoff = (d: Date) =>
+      new Date(d).toLocaleString('fr-FR', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+    const ticker: string[] = [];
+
+    for (const m of liveMatches) {
+      ticker.push(`🔴 EN DIRECT · ${m.homeTeam.shortName} ${m.homeScore ?? 0} — ${m.awayScore ?? 0} ${m.awayTeam.shortName}`);
+    }
+    for (const m of upcomingMatches) {
+      ticker.push(`À VENIR · ${m.homeTeam.shortName} — ${m.awayTeam.shortName} · ${fmtKickoff(m.matchDate)}`);
+    }
+    for (const m of recentMatches) {
+      ticker.push(`FT · ${m.homeTeam.shortName} ${m.homeScore ?? 0} — ${m.awayScore ?? 0} ${m.awayTeam.shortName}`);
+    }
+    for (const s of streamers.filter((x) => x.live).slice(0, 3)) {
+      ticker.push(`TWITCH.TV/${s.channel.toUpperCase()} · EN DIRECT`);
+    }
+    if (counts) {
+      ticker.push(`${counts.nations} ÉQUIPES ENGAGÉES`);
+      if (counts.players > 0) ticker.push(`${counts.players} JOUEURS INSCRITS`);
+      if (counts.matches > 0) ticker.push(`${counts.matches} MATCHS JOUÉS`);
+    }
+    const poolTotal =
+      (matchPoolAgg._sum.totalHomePool ?? 0) +
+      (matchPoolAgg._sum.totalDrawPool ?? 0) +
+      (matchPoolAgg._sum.totalAwayPool ?? 0) +
+      (marketPoolAgg._sum.totalPool ?? 0);
+    if (poolTotal > 0) {
+      ticker.push(`POOL DE PARIS · ${poolTotal.toLocaleString('fr-FR')} PTS EN JEU`);
+    }
+
     return {
-      props: JSON.parse(JSON.stringify({ counts, fixtures, streamers })) as CDM26HomeProps,
+      props: JSON.parse(JSON.stringify({ counts, fixtures, streamers, ticker })) as CDM26HomeProps,
     };
   } catch (error) {
     console.error('[landing] getServerSideProps failed, falling back to mocks:', error);
@@ -603,6 +647,7 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
         counts: null,
         fixtures: FIXTURES_MOCK,
         streamers: [],
+        ticker: [],
       },
     };
   }
@@ -612,8 +657,9 @@ export const getServerSideProps: GetServerSideProps<CDM26HomeProps> = async () =
 // PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CDM26Home({ counts, fixtures, streamers }: CDM26HomeProps) {
+export default function CDM26Home({ counts, fixtures, streamers, ticker }: CDM26HomeProps) {
   const { isSignedIn } = useUser();
+  const tickerItems = ticker.length > 0 ? ticker : TICKER_FALLBACK;
 
   // Stats : on reconstitue côté client pour préserver les références icônes
   // (un LucideIcon ne survit pas à JSON.stringify côté SSR).
@@ -651,7 +697,7 @@ export default function CDM26Home({ counts, fixtures, streamers }: CDM26HomeProp
             </div>
             <div className="flex-1 overflow-hidden">
               <Marquee className="py-3.5 [--duration:55s] [--gap:3rem]" pauseOnHover repeat={2}>
-                {TICKER_ITEMS.map((item, i) => (
+                {tickerItems.map((item, i) => (
                   <span
                     key={i}
                     className="inline-flex items-center gap-3 text-sm font-mono text-white/80 uppercase tracking-wide whitespace-nowrap"
@@ -663,7 +709,7 @@ export default function CDM26Home({ counts, fixtures, streamers }: CDM26HomeProp
               </Marquee>
             </div>
             <div className="shrink-0 hidden md:flex items-center px-5 bg-white/5 border-l border-white/10">
-              <span className="text-[11px] font-mono text-white/50 uppercase tracking-[0.25em]">SE26 / W04</span>
+              <span className="text-[11px] font-mono text-white/50 uppercase tracking-[0.25em]">SAISON 2026</span>
             </div>
           </div>
         </section>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, UserCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,7 +17,6 @@ interface AssignCoachModalProps {
   onClose: () => void;
   teamId: string;
   teamName: string;
-  users: User[];
   currentCoachId?: string | null;
   onSuccess?: () => void;
 }
@@ -27,19 +26,40 @@ export function AssignCoachModal({
   onClose,
   teamId,
   teamName,
-  users,
   currentCoachId,
   onSuccess,
 }: AssignCoachModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(currentCoachId ?? null);
   const [isPending, startTransition] = useTransition();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Recherche serveur debouncée — uniquement quand la modale est ouverte.
+  // Évite de charger tous les utilisateurs en mémoire (cf. pagination serveur).
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ pageSize: '20', sortBy: 'name', sortDir: 'asc' });
+        if (searchQuery.trim()) params.set('search', searchQuery.trim());
+        const res = await fetch(`/api/admin/users-list?${params.toString()}`);
+        if (!res.ok) throw new Error();
+        const json = (await res.json()) as { rows: User[] };
+        if (active) setUsers(json.rows);
+      } catch {
+        if (active) setUsers([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [isOpen, searchQuery]);
 
   const handleAssign = () => {
     if (!selectedUserId) {
@@ -121,7 +141,13 @@ export function AssignCoachModal({
 
           {/* User List */}
           <div className="flex-1 overflow-y-auto space-y-2 mb-6">
-            {filteredUsers.map((user) => (
+            {loading && (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <span className="text-sm">Recherche…</span>
+              </div>
+            )}
+            {!loading && users.map((user) => (
               <motion.div
                 key={user.id}
                 whileHover={{ x: 4 }}
@@ -173,7 +199,7 @@ export function AssignCoachModal({
               </motion.div>
             ))}
 
-            {filteredUsers.length === 0 && (
+            {!loading && users.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
               </div>

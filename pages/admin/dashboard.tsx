@@ -1,7 +1,7 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
-import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Shield,
   Users,
@@ -11,13 +11,13 @@ import {
   ShieldCheck,
   ChevronRight,
   CircleDot,
-  Activity,
 } from 'lucide-react';
 import Link from 'next/link';
 
 import { UsersDataTable } from '@/components/admin/users-data-table';
 import { TeamsDataTable } from '@/components/admin/teams-data-table';
 import { AssignCoachModal } from '@/components/admin/assign-coach-modal';
+import { SystemHealthBadge } from '@/components/admin/system-health-badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BorderBeam } from '@/components/ui/border-beam';
@@ -49,7 +49,17 @@ interface Team {
   coach?: { id: string; name: string } | null;
 }
 
-type PageProps = { users: User[]; teams: Team[] };
+type Counts = {
+  totalUsers: number;
+  admins: number;
+  participants: number;
+  totalTeams: number;
+  coachedCount: number;
+};
+
+type PageProps = { users: User[]; teams: Team[]; counts: Counts };
+
+const PAGE_SIZE = 10;
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => {
   const { getAuth } = await import('@clerk/nextjs/server');
@@ -66,37 +76,50 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
   if (!isAdmin) return { redirect: { destination: '/', permanent: false } };
 
   const prisma = (await import('@/lib/prisma')).default;
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      username: true,
-      role: true,
-      createdAt: true,
-      coachedTeams: {
+
+  // Seulement la 1re page de chaque table + des compteurs agrégés.
+  // Les tables paginent/trient/recherchent ensuite côté serveur via /api/admin/*-list.
+  const [users, teams, totalUsers, admins, participants, totalTeams, coachedCount] =
+    await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          username: true,
+          role: true,
+          createdAt: true,
+          coachedTeams: {
+            select: { id: true, name: true, tournament: { select: { name: true } } },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: PAGE_SIZE,
+      }),
+      prisma.team.findMany({
         select: {
           id: true,
           name: true,
-          tournament: { select: { name: true } },
+          shortName: true,
+          coachUserId: true,
+          tournament: { select: { id: true, name: true } },
+          coach: { select: { id: true, name: true } },
         },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  const teams = await prisma.team.findMany({
-    include: {
-      tournament: { select: { id: true, name: true } },
-      coach: { select: { id: true, name: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+        orderBy: { createdAt: 'desc' },
+        take: PAGE_SIZE,
+      }),
+      prisma.user.count(),
+      prisma.user.count({ where: { role: 'ADMIN' } }),
+      prisma.user.count({ where: { role: 'PARTICIPANT' } }),
+      prisma.team.count(),
+      prisma.team.count({ where: { coachUserId: { not: null } } }),
+    ]);
 
   return {
     props: {
       users: JSON.parse(JSON.stringify(users)),
       teams: JSON.parse(JSON.stringify(teams)),
+      counts: { totalUsers, admins, participants, totalTeams, coachedCount },
     },
   };
 };
@@ -108,6 +131,15 @@ const ACCENT: Record<Accent, { text: string; bg: string; border: string }> = {
   red: { text: 'text-red-400', bg: 'bg-red-400', border: 'border-red-500/30' },
   purple: { text: 'text-purple-400', bg: 'bg-purple-400', border: 'border-purple-500/30' },
   blue: { text: 'text-blue-400', bg: 'bg-blue-400', border: 'border-blue-500/30' },
+};
+
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
@@ -125,23 +157,11 @@ function SectionEyebrow({ num, label, accent }: { num: string; label: string; ac
 export default function AdminDashboardPage(
   props: InferGetServerSidePropsType<typeof getServerSideProps>
 ) {
-  const { users, teams } = props;
+  const { users, teams, counts: stats } = props;
+  const reduce = useReducedMotion();
   const [activeTab, setActiveTab] = useState<'users' | 'teams'>('users');
   const [assignCoachModalOpen, setAssignCoachModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-
-  const stats = useMemo(() => {
-    const admins = users.filter((u) => u.role === 'ADMIN').length;
-    const participants = users.filter((u) => u.role === 'PARTICIPANT').length;
-    const coachedCount = teams.filter((t) => t.coachUserId).length;
-    return {
-      totalUsers: users.length,
-      admins,
-      participants,
-      totalTeams: teams.length,
-      coachedCount,
-    };
-  }, [users, teams]);
 
   const handleAssignCoach = (team: Team) => {
     setSelectedTeam(team);
@@ -162,7 +182,18 @@ export default function AdminDashboardPage(
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-red-500/60 to-transparent" />
+          {/* halo d'ambiance animé */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 left-[8%] h-72 w-72 rounded-full bg-red-600/10 blur-[100px]"
+            animate={reduce ? undefined : { opacity: [0.5, 0.9, 0.5], scale: [1, 1.12, 1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-red-500/60 to-transparent"
+            animate={reduce ? undefined : { opacity: [0.35, 1, 0.35] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
 
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
@@ -173,47 +204,57 @@ export default function AdminDashboardPage(
               Retour à l&apos;accueil
             </Link>
 
-            <div className="flex items-start gap-6 flex-wrap">
+            <motion.div variants={containerStagger} initial="hidden" animate="show" className="flex items-start gap-6 flex-wrap">
               {/* Big shield admin signature */}
-              <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-linear-to-br from-red-600/40 via-orange-600/30 to-yellow-500/40 rounded-3xl blur-xl" />
+              <motion.div variants={fadeUp} className="relative shrink-0">
+                <motion.div
+                  aria-hidden
+                  className="absolute inset-0 bg-linear-to-br from-red-600/40 via-orange-600/30 to-yellow-500/40 rounded-3xl blur-xl"
+                  animate={reduce ? undefined : { opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                />
                 <motion.div
                   whileHover={{ rotate: -6, scale: 1.05 }}
                   className="relative w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-linear-to-br from-red-600 via-orange-600 to-yellow-500 flex items-center justify-center shadow-2xl shadow-red-500/40 ring-1 ring-white/15"
                 >
                   <Shield className="w-10 h-10 md:w-12 md:h-12 text-white" strokeWidth={2.2} />
                 </motion.div>
-              </div>
+              </motion.div>
 
               <div className="flex-1 min-w-0">
-                <SectionEyebrow num="ADM" label="Espace administrateur · CDM 26" accent="red" />
-                <h1 className="text-5xl md:text-7xl font-black mt-4 leading-[0.92] tracking-tight">
+                <motion.div variants={fadeUp}>
+                  <SectionEyebrow num="ADM" label="Espace administrateur · CDM 26" accent="red" />
+                </motion.div>
+                <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black mt-4 leading-[0.92] tracking-tight">
                   <span className="text-gradient-worldcup">Dashboard.</span>
-                </h1>
-                <p className="text-white/60 mt-5 max-w-2xl text-base md:text-lg leading-relaxed">
+                </motion.h1>
+                <motion.p variants={fadeUp} className="text-white/60 mt-5 max-w-2xl text-base md:text-lg leading-relaxed">
                   Gestion des utilisateurs, des équipes et des coachs. Promotion de rôles,
                   assignation de coachs, supervision globale.
-                </p>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
+                </motion.p>
+                <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center gap-3">
                   <Badge className="bg-red-500/10 border-red-500/30 text-red-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Shield className="w-3 h-3 mr-1" /> Admin only
                   </Badge>
                   <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <CircleDot className="w-3 h-3 mr-1" /> Saison 2026
                   </Badge>
-                  <Badge className="bg-white/5 border-white/15 text-white/70 uppercase tracking-[0.22em] text-[10px] font-mono">
-                    <Activity className="w-3 h-3 mr-1" /> Tous services OK
-                  </Badge>
-                </div>
+                  <SystemHealthBadge />
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* STATS BAND */}
         <section className="relative bg-black overflow-hidden border-b border-white/10">
           <div className="container mx-auto px-4 py-12">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-y border-white/10">
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border-y border-white/10"
+            >
               <StatCell code="USR-TOT" label="Utilisateurs" value={stats.totalUsers} icon={Users} accent="blue" />
               <StatCell code="ADM-NB" label="Admins" value={stats.admins} icon={Crown} accent="red" beam />
               <StatCell code="PLY-NB" label="Participants" value={stats.participants} icon={UserCheck} accent="emerald" />
@@ -225,7 +266,7 @@ export default function AdminDashboardPage(
                 icon={Trophy}
                 accent="yellow"
               />
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -288,7 +329,7 @@ export default function AdminDashboardPage(
                         {stats.totalUsers} entrées
                       </span>
                     </div>
-                    <UsersDataTable data={users} onUpdate={handleRefresh} />
+                    <UsersDataTable initialData={users} initialTotal={stats.totalUsers} onMutate={handleRefresh} />
                   </Card>
                 </motion.div>
               </TabsContent>
@@ -319,7 +360,12 @@ export default function AdminDashboardPage(
                         {stats.coachedCount} / {stats.totalTeams} coachées
                       </span>
                     </div>
-                    <TeamsDataTable data={teams} onAssignCoach={handleAssignCoach} />
+                    <TeamsDataTable
+                      initialData={teams}
+                      initialTotal={stats.totalTeams}
+                      initialCoached={stats.coachedCount}
+                      onAssignCoach={handleAssignCoach}
+                    />
                   </Card>
                 </motion.div>
               </TabsContent>
@@ -353,7 +399,6 @@ export default function AdminDashboardPage(
             }}
             teamId={selectedTeam.id}
             teamName={selectedTeam.name}
-            users={users}
             currentCoachId={selectedTeam.coachUserId}
             onSuccess={handleRefresh}
           />

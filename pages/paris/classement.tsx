@@ -1,7 +1,7 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { Trophy, Award, Coins, Flame, ArrowRight, Activity } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,15 @@ const ACCENT: Record<Accent, { text: string; bg: string }> = {
   yellow: { text: 'text-yellow-400', bg: 'bg-yellow-400' },
   red: { text: 'text-red-400', bg: 'bg-red-400' },
   purple: { text: 'text-purple-400', bg: 'bg-purple-400' },
+};
+
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
@@ -87,6 +96,7 @@ function StatCell({
 
 export default function LeaderboardPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { rows, totalSettled, totalProfitDistributed } = props;
+  const reduce = useReducedMotion();
 
   return (
     <>
@@ -101,40 +111,54 @@ export default function LeaderboardPage(props: InferGetServerSidePropsType<typeo
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-20 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-purple-500/60 to-transparent" />
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 right-[12%] h-72 w-72 rounded-full bg-purple-500/10 blur-[100px]"
+            animate={reduce ? undefined : { opacity: [0.5, 0.9, 0.5], scale: [1, 1.12, 1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-purple-500/60 to-transparent"
+            animate={reduce ? undefined : { opacity: [0.35, 1, 0.35] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <div className="flex items-end justify-between flex-wrap gap-6">
-              <div>
-                <SectionEyebrow num="TOP" label="Classement saison" accent="purple" />
-                <h1 className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight">
+              <motion.div variants={containerStagger} initial="hidden" animate="show">
+                <motion.div variants={fadeUp}>
+                  <SectionEyebrow num="TOP" label="Classement saison" accent="purple" />
+                </motion.div>
+                <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight">
                   Le <span className="text-gradient-worldcup">leaderboard</span>
                   <br />
                   <span className="italic font-light text-white/35">des parieurs.</span>
-                </h1>
-                <p className="text-white/60 mt-6 max-w-2xl text-base md:text-lg leading-relaxed">
+                </motion.h1>
+                <motion.p variants={fadeUp} className="text-white/60 mt-6 max-w-2xl text-base md:text-lg leading-relaxed">
                   Classement basé sur les paris résolus. Tri par bénéfice net, ROI, win rate ou volume misé.
                   Les paris en cours ne comptent pas tant qu'ils ne sont pas settled.
-                </p>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
+                </motion.p>
+                <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center gap-3">
                   <Badge className="bg-purple-500/10 border-purple-500/30 text-purple-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Trophy className="w-3 h-3 mr-1" /> Saison 26
                   </Badge>
                   <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Activity className="w-3 h-3 mr-1" /> {rows.length} parieurs classés
                   </Badge>
-                </div>
-              </div>
-              <Link href="/paris">
-                <ShimmerButton
-                  background="linear-gradient(110deg, #9333ea 0%, #facc15 50%, #dc2626 100%)"
-                  shimmerColor="#ffffff"
-                  className="px-7 py-4 font-black uppercase tracking-[0.18em] text-xs"
-                >
-                  <Flame className="w-4 h-4 mr-2" />
-                  Rejoindre le classement
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </ShimmerButton>
-              </Link>
+                </motion.div>
+              </motion.div>
+              <motion.div variants={fadeUp} initial="hidden" animate="show">
+                <Link href="/paris">
+                  <ShimmerButton
+                    background="linear-gradient(110deg, #9333ea 0%, #facc15 50%, #dc2626 100%)"
+                    shimmerColor="#ffffff"
+                    className="px-7 py-4 font-black uppercase tracking-[0.18em] text-xs"
+                  >
+                    <Flame className="w-4 h-4 mr-2" />
+                    Rejoindre le classement
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </ShimmerButton>
+                </Link>
+              </motion.div>
             </div>
           </div>
         </section>

@@ -75,6 +75,8 @@ export async function progressKnockoutStage(tournamentId: string, completedMatch
         throw new Error('La finale de barrage doit avoir un vainqueur');
       }
 
+      // Scénario B : l'équipe disqualifiée est déjà placée dans un match knockout
+      // (disqualification APRÈS génération du bracket) → on la remplace en place.
       const { handlePlayoffFinalComplete } = await import('./team-replacement');
       const replacementResult = await handlePlayoffFinalComplete(
         tournamentId,
@@ -87,6 +89,22 @@ export async function progressKnockoutStage(tournamentId: string, completedMatch
           message: replacementResult.message,
         };
       }
+
+      // Scénario A : disqualification PENDANT les poules → aucun bracket principal
+      // n'a encore été généré (seuls les barrages existaient). Le vainqueur des
+      // barrages prend la place manquante et on génère le bracket complet.
+      const { completeBarrageAndGenerateBracket } = await import('./bracket-generator');
+      const bracketResult = await completeBarrageAndGenerateBracket(
+        tournamentId,
+        playoffFinal.winnerTeamId
+      );
+
+      if (bracketResult.generated) {
+        return {
+          progressed: true,
+          message: bracketResult.message,
+        };
+      }
     }
 
     return { progressed: false };
@@ -97,7 +115,11 @@ export async function progressKnockoutStage(tournamentId: string, completedMatch
     return { progressed: false };
   }
 
-  // Récupérer tous les matchs du même stage
+  // Récupérer tous les matchs du même stage.
+  // ⚠️ orderBy explicite obligatoire : les gagnants sont appariés dans cet ordre
+  // (gagnant match 1 vs match 2, etc.). Sans tri, Postgres renvoie les lignes
+  // dans un ordre non garanti (encore plus après des UPDATE), ce qui casserait
+  // le seeding du bracket. matchDate asc = ordre de création/d'affichage.
   const stageMatches = await prisma.match.findMany({
     where: {
       tournamentId,
@@ -106,6 +128,9 @@ export async function progressKnockoutStage(tournamentId: string, completedMatch
     include: {
       homeTeam: true,
       awayTeam: true,
+    },
+    orderBy: {
+      matchDate: 'asc',
     },
   });
 

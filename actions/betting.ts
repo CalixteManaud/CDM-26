@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { computeLiveOdds } from '@/lib/utils/betting';
+import { describeOutcome, MARKET_SHORT, type BettingMarketType } from '@/lib/utils/markets';
 import { BetStatus, MatchStatus } from '@/prisma/prisma-client/enums';
 
 const TEAM_SELECT = {
@@ -158,39 +159,193 @@ export async function getRecentBets(limit = 12) {
   }
 }
 
+export type RecentFeedBet = {
+  id: string;
+  kind: '1x2' | 'market';
+  createdAt: Date;
+  pointsWagered: number;
+  odds: number;
+  status: string;
+  user: { twitchUsername: string | null; username: string | null };
+  context: string;
+  pick: string;
+  tone: 'emerald' | 'yellow' | 'red' | 'purple';
+};
+
+const ID_KEY_MARKETS = ['TOURNAMENT_TOP_SCORER', 'TOURNAMENT_MVP', 'TOURNAMENT_WINNER'];
+const ONE_X2_PICK = { HOME_WIN: 'Domicile', DRAW: 'Nul', AWAY_WIN: 'Extérieur' } as const;
+const ONE_X2_TONE = { HOME_WIN: 'emerald', DRAW: 'yellow', AWAY_WIN: 'red' } as const;
+
+/**
+ * Flux unifié des dernières mises : paris 1X2 (table Bet) ET paris sur marchés
+ * flexibles (table MarketBet), fusionnés et triés par date. C'est ce que voient
+ * les viewers dans "dernières mises placées". Conçu pour du volume + polling.
+ */
+export async function getRecentBetsFeed(limit = 30) {
+  try {
+    const [oneX2, market] = await Promise.all([
+      prisma.bet.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          outcome: true,
+          pointsWagered: true,
+          oddsAtPlacement: true,
+          status: true,
+          createdAt: true,
+          user: { select: { twitchUsername: true, username: true } },
+          match: {
+            select: {
+              homeTeam: { select: { shortName: true } },
+              awayTeam: { select: { shortName: true } },
+            },
+          },
+        },
+      }),
+      prisma.marketBet.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          marketId: true,
+          outcomeKey: true,
+          pointsWagered: true,
+          oddsAtPlacement: true,
+          status: true,
+          createdAt: true,
+          user: { select: { twitchUsername: true, username: true } },
+          market: {
+            select: {
+              type: true,
+              param: true,
+              match: {
+                select: {
+                  homeTeam: { select: { shortName: true } },
+                  awayTeam: { select: { shortName: true } },
+                },
+              },
+              tournament: { select: { name: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Résoudre les noms (player/team) pour les marchés dont l'outcomeKey est un id
+    const idKeyBets = market.filter((m) => ID_KEY_MARKETS.includes(m.market.type));
+    const resolveMap = new Map<string, { name?: string; shortName?: string }>();
+    if (idKeyBets.length > 0) {
+      const pools = await prisma.marketPool.findMany({
+        where: {
+          marketId: { in: [...new Set(idKeyBets.map((m) => m.marketId))] },
+          outcomeKey: { in: [...new Set(idKeyBets.map((m) => m.outcomeKey))] },
+        },
+        select: {
+          marketId: true,
+          outcomeKey: true,
+          player: { select: { user: { select: { name: true, username: true } } } },
+          team: { select: { name: true, shortName: true } },
+        },
+      });
+      for (const p of pools) {
+        const playerName = p.player?.user?.name ?? p.player?.user?.username ?? undefined;
+        resolveMap.set(`${p.marketId}:${p.outcomeKey}`, {
+          name: playerName ?? p.team?.name ?? undefined,
+          shortName: p.team?.shortName ?? undefined,
+        });
+      }
+    }
+
+    const oneX2Rows: RecentFeedBet[] = oneX2.map((b) => ({
+      id: b.id,
+      kind: '1x2',
+      createdAt: b.createdAt,
+      pointsWagered: b.pointsWagered,
+      odds: Number(b.oddsAtPlacement),
+      status: b.status,
+      user: b.user,
+      context: `${b.match.homeTeam.shortName} vs ${b.match.awayTeam.shortName}`,
+      pick: ONE_X2_PICK[b.outcome],
+      tone: ONE_X2_TONE[b.outcome],
+    }));
+
+    const marketRows: RecentFeedBet[] = market.map((mb) => {
+      const type = mb.market.type as BettingMarketType;
+      const resolved = resolveMap.get(`${mb.marketId}:${mb.outcomeKey}`);
+      let pick = describeOutcome(type, mb.outcomeKey, resolved);
+      if (type === 'MATCH_TOTAL_GOALS' && mb.market.param) pick = `${pick} ${mb.market.param}`;
+      const context = mb.market.match
+        ? `${MARKET_SHORT[type]} · ${mb.market.match.homeTeam.shortName} vs ${mb.market.match.awayTeam.shortName}`
+        : `${MARKET_SHORT[type]} · ${mb.market.tournament?.name ?? 'Tournoi'}`;
+      return {
+        id: mb.id,
+        kind: 'market',
+        createdAt: mb.createdAt,
+        pointsWagered: mb.pointsWagered,
+        odds: Number(mb.oddsAtPlacement),
+        status: mb.status,
+        user: mb.user,
+        context,
+        pick,
+        tone: 'purple',
+      };
+    });
+
+    const merged = [...oneX2Rows, ...marketRows]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+
+    return { success: true, data: merged };
+  } catch (error) {
+    console.error('Error fetching recent bets feed:', error);
+    return { success: false, error: 'Erreur lors de la récupération du flux' };
+  }
+}
+
 /**
  * Stats globales pour le hero de la page paris.
  */
 export async function getGlobalBettingStats() {
   try {
-    const [pools, betsAggregate, uniqueBettorsAgg] = await Promise.all([
-      prisma.matchBettingPool.aggregate({
-        _sum: {
-          totalHomePool: true,
-          totalDrawPool: true,
-          totalAwayPool: true,
-          betCount: true,
-        },
-      }),
-      prisma.bet.count({ where: { status: BetStatus.PENDING } }),
-      prisma.bet.findMany({
-        select: { userId: true },
-        distinct: ['userId'],
-      }),
-    ]);
+    const [pools, marketPools, pendingOneX2, pendingMarket, oneX2Users, marketUsers] =
+      await Promise.all([
+        prisma.matchBettingPool.aggregate({
+          _sum: {
+            totalHomePool: true,
+            totalDrawPool: true,
+            totalAwayPool: true,
+            betCount: true,
+          },
+        }),
+        prisma.marketPool.aggregate({
+          _sum: { totalPool: true, betCount: true },
+        }),
+        prisma.bet.count({ where: { status: BetStatus.PENDING } }),
+        prisma.marketBet.count({ where: { status: BetStatus.PENDING } }),
+        prisma.bet.findMany({ select: { userId: true }, distinct: ['userId'] }),
+        prisma.marketBet.findMany({ select: { userId: true }, distinct: ['userId'] }),
+      ]);
 
     const totalWagered =
       (pools._sum.totalHomePool ?? 0) +
       (pools._sum.totalDrawPool ?? 0) +
-      (pools._sum.totalAwayPool ?? 0);
+      (pools._sum.totalAwayPool ?? 0) +
+      (marketPools._sum.totalPool ?? 0);
+
+    // Parieurs uniques sur l'ensemble des deux types de paris
+    const uniqueBettors = new Set<string>([
+      ...oneX2Users.map((u) => u.userId),
+      ...marketUsers.map((u) => u.userId),
+    ]).size;
 
     return {
       success: true,
       data: {
         totalWagered,
-        totalBets: pools._sum.betCount ?? 0,
-        pendingBets: betsAggregate,
-        uniqueBettors: uniqueBettorsAgg.length,
+        totalBets: (pools._sum.betCount ?? 0) + (marketPools._sum.betCount ?? 0),
+        pendingBets: pendingOneX2 + pendingMarket,
+        uniqueBettors,
       },
     };
   } catch (error) {

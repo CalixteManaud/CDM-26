@@ -1,7 +1,7 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Trophy,
   Star,
@@ -65,6 +65,15 @@ const ACCENT: Record<Accent, { text: string; bg: string }> = {
   purple: { text: 'text-purple-400', bg: 'bg-purple-400' },
 };
 
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
+
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
   const s = ACCENT[accent];
   return (
@@ -110,6 +119,7 @@ function StatCell({
 
 export default function TournamentBettingPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { tournament, markets } = props;
+  const reduce = useReducedMotion();
   if (!tournament) return null;
 
   const totalPool = markets.reduce(
@@ -137,7 +147,17 @@ export default function TournamentBettingPage(props: InferGetServerSidePropsType
 
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-20 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-yellow-500/60 to-transparent" />
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 right-[12%] h-72 w-72 rounded-full bg-yellow-500/10 blur-[100px]"
+            animate={reduce ? undefined : { opacity: [0.5, 0.9, 0.5], scale: [1, 1.12, 1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-yellow-500/60 to-transparent"
+            animate={reduce ? undefined : { opacity: [0.35, 1, 0.35] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
             <Link
               href="/paris"
@@ -148,36 +168,40 @@ export default function TournamentBettingPage(props: InferGetServerSidePropsType
             </Link>
 
             <div className="flex items-end justify-between flex-wrap gap-6">
-              <div>
-                <SectionEyebrow num="LONG" label="Paris longue durée" accent="yellow" />
-                <h1 className="text-4xl md:text-6xl font-black mt-5 leading-[0.92] tracking-tight">
+              <motion.div variants={containerStagger} initial="hidden" animate="show">
+                <motion.div variants={fadeUp}>
+                  <SectionEyebrow num="LONG" label="Paris longue durée" accent="yellow" />
+                </motion.div>
+                <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl font-black mt-5 leading-[0.92] tracking-tight">
                   <span className="text-gradient-worldcup">{tournament.name}</span>
                   <br />
                   <span className="italic font-light text-white/35">les marchés du tournoi.</span>
-                </h1>
-                <p className="text-white/60 mt-6 max-w-2xl text-base md:text-lg leading-relaxed">
+                </motion.h1>
+                <motion.p variants={fadeUp} className="text-white/60 mt-6 max-w-2xl text-base md:text-lg leading-relaxed">
                   Vainqueur du tournoi, meilleur buteur, MVP. Les paris ferment au coup d'envoi
                   du premier match concerné. Cotes en pari mutuel — elles bougent à chaque mise.
-                </p>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
+                </motion.p>
+                <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center gap-3">
                   <Badge className="bg-yellow-500/10 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Trophy className="w-3 h-3 mr-1" /> {markets.length} marchés
                   </Badge>
                   <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Activity className="w-3 h-3 mr-1" /> {totalOptions} options
                   </Badge>
-                </div>
-              </div>
-              <Link href={`/tournaments/${tournament.id}`}>
-                <ShimmerButton
-                  background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
-                  shimmerColor="#ffffff"
-                  className="px-7 py-4 font-black uppercase tracking-[0.18em] text-xs"
-                >
-                  Voir le tournoi
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </ShimmerButton>
-              </Link>
+                </motion.div>
+              </motion.div>
+              <motion.div variants={fadeUp} initial="hidden" animate="show">
+                <Link href={`/tournaments/${tournament.id}`}>
+                  <ShimmerButton
+                    background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
+                    shimmerColor="#ffffff"
+                    className="px-7 py-4 font-black uppercase tracking-[0.18em] text-xs"
+                  >
+                    Voir le tournoi
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </ShimmerButton>
+                </Link>
+              </motion.div>
             </div>
           </div>
         </section>

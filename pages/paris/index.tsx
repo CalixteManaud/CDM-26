@@ -1,6 +1,6 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import {
   Coins,
@@ -23,7 +23,7 @@ import { ShimmerButton } from '@/components/ui/shimmer-button';
 
 import { MatchBetCard } from '@/components/betting/match-bet-card';
 import { TopOddsLeaderboard } from '@/components/betting/top-odds-leaderboard';
-import { RecentBetsFeed } from '@/components/betting/recent-bets-feed';
+import { LiveBetsTable } from '@/components/betting/live-bets-table';
 import { HowToBetCard } from '@/components/betting/how-to-bet-card';
 import { ParisSubnav } from '@/components/betting/paris-subnav';
 
@@ -31,7 +31,7 @@ type ActionResult<T> = { success: boolean; data?: T; error?: string };
 
 type Match = Parameters<typeof MatchBetCard>[0]['match'];
 type TopRow = Parameters<typeof TopOddsLeaderboard>[0]['rows'][number];
-type Bet = Parameters<typeof RecentBetsFeed>[0]['bets'][number];
+type Bet = Parameters<typeof LiveBetsTable>[0]['initial'][number];
 
 type Stats = {
   totalWagered: number;
@@ -62,7 +62,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
   const {
     getOpenBettingMatches,
     getTopLiveOdds,
-    getRecentBets,
+    getRecentBetsFeed,
     getGlobalBettingStats,
     getTournamentsWithOpenMarkets,
   } = await import('@/actions/betting');
@@ -70,7 +70,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
   const [matchesRes, topRes, recentRes, statsRes, tournamentsRes] = await Promise.all([
     getOpenBettingMatches() as Promise<ActionResult<Match[]>>,
     getTopLiveOdds(8) as Promise<ActionResult<TopRow[]>>,
-    getRecentBets(15) as Promise<ActionResult<Bet[]>>,
+    getRecentBetsFeed(40) as Promise<ActionResult<Bet[]>>,
     getGlobalBettingStats() as Promise<ActionResult<Stats>>,
     getTournamentsWithOpenMarkets() as Promise<ActionResult<TournamentMarketSummary[]>>,
   ]);
@@ -97,6 +97,15 @@ const ACCENT: Record<Accent, { text: string; bg: string }> = {
   yellow: { text: 'text-yellow-400', bg: 'bg-yellow-400' },
   red: { text: 'text-red-400', bg: 'bg-red-400' },
   purple: { text: 'text-purple-400', bg: 'bg-purple-400' },
+};
+
+const containerStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
 function SectionEyebrow({ num, label, accent }: { num: string; label: string; accent: Accent }) {
@@ -144,6 +153,7 @@ function StatCell({
 
 export default function ParisPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { matches, topOdds, recentBets, stats, tournamentMarkets } = props;
+  const reduce = useReducedMotion();
 
   return (
     <>
@@ -161,22 +171,36 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
-          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-yellow-500/60 to-transparent" />
+          {/* halo d'ambiance animé */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 right-[12%] h-72 w-72 rounded-full bg-yellow-500/10 blur-[100px]"
+            animate={reduce ? undefined : { opacity: [0.5, 0.9, 0.5], scale: [1, 1.12, 1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* ligne d'énergie pulsante */}
+          <motion.div
+            className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-yellow-500/60 to-transparent"
+            animate={reduce ? undefined : { opacity: [0.35, 1, 0.35] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div className="container mx-auto px-4 py-20 md:py-24 relative">
             <div className="flex items-end justify-between flex-wrap gap-8">
-              <div>
-                <SectionEyebrow num="BET" label="Paris en pari mutuel" accent="yellow" />
-                <h1 className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight">
+              <motion.div variants={containerStagger} initial="hidden" animate="show">
+                <motion.div variants={fadeUp}>
+                  <SectionEyebrow num="BET" label="Paris en pari mutuel" accent="yellow" />
+                </motion.div>
+                <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black mt-5 leading-[0.92] tracking-tight">
                   Les <span className="text-gradient-worldcup">cotes</span>
                   <br />
                   <span className="italic font-light text-white/35">en direct.</span>
-                </h1>
-                <p className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed">
+                </motion.h1>
+                <motion.p variants={fadeUp} className="text-white/60 mt-7 max-w-2xl text-base md:text-lg leading-relaxed">
                   Tu paries depuis le site avec tes points de chaîne Twitch (gérés par Wizebot). Pari mutuel —
                   les cotes bougent en temps réel selon l&apos;état du pool. Pas de bookmaker, tu joues contre
                   les autres viewers.
-                </p>
-                <div className="mt-7 flex flex-wrap items-center gap-3">
+                </motion.p>
+                <motion.div variants={fadeUp} className="mt-7 flex flex-wrap items-center gap-3">
                   <Badge className="bg-yellow-500/10 border-yellow-500/30 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <CircleDot className="w-3 h-3 mr-1" /> Live
                   </Badge>
@@ -186,20 +210,22 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
                   <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <Coins className="w-3 h-3 mr-1" /> Pari mutuel
                   </Badge>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
 
-              <Link href="#open-matches">
-                <ShimmerButton
-                  background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
-                  shimmerColor="#ffffff"
-                  className="px-7 py-4 font-black uppercase tracking-[0.18em] text-xs"
-                >
-                  <Flame className="w-4 h-4 mr-2" />
-                  Voir les paris ouverts
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </ShimmerButton>
-              </Link>
+              <motion.div variants={fadeUp} initial="hidden" animate="show">
+                <Link href="#open-matches">
+                  <ShimmerButton
+                    background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
+                    shimmerColor="#ffffff"
+                    className="px-7 py-4 font-black uppercase tracking-[0.18em] text-xs"
+                  >
+                    <Flame className="w-4 h-4 mr-2" />
+                    Voir les paris ouverts
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </ShimmerButton>
+                </Link>
+              </motion.div>
             </div>
           </div>
         </section>
@@ -348,11 +374,11 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
                 Le <span className="text-gradient-worldcup">flux</span> des paris
               </h2>
               <p className="text-white/50 mt-3 font-mono text-sm uppercase tracking-[0.22em]">
-                / dernières mises placées par les viewers
+                / dernières mises placées par les viewers · 1X2 + marchés · live
               </p>
             </div>
 
-            <RecentBetsFeed bets={recentBets} />
+            <LiveBetsTable initial={recentBets} limit={40} />
           </div>
         </section>
 
