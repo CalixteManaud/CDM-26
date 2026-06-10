@@ -43,6 +43,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { CoachCombobox } from '@/components/admin/coach-combobox';
 import { toast } from 'sonner';
 
 export interface TeamData {
@@ -64,12 +65,13 @@ interface TeamsDataTableProps {
   initialData: TeamData[];
   initialTotal: number;
   initialCoached: number;
-  onAssignCoach: (team: TeamData) => void;
+  /** Appelé après une assignation de coach réussie (refresh global côté parent). */
+  onCoachAssigned?: () => void;
 }
 
 const SORTABLE = new Set(['name', 'tournament']);
 
-export function TeamsDataTable({ initialData, initialTotal, initialCoached, onAssignCoach }: TeamsDataTableProps) {
+export function TeamsDataTable({ initialData, initialTotal, initialCoached, onCoachAssigned }: TeamsDataTableProps) {
   const [data, setData] = React.useState<TeamData[]>(initialData);
   const [total, setTotal] = React.useState(initialTotal);
   const [loading, setLoading] = React.useState(false);
@@ -190,10 +192,16 @@ export function TeamsDataTable({ initialData, initialTotal, initialCoached, onAs
       cell: ({ row }) => {
         const team = row.original;
         return (
-          <Button onClick={() => onAssignCoach(team)} variant="outline" size="sm" className="ml-auto">
-            <UserCog className="mr-2 h-4 w-4" />
-            {team.coach ? 'Changer' : 'Assigner'}
-          </Button>
+          <div className="flex justify-end">
+            <CoachCombobox
+              teamId={team.id}
+              currentCoachId={team.coachUserId}
+              onAssigned={() => {
+                fetchPage();
+                onCoachAssigned?.();
+              }}
+            />
+          </div>
         );
       },
     },

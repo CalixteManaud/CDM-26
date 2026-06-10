@@ -85,7 +85,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? 400
         : result.code === 'NOT_FOUND'
         ? 404
-        : result.code === 'BAD_OUTCOME' || result.code === 'OUTCOME_LOCKED'
+        : result.code === 'BAD_OUTCOME' ||
+          result.code === 'OUTCOME_LOCKED' ||
+          result.code === 'INVALID_STAKE' ||
+          result.code === 'DAILY_QUOTA' ||
+          result.code === 'MATCH_QUOTA'
         ? 400
         : 500;
     return res.status(status).json({ error: result.error, code: result.code });

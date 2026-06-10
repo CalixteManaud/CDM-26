@@ -78,9 +78,13 @@ const STATES: Array<{
 export function MatchStatusSwitcher({
   matchId,
   currentStatus,
+  hasScore = true,
 }: {
   matchId: string;
   currentStatus: Status;
+  /** Score enregistré ? Si non, on bloque le passage en "Terminé" (sinon le
+   *  match serait ignoré par les stats et les standings). */
+  hasScore?: boolean;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<Status | null>(null);
@@ -138,6 +142,10 @@ export function MatchStatusSwitcher({
         {STATES.map((s) => {
           const isActive = currentStatus === s.key;
           const isLoading = pending === s.key;
+          // "Terminé" verrouillé tant qu'aucun score n'est saisi : sinon le match
+          // serait clôturé "à vide" et ignoré par les stats / standings.
+          const lockedNoScore = s.key === 'FINISHED' && !hasScore && !isActive;
+          const isDisabled = isActive || pending !== null || lockedNoScore;
           const Icon = s.Icon;
           return (
             <AlertDialog
@@ -148,14 +156,15 @@ export function MatchStatusSwitcher({
               <AlertDialogTrigger asChild>
                 <button
                   type="button"
-                  disabled={isActive || pending !== null}
+                  disabled={isDisabled}
+                  title={lockedNoScore ? 'Saisis d\'abord le score via le formulaire de résultat' : undefined}
                   onClick={() => setConfirmTarget(s.key)}
                   className={cn(
                     'group relative flex flex-col items-center gap-2 px-3 py-4 rounded-xl border bg-black/30 transition-all',
                     isActive
                       ? `border-white/20 ${s.ring} ring-2`
                       : 'border-white/10 hover:border-white/25 hover:bg-white/[0.04]',
-                    pending !== null && 'opacity-60 cursor-not-allowed'
+                    (pending !== null || lockedNoScore) && 'opacity-60 cursor-not-allowed'
                   )}
                 >
                   {isLoading ? (
@@ -178,8 +187,8 @@ export function MatchStatusSwitcher({
                     >
                       {s.label}
                     </span>
-                    <span className={cn('text-[9px] font-mono mt-0.5', isActive ? s.cls : 'text-white/30')}>
-                      / {s.code}
+                    <span className={cn('text-[9px] font-mono mt-0.5', lockedNoScore ? 'text-yellow-300/70' : isActive ? s.cls : 'text-white/30')}>
+                      {lockedNoScore ? '/ score requis' : `/ ${s.code}`}
                     </span>
                   </div>
                   {isActive && (

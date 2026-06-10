@@ -7,7 +7,8 @@ import {
   BetStatus,
 } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints, debitWizebotPoints } from '@/lib/wizebot';
-import { computeMarketOdds, isMarketOpen, generateExactScoreOutcomes } from '@/lib/utils/markets';
+import { computeMarketOdds, isMarketOpen, generateExactScoreOutcomes, MIN_MARKET_STAKE, MAX_MARKET_STAKE } from '@/lib/utils/markets';
+import { checkBetWithinQuota, type QuotaAdditions } from '@/lib/utils/bet-quota';
 
 const TEAM_SELECT = {
   id: true,
@@ -133,13 +134,10 @@ export async function getAllOpenMarkets() {
 
 // =================== Validation helpers ===================
 
-const MIN_STAKE = 50;
-const MAX_STAKE = 10_000;
-
 function validateStake(amount: number): string | null {
   if (!Number.isFinite(amount) || !Number.isInteger(amount)) return 'Mise invalide';
-  if (amount < MIN_STAKE) return `Mise minimum : ${MIN_STAKE} pts`;
-  if (amount > MAX_STAKE) return `Mise maximum : ${MAX_STAKE.toLocaleString('fr-FR')} pts`;
+  if (amount < MIN_MARKET_STAKE) return `Mise minimum : ${MIN_MARKET_STAKE} pts`;
+  if (amount > MAX_MARKET_STAKE) return `Mise maximum : ${MAX_MARKET_STAKE.toLocaleString('fr-FR')} pts`;
   return null;
 }
 
@@ -340,6 +338,7 @@ export async function placeMarketBet(input: PlaceMarketBetInput) {
       status: true,
       closesAt: true,
       housePercentage: true,
+      matchId: true,
       pools: { select: { outcomeKey: true, totalPool: true } },
     },
   });
@@ -352,6 +351,16 @@ export async function placeMarketBet(input: PlaceMarketBetInput) {
   const targetPool = market.pools.find((p) => p.outcomeKey === input.outcomeKey);
   if (!targetPool) {
     return { success: false, error: 'Outcome inconnu pour ce marché', code: 'BAD_OUTCOME' };
+  }
+
+  // Quota cumulatif jour + match (un marché rattaché à un match impute son match,
+  // un marché tournoi ne compte qu'au journalier).
+  const quota = await checkBetWithinQuota(input.userId, {
+    daily: input.amount,
+    perMatch: market.matchId ? { [market.matchId]: input.amount } : {},
+  });
+  if (!quota.ok) {
+    return { success: false, error: quota.error, code: quota.code };
   }
 
   // Règle "no switching sides" : si l'user a déjà parié sur ce marché avec un
@@ -471,6 +480,7 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
       status: true,
       closesAt: true,
       housePercentage: true,
+      matchId: true,
       pools: { select: { outcomeKey: true, totalPool: true } },
     },
   });
@@ -529,6 +539,21 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
         code: 'OUTCOME_LOCKED',
       };
     }
+  }
+
+  // Quota cumulatif : la mise totale compte au journalier, et chaque jambe impute
+  // le match de son marché (combiné multi-marchés d'un même match = additionné).
+  const perMatch: QuotaAdditions['perMatch'] = {};
+  for (const leg of input.legs) {
+    const m = markets.find((mk) => mk.id === leg.marketId)!;
+    if (m.matchId) perMatch[m.matchId] = (perMatch[m.matchId] ?? 0) + perLegStake;
+  }
+  const quota = await checkBetWithinQuota(input.userId, {
+    daily: input.totalStake,
+    perMatch,
+  });
+  if (!quota.ok) {
+    return { success: false, error: quota.error, code: quota.code };
   }
 
   // 2. Débit Wizebot pour la mise totale

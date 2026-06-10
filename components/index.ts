@@ -14,5 +14,5 @@ export { RoleUpgradeCard } from './user/role-upgrade-card';
 export { UserProfileCard } from './user/user-profile-card';
 
 // Admin
-export { AssignCoachModal } from './admin/assign-coach-modal';
+export { CoachCombobox } from './admin/coach-combobox';
 export { UsersManagement } from './admin/users-management';

@@ -21,6 +21,7 @@ import { BetOutcome } from '@/prisma/prisma-client/enums';
 import { isBettingOpen } from '@/lib/utils/odds';
 import { canUserBetOnMatch, betRefusalMessage } from '@/lib/utils/permissions';
 import { rateLimitBet } from '@/lib/rate-limit';
+import { checkBetWithinQuota } from '@/lib/utils/bet-quota';
 
 function parseOutcome(raw: unknown): BetOutcome | null {
   if (typeof raw !== 'string') return null;
@@ -101,6 +102,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res
       .status(403)
       .json({ error: betRefusalMessage(permission.reason), code: `FORBIDDEN_${permission.reason}` });
+  }
+
+  // 3 ter. Quota cumulatif jour + match (avant le débit Wizebot)
+  const quota = await checkBetWithinQuota(dbUser.id, {
+    daily: points,
+    perMatch: { [matchId]: points },
+  });
+  if (!quota.ok) {
+    return res.status(400).json({ error: quota.error, code: quota.code, remaining: quota.remaining });
   }
 
   // 4. Débit Wizebot

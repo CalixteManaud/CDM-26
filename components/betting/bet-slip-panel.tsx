@@ -20,6 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { useBetSlip } from '@/lib/contexts/bet-slip-context';
+import { useBetQuota } from '@/hooks/use-bet-quota';
+import { MAX_MARKET_STAKE } from '@/lib/utils/markets';
 
 const PRESETS = [100, 500, 1000, 5000];
 
@@ -31,13 +33,25 @@ export function BetSlipPanel() {
   const [stake, setStake] = useState('500');
   const [submitting, setSubmitting] = useState(false);
 
+  // Quota journalier (la mise totale du combiné y est imputée ; le quota par
+  // match de chaque jambe reste vérifié côté serveur).
+  const { data: quota, refresh: refreshQuota } = useBetQuota(null, !!isSignedIn);
+
   if (legs.length === 0) return null;
 
   const stakeNum = Number.parseInt(stake, 10);
+  const dailyRemaining = quota?.dailyRemaining ?? MAX_MARKET_STAKE;
+  const effectiveMax = Math.max(0, Math.min(MAX_MARKET_STAKE, dailyRemaining));
+  const quotaExhausted = quota != null && effectiveMax < 50;
   const potentialPayout =
     Number.isFinite(stakeNum) && stakeNum > 0 ? Math.floor(stakeNum * combinedOdds) : 0;
   const profit = potentialPayout - (Number.isFinite(stakeNum) ? stakeNum : 0);
-  const canSubmit = legs.length >= 2 && Number.isFinite(stakeNum) && stakeNum >= 50;
+  const canSubmit =
+    legs.length >= 2 &&
+    Number.isFinite(stakeNum) &&
+    stakeNum >= 50 &&
+    stakeNum <= effectiveMax &&
+    !quotaExhausted;
 
   const onSubmit = async () => {
     if (!isSignedIn) {
@@ -48,7 +62,11 @@ export function BetSlipPanel() {
       toast.error(
         legs.length < 2
           ? 'Un combiné nécessite au moins 2 paris'
-          : 'Mise invalide (min 50 pts)'
+          : quotaExhausted
+            ? 'Quota journalier épuisé — reviens demain'
+            : Number.isFinite(stakeNum) && stakeNum > effectiveMax
+              ? `Quota journalier : max ${effectiveMax.toLocaleString('fr-FR')} pts possibles`
+              : 'Mise invalide (min 50 pts)'
       );
       return;
     }
@@ -70,6 +88,7 @@ export function BetSlipPanel() {
       toast.success(`Combiné placé : ×${combinedOdds.toFixed(2)} pour ${potentialPayout.toLocaleString('fr-FR')} pts potentiels`);
       clear();
       setOpen(false);
+      refreshQuota();
       router.replace(router.asPath, undefined, { scroll: false });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur réseau');
@@ -186,18 +205,32 @@ export function BetSlipPanel() {
 
               <footer className="border-t border-white/10 p-4 space-y-3 bg-white/2">
                 <div>
-                  <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 font-bold flex items-center gap-1.5">
-                    <Coins className="w-3 h-3 text-yellow-400" />
-                    Mise totale
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 font-bold flex items-center gap-1.5">
+                      <Coins className="w-3 h-3 text-yellow-400" />
+                      Mise totale
+                    </label>
+                    {quota && (
+                      <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/40 tabular-nums">
+                        reste {dailyRemaining.toLocaleString('fr-FR')} pts / jour
+                      </span>
+                    )}
+                  </div>
                   <Input
                     type="number"
                     min={50}
                     step={50}
+                    max={Math.max(50, effectiveMax)}
                     value={stake}
+                    disabled={quotaExhausted}
                     onChange={(e) => setStake(e.target.value)}
-                    className="font-mono text-base font-black bg-white/5 border-white/15 mt-2"
+                    className="font-mono text-base font-black bg-white/5 border-white/15 mt-2 disabled:opacity-50"
                   />
+                  {quotaExhausted && (
+                    <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-red-300/80">
+                      / quota journalier épuisé
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     {PRESETS.map((preset) => (
                       <button

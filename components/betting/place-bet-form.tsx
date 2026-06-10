@@ -15,6 +15,8 @@ import { computeLiveOdds } from '@/lib/utils/odds';
 import { cn } from '@/lib/utils';
 import { useLiveMatchPool } from '@/hooks/use-live-match-pool';
 import { MAX_BET_POINTS } from '@/lib/utils/odds';
+import { useBetQuota } from '@/hooks/use-bet-quota';
+import { PER_MATCH_POINT_QUOTA } from '@/lib/utils/quota';
 
 type Pool = {
   totalHomePool: number;
@@ -74,6 +76,17 @@ export function PlaceBetForm({
   // (max-age=2 + stale-while-revalidate=4) → Vercel absorbe la charge même à 1k
   // clients. On prend en priorité la data live, fallback sur le snapshot SSR.
   const { data: live } = useLiveMatchPool(matchId);
+
+  // Quota restant (jour + ce match). Sert au plafond de mise + à l'affichage.
+  const { data: quota, refresh: refreshQuota } = useBetQuota(
+    matchId,
+    !!isSignedIn && !!userTwitchUsername
+  );
+  const matchRemaining = quota?.matchRemaining ?? PER_MATCH_POINT_QUOTA;
+  const dailyRemaining = quota?.dailyRemaining ?? MAX_BET_POINTS;
+  const effectiveMax = Math.max(0, Math.min(MAX_BET_POINTS, matchRemaining, dailyRemaining));
+  const quotaExhausted = quota != null && effectiveMax < 1;
+
   const activePool = live?.pool ?? pool;
   const totalPool = live
     ? live.pool.totalPool
@@ -145,6 +158,14 @@ export function PlaceBetForm({
       toast.error('Mise invalide');
       return;
     }
+    if (points > effectiveMax) {
+      toast.error(
+        effectiveMax < 1
+          ? 'Quota de mise épuisé pour aujourd\'hui / ce match'
+          : `Quota dépassé : max ${effectiveMax.toLocaleString('fr-FR')} pts possible ici`
+      );
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -160,6 +181,7 @@ export function PlaceBetForm({
           `Pari placé : ${points.toLocaleString('fr-FR')} pts · cote ×${Number(json.oddsAtPlacement).toFixed(2)}`,
         );
         setOutcome(null);
+        refreshQuota();
         router.replace(router.asPath, undefined, { scroll: false });
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -221,34 +243,43 @@ export function PlaceBetForm({
 
       {/* Points input */}
       <div>
-        <Label htmlFor="bet-points" className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/50">
-          Mise (points de chaîne)
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="bet-points" className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/50">
+            Mise (points de chaîne)
+          </Label>
+          {quota && (
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/40 tabular-nums">
+              reste {matchRemaining.toLocaleString('fr-FR')}/match · {dailyRemaining.toLocaleString('fr-FR')}/jour
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex gap-2">
           <Input
             id="bet-points"
             type="number"
             min={1}
-            max={MAX_BET_POINTS}
+            max={Math.max(1, effectiveMax)}
             value={points}
+            disabled={quotaExhausted}
             onChange={(e) =>
               setPoints(
                 Math.min(
-                  MAX_BET_POINTS,
+                  Math.max(1, effectiveMax),
                   Math.max(1, Number.parseInt(e.target.value || '0', 10) || 0)
                 )
               )
             }
-            className="bg-white/[0.02] border-white/15 text-white tabular-nums font-bold"
+            className="bg-white/[0.02] border-white/15 text-white tabular-nums font-bold disabled:opacity-50"
           />
           <div className="flex gap-1">
             {PRESETS.map((p) => (
               <button
                 key={p}
                 type="button"
+                disabled={p > effectiveMax}
                 onClick={() => setPoints(p)}
                 className={cn(
-                  'px-2.5 rounded-md border text-[10px] font-mono uppercase tracking-wider transition',
+                  'px-2.5 rounded-md border text-[10px] font-mono uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed',
                   points === p
                     ? 'bg-yellow-500/15 border-yellow-500 text-yellow-300'
                     : 'border-white/10 text-white/60 hover:bg-white/5',
@@ -259,6 +290,11 @@ export function PlaceBetForm({
             ))}
           </div>
         </div>
+        {quotaExhausted && (
+          <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-red-300/80">
+            / quota épuisé — reviens demain ou sur un autre match
+          </p>
+        )}
       </div>
 
       {/* Estimated return */}
@@ -280,7 +316,7 @@ export function PlaceBetForm({
 
       <ShimmerButton
         type="submit"
-        disabled={isPending || !outcome}
+        disabled={isPending || !outcome || quotaExhausted || points > effectiveMax}
         background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
         shimmerColor="#ffffff"
         className="w-full px-5 py-3 font-black uppercase tracking-[0.18em] text-xs disabled:opacity-50 disabled:cursor-not-allowed"

@@ -16,7 +16,6 @@ import Link from 'next/link';
 
 import { UsersDataTable } from '@/components/admin/users-data-table';
 import { TeamsDataTable } from '@/components/admin/teams-data-table';
-import { AssignCoachModal } from '@/components/admin/assign-coach-modal';
 import { SystemHealthBadge } from '@/components/admin/system-health-badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -160,14 +159,6 @@ export default function AdminDashboardPage(
   const { users, teams, counts: stats } = props;
   const reduce = useReducedMotion();
   const [activeTab, setActiveTab] = useState<'users' | 'teams'>('users');
-  const [assignCoachModalOpen, setAssignCoachModalOpen] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-
-  const handleAssignCoach = (team: Team) => {
-    setSelectedTeam(team);
-    setAssignCoachModalOpen(true);
-  };
-
   const handleRefresh = () => {
     window.location.reload();
   };
@@ -364,7 +355,7 @@ export default function AdminDashboardPage(
                       initialData={teams}
                       initialTotal={stats.totalTeams}
                       initialCoached={stats.coachedCount}
-                      onAssignCoach={handleAssignCoach}
+                      onCoachAssigned={handleRefresh}
                     />
                   </Card>
                 </motion.div>
@@ -389,20 +380,6 @@ export default function AdminDashboardPage(
           </div>
         </section>
 
-        {/* Assign Coach Modal */}
-        {selectedTeam && (
-          <AssignCoachModal
-            isOpen={assignCoachModalOpen}
-            onClose={() => {
-              setAssignCoachModalOpen(false);
-              setSelectedTeam(null);
-            }}
-            teamId={selectedTeam.id}
-            teamName={selectedTeam.name}
-            currentCoachId={selectedTeam.coachUserId}
-            onSuccess={handleRefresh}
-          />
-        )}
       </div>
     </>
   );

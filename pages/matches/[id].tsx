@@ -538,7 +538,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
             {/* Pilotage admin/coach — status + event composer */}
             {canEditMatch && (
               <>
-                <MatchStatusSwitcher matchId={match.id} currentStatus={match.status as 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED'} />
+                <MatchStatusSwitcher matchId={match.id} currentStatus={match.status as 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED'} hasScore={match.homeScore !== null && match.awayScore !== null} />
                 {match.status === 'LIVE' && (
                   <MatchEventComposer
                     matchId={match.id}

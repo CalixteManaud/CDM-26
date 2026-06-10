@@ -28,8 +28,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
-import { computeMarketOdds, isMarketOpen, MARKET_LABEL } from '@/lib/utils/markets';
+import { computeMarketOdds, isMarketOpen, MARKET_LABEL, MAX_MARKET_STAKE } from '@/lib/utils/markets';
 import { useBetSlip } from '@/lib/contexts/bet-slip-context';
+import { useBetQuota } from '@/hooks/use-bet-quota';
 
 type Pool = {
   id: string;
@@ -123,6 +124,18 @@ export function MarketCard({ market }: { market: Market }) {
   const [submitting, setSubmitting] = useState(false);
   const inSlip = slip.hasLeg(market.id);
 
+  // Quota restant — fetch à la demande (à l'ouverture du dialog de mise).
+  const { data: quota, refresh: refreshQuota } = useBetQuota(market.match?.id ?? null, false);
+  const effectiveMax = Math.max(
+    0,
+    Math.min(
+      MAX_MARKET_STAKE,
+      quota?.dailyRemaining ?? MAX_MARKET_STAKE,
+      quota?.matchRemaining ?? MAX_MARKET_STAKE
+    )
+  );
+  const quotaExhausted = quota != null && effectiveMax < 50;
+
   const odds = useMemo(
     () => computeMarketOdds(market.pools, Number(market.housePercentage)),
     [market.pools, market.housePercentage]
@@ -141,6 +154,14 @@ export function MarketCard({ market }: { market: Market }) {
     const amt = Number.parseInt(amount, 10);
     if (!Number.isFinite(amt) || amt < 50) {
       toast.error('Mise minimum : 50 pts');
+      return;
+    }
+    if (amt > effectiveMax) {
+      toast.error(
+        effectiveMax < 50
+          ? 'Quota de mise épuisé (jour / match)'
+          : `Quota : max ${effectiveMax.toLocaleString('fr-FR')} pts possible ici`
+      );
       return;
     }
     setSubmitting(true);
@@ -162,6 +183,7 @@ export function MarketCard({ market }: { market: Market }) {
       toast.success(`Pari placé : ${amt} pts sur ${outcomeLabel(market, market.pools.find((p) => p.outcomeKey === selectedOutcome)!)}`);
       setOpen(false);
       setSelectedOutcome(null);
+      refreshQuota();
       router.replace(router.asPath, undefined, { scroll: false });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur réseau');
@@ -246,6 +268,7 @@ export function MarketCard({ market }: { market: Market }) {
                       }
                       setSelectedOutcome(p.outcomeKey);
                       setOpen(true);
+                      refreshQuota();
                     }}
                     className={cn(
                       'group relative flex flex-col items-center justify-center gap-1 rounded-lg border bg-black/40 px-2 py-3 transition-all',
@@ -291,17 +314,27 @@ export function MarketCard({ market }: { market: Market }) {
 
                   <div className="space-y-4 mt-2">
                     <div>
-                      <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 font-bold">
-                        / Mise (pts)
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 font-bold">
+                          / Mise (pts)
+                        </label>
+                        {quota && (
+                          <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/40 tabular-nums">
+                            reste {quota.matchRemaining != null ? `${quota.matchRemaining.toLocaleString('fr-FR')}/match · ` : ''}
+                            {quota.dailyRemaining.toLocaleString('fr-FR')}/jour
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 mt-2">
                         <Input
                           type="number"
                           min={50}
                           step={50}
+                          max={Math.max(50, effectiveMax)}
                           value={amount}
+                          disabled={quotaExhausted}
                           onChange={(e) => setAmount(e.target.value)}
-                          className="font-mono text-lg font-black bg-white/5 border-white/15"
+                          className="font-mono text-lg font-black bg-white/5 border-white/15 disabled:opacity-50"
                         />
                         <Coins className="w-4 h-4 text-yellow-400" />
                       </div>
@@ -310,13 +343,19 @@ export function MarketCard({ market }: { market: Market }) {
                           <button
                             key={preset}
                             type="button"
+                            disabled={preset > effectiveMax}
                             onClick={() => setAmount(String(preset))}
-                            className="px-3 py-1.5 rounded border border-white/10 text-[11px] font-mono uppercase tracking-[0.22em] text-white/65 hover:border-yellow-400/30 hover:text-yellow-300"
+                            className="px-3 py-1.5 rounded border border-white/10 text-[11px] font-mono uppercase tracking-[0.22em] text-white/65 hover:border-yellow-400/30 hover:text-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             {preset.toLocaleString('fr-FR')}
                           </button>
                         ))}
                       </div>
+                      {quotaExhausted && (
+                        <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-red-300/80">
+                          / quota épuisé (jour / match)
+                        </p>
+                      )}
                     </div>
 
                     <div className="rounded-lg border border-white/10 bg-white/3 p-3 flex items-center justify-between">
@@ -377,7 +416,7 @@ export function MarketCard({ market }: { market: Market }) {
                         </Button>
                         <ShimmerButton
                           onClick={onSubmit}
-                          disabled={submitting}
+                          disabled={submitting || quotaExhausted || (Number.isFinite(stake) && stake > effectiveMax)}
                           background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
                           shimmerColor="#ffffff"
                           className="px-5 py-2.5 font-black uppercase tracking-[0.18em] text-[11px] disabled:opacity-50"

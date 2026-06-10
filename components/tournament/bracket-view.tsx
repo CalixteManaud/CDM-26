@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { Trophy, Crown, Sparkles, Swords } from 'lucide-react';
+import { Trophy, Crown, Sparkles, Swords, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
@@ -29,16 +29,16 @@ interface BracketViewProps {
   matches: BracketMatch[];
 }
 
-const ROUND_META: Record<string, { label: string; code: string; dot: string; chip: string }> = {
-  ROUND_OF_16: { label: '8es de finale', code: 'R16', dot: 'bg-emerald-400', chip: 'text-emerald-300 border-emerald-500/30' },
-  QUARTER_FINAL: { label: 'Quarts', code: 'QF', dot: 'bg-yellow-400', chip: 'text-yellow-300 border-yellow-500/30' },
-  SEMI_FINAL: { label: 'Demi-finales', code: 'SF', dot: 'bg-orange-400', chip: 'text-orange-300 border-orange-500/30' },
-  FINAL: { label: 'Finale', code: 'F', dot: 'bg-red-400', chip: 'text-red-300 border-red-500/30' },
+const ROUND_META: Record<string, { label: string; code: string }> = {
+  ROUND_OF_16: { label: '8es de finale', code: 'R16' },
+  QUARTER_FINAL: { label: 'Quarts de finale', code: 'QF' },
+  SEMI_FINAL: { label: 'Demi-finales', code: 'SF' },
+  FINAL: { label: 'Finale', code: 'F' },
 };
 
 const TREE_ORDER: MatchStage[] = ['ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'];
 
-// ── Carte d'un match ────────────────────────────────────────────────────────
+// ── Ligne d'une équipe ───────────────────────────────────────────────────────
 function TeamRow({
   team,
   score,
@@ -55,12 +55,15 @@ function TeamRow({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-2.5 rounded-md px-3 py-2 transition-colors',
-        won && 'bg-emerald-500/12 ring-1 ring-emerald-500/30',
-        lost && 'opacity-45',
-        !decided && 'bg-white/[0.03]'
+        'group/row relative flex items-center justify-between gap-2.5 rounded-lg px-2.5 py-2 transition-all duration-300',
+        won && 'bg-linear-to-r from-amber-400/20 via-amber-400/10 to-transparent ring-1 ring-amber-400/40',
+        lost && 'opacity-40 saturate-50',
+        !decided && 'bg-emerald-950/30'
       )}
     >
+      {/* liseré or du qualifié */}
+      {won && <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
+
       <div className="flex min-w-0 items-center gap-2.5">
         {team.logo ? (
           // user-uploaded logo → <img> natif (pas de facturation Vercel Image)
@@ -68,22 +71,46 @@ function TeamRow({
           <img
             src={team.logo}
             alt={team.name}
-            className="h-7 w-7 shrink-0 rounded-md object-cover ring-1 ring-white/10"
+            className={cn(
+              'h-9 w-9 shrink-0 rounded-md object-cover ring-1 transition-all',
+              won ? 'ring-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.35)]' : 'ring-white/10'
+            )}
           />
         ) : (
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-linear-to-br from-emerald-500 to-emerald-700 text-xs font-black text-white ring-1 ring-white/10">
+          <div
+            className={cn(
+              'flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-sm font-black text-white ring-1',
+              won
+                ? 'bg-linear-to-br from-amber-400 to-amber-600 ring-amber-400/60'
+                : 'bg-linear-to-br from-emerald-500 to-emerald-700 ring-white/10'
+            )}
+          >
             {team.shortName?.charAt(0) ?? '?'}
           </div>
         )}
-        <span className={cn('truncate text-sm font-bold', won ? 'text-emerald-200' : 'text-white/85')}>
-          {team.name}
-        </span>
+        <div className="flex min-w-0 flex-col">
+          <span className={cn('truncate text-sm font-extrabold leading-tight', won ? 'text-amber-100' : 'text-white/90')}>
+            {team.name}
+          </span>
+          <span className="truncate font-mono text-[9px] uppercase tracking-[0.18em] text-white/30">
+            {team.shortName}
+          </span>
+        </div>
       </div>
-      {score != null && (
-        <span className={cn('shrink-0 text-lg font-black tabular-nums', won ? 'text-emerald-200' : 'text-white/40')}>
-          {score}
-        </span>
-      )}
+
+      <div className="flex shrink-0 items-center gap-2">
+        {won && <CheckCircle2 className="h-3.5 w-3.5 text-amber-300" />}
+        {score != null && (
+          <span
+            className={cn(
+              'min-w-[1.5rem] text-center text-xl font-black tabular-nums',
+              won ? 'text-amber-200' : 'text-white/35'
+            )}
+          >
+            {score}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -109,39 +136,46 @@ function MatchCard({
       onMouseEnter={() => onHover(match.id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        'relative w-full overflow-hidden rounded-xl border bg-linear-to-b from-white/[0.05] to-white/[0.01] p-2.5 backdrop-blur-sm transition-all duration-300',
-        isHovered ? 'border-white/30 shadow-lg shadow-black/30' : 'border-white/10',
-        isChampionCard && 'border-yellow-500/40'
+        'relative w-full overflow-hidden rounded-2xl border p-2.5 backdrop-blur-md transition-all duration-300',
+        // base pelouse
+        'bg-linear-to-b from-emerald-900/30 via-emerald-950/40 to-black/50',
+        isHovered ? 'border-amber-400/40 shadow-xl shadow-emerald-950/50 scale-[1.015]' : 'border-emerald-500/15',
+        isFinal && 'border-amber-400/40 shadow-lg shadow-amber-500/10',
+        isChampionCard && 'border-amber-400/60 from-amber-900/25 via-emerald-950/40'
       )}
     >
-      {/* en-tête : code + statut */}
-      <div className="mb-2 flex items-center justify-between px-1">
-        <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/35">
-          #{match.id.slice(0, 5)}
-        </span>
+      {/* texture de pelouse subtile */}
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-emerald-500/[0.03] to-transparent" />
+
+      {/* en-tête : tour + statut */}
+      <div className="relative mb-2 flex items-center justify-between px-1">
         {decided ? (
-          <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/35">Terminé</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.04] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-300/80">
+            <span className="h-1 w-1 rounded-full bg-emerald-400" /> Terminé
+          </span>
         ) : (
-          <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.22em] text-yellow-300/90">
-            <Swords className="h-2.5 w-2.5" /> À venir
+          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-400/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-yellow-300">
+            <Swords className="h-2.5 w-2.5" /> À jouer
           </span>
         )}
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/20">VS</span>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="relative space-y-1.5">
         <TeamRow team={match.homeTeam} score={match.homeScore} won={homeWon} lost={awayWon} decided={decided} />
         <TeamRow team={match.awayTeam} score={match.awayScore} won={awayWon} lost={homeWon} decided={decided} />
       </div>
 
       {isChampionCard && (
-        <BorderBeam size={120} duration={7} colorFrom="#facc15" colorTo="#dc2626" borderWidth={1.5} />
+        <BorderBeam size={140} duration={6} colorFrom="#fbbf24" colorTo="#10b981" borderWidth={2} />
       )}
     </div>
   );
 }
 
 // ── Connecteurs (lignes de l'arbre) ──────────────────────────────────────────
-// Gouttière entre colonnes = gap-x-12 (3rem). Chaque demi-connecteur fait 1.5rem.
+// Gouttière entre colonnes = gap-x-14 (3.5rem). Chaque demi-connecteur fait 1.75rem.
+// Le chemin s'illumine en OR dès que l'équipe qualifiée est connue (feederDecided).
 function Connectors({
   hasPrev,
   hasNext,
@@ -153,23 +187,30 @@ function Connectors({
   parity: 0 | 1;
   feederDecided: boolean;
 }) {
-  const line = feederDecided ? 'bg-emerald-500/40' : 'bg-white/12';
+  const lit = feederDecided;
+  const line = lit ? 'bg-amber-400/70' : 'bg-emerald-300/12';
+  const glow = lit ? 'shadow-[0_0_6px_rgba(251,191,36,0.6)]' : '';
   return (
     <>
       {/* arrivée depuis le tour précédent */}
       {hasPrev && (
-        <span className="pointer-events-none absolute left-0 top-1/2 h-px w-[1.5rem] -translate-x-full -translate-y-1/2 bg-white/12" />
+        <span className="pointer-events-none absolute left-0 top-1/2 h-px w-[1.75rem] -translate-x-full -translate-y-1/2 bg-emerald-300/12" />
       )}
       {/* départ vers le tour suivant */}
       {hasNext && (
         <>
+          {/* point de départ lumineux */}
+          {lit && (
+            <span className="pointer-events-none absolute right-0 top-1/2 z-10 h-1.5 w-1.5 -translate-y-1/2 translate-x-[0.4rem] rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+          )}
           {/* segment horizontal sortant */}
-          <span className={cn('pointer-events-none absolute right-0 top-1/2 h-px w-[1.5rem] translate-x-full -translate-y-1/2', line)} />
+          <span className={cn('pointer-events-none absolute right-0 top-1/2 h-px w-[1.75rem] translate-x-full -translate-y-1/2', line, glow)} />
           {/* demi-segment vertical : haut de paire descend, bas de paire monte */}
           <span
             className={cn(
-              'pointer-events-none absolute right-[-1.5rem] w-px',
+              'pointer-events-none absolute right-[-1.75rem] w-px',
               line,
+              glow,
               parity === 0 ? 'top-1/2 bottom-0' : 'top-0 bottom-1/2'
             )}
           />
@@ -193,15 +234,16 @@ export function BracketView({ matches }: BracketViewProps) {
   if (treeRounds.length === 0 && playoffMatches.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-x-auto">
-      {/* halo d'ambiance */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-linear-to-r from-emerald-500/[0.04] via-yellow-500/[0.04] to-red-500/[0.05]" />
+    <div className="relative w-full overflow-x-auto rounded-3xl">
+      {/* ── Terrain : dégradé pelouse + halo or au centre ── */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-linear-to-b from-emerald-950/40 via-emerald-900/10 to-black/30" />
+      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_60%_50%_at_85%_50%,rgba(251,191,36,0.08),transparent)]" />
 
       {/* ── Barrages (repêchage des meilleurs 3es) ── */}
       {playoffMatches.length > 0 && (
-        <div className="relative mb-10 rounded-2xl border border-blue-500/20 bg-blue-500/[0.03] p-4">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.25em] text-blue-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+        <div className="relative mb-10 rounded-2xl border border-blue-500/20 bg-blue-500/[0.04] p-4">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.25em] text-blue-300">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
             <span>Barrages · repêchage des meilleurs 3es</span>
           </div>
           <div className="flex flex-wrap gap-4">
@@ -225,30 +267,30 @@ export function BracketView({ matches }: BracketViewProps) {
 
       {/* ── Arbre principal ── */}
       {treeRounds.length > 0 && (
-        <div className="relative flex min-h-[26rem] min-w-max gap-x-12 px-2 pb-6 pt-4">
+        <div className="relative flex min-h-[28rem] min-w-max gap-x-14 px-3 pb-8 pt-5">
           {treeRounds.map((round, rIdx) => {
             const hasPrev = rIdx > 0;
             const hasNext = rIdx < treeRounds.length - 1;
             const isFinalCol = round.stage === 'FINAL';
 
             return (
-              <div key={round.stage} className="flex min-w-[16rem] flex-1 flex-col">
+              <div key={round.stage} className={cn('flex min-w-[17rem] flex-1 flex-col', isFinalCol && 'min-w-[19rem]')}>
                 {/* en-tête de colonne (hauteur fixe → aligne les zones de matchs) */}
-                <div className="mb-4 flex h-7 items-center justify-center">
+                <div className="mb-5 flex h-9 items-center justify-center">
                   {isFinalCol ? (
                     <motion.div
-                      animate={reduce ? undefined : { scale: [1, 1.04, 1] }}
+                      animate={reduce ? undefined : { scale: [1, 1.05, 1] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                      className="inline-flex items-center gap-2 rounded-full border border-yellow-500/40 bg-linear-to-r from-yellow-500/15 via-amber-500/15 to-red-500/15 px-4 py-1 font-mono text-[11px] font-black uppercase tracking-[0.28em] text-yellow-200"
+                      className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-linear-to-r from-amber-400/20 via-yellow-400/15 to-amber-500/20 px-5 py-1.5 font-mono text-[12px] font-black uppercase tracking-[0.3em] text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
                     >
-                      <Sparkles className="h-3 w-3" /> Finale <Trophy className="h-3 w-3" />
+                      <Sparkles className="h-3.5 w-3.5" /> Finale <Trophy className="h-3.5 w-3.5" />
                     </motion.div>
                   ) : (
-                    <div className={cn('inline-flex items-center gap-2 rounded-full border bg-white/[0.03] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em]', round.meta.chip)}>
-                      <span className={cn('h-1.5 w-1.5 rounded-full', round.meta.dot)} />
-                      <span>{round.meta.code}</span>
-                      <span className="text-white/25">·</span>
-                      <span>{round.meta.label}</span>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-950/40 px-4 py-1 font-mono text-[10px] uppercase tracking-[0.24em] text-emerald-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+                      <span className="font-black">{round.meta.code}</span>
+                      <span className="text-emerald-500/40">·</span>
+                      <span className="text-emerald-100/70">{round.meta.label}</span>
                     </div>
                   )}
                 </div>
@@ -259,23 +301,28 @@ export function BracketView({ matches }: BracketViewProps) {
                     const parity = (i % 2) as 0 | 1;
                     const feederDecided = match.homeScore != null && match.awayScore != null && !!match.winnerTeamId;
                     return (
-                      <div key={match.id} className="relative flex flex-1 items-center px-1 py-2">
+                      <div key={match.id} className="relative flex flex-1 items-center px-1 py-2.5">
                         <Connectors hasPrev={hasPrev} hasNext={hasNext} parity={parity} feederDecided={feederDecided} />
 
                         <div className="relative w-full">
-                          {/* couronne du champion au-dessus de la finale gagnée */}
+                          {/* podium doré + couronne du champion au-dessus de la finale gagnée */}
                           {isFinalCol && match.winnerTeamId && (
                             <motion.div
                               initial={reduce ? false : { scale: 0, rotate: -160 }}
                               animate={{ scale: 1, rotate: 0 }}
                               transition={{ type: 'spring', duration: 0.9 }}
-                              className="absolute -top-9 left-1/2 z-10 -translate-x-1/2"
+                              className="absolute -top-11 left-1/2 z-20 -translate-x-1/2"
                             >
                               <div className="relative">
-                                <div className="absolute inset-0 animate-pulse rounded-full bg-yellow-400 opacity-50 blur-xl" />
-                                <Crown className="relative h-9 w-9 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]" />
+                                <div className="absolute inset-0 animate-pulse rounded-full bg-amber-400 opacity-50 blur-xl" />
+                                <Crown className="relative h-11 w-11 text-amber-300 drop-shadow-[0_0_14px_rgba(251,191,36,0.7)]" />
                               </div>
                             </motion.div>
+                          )}
+
+                          {/* lueur de scène derrière la finale */}
+                          {isFinalCol && (
+                            <div className="pointer-events-none absolute -inset-3 -z-10 rounded-3xl bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.12),transparent_70%)]" />
                           )}
 
                           <motion.div

@@ -99,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const status =
       result.code === 'INSUFFICIENT_FUNDS'
         ? 402
-        : result.code === 'CLOSED' || result.code === 'TOO_FEW_LEGS' || result.code === 'TOO_MANY_LEGS' || result.code === 'DUPLICATE_MARKET' || result.code === 'OUTCOME_LOCKED'
+        : result.code === 'CLOSED' || result.code === 'TOO_FEW_LEGS' || result.code === 'TOO_MANY_LEGS' || result.code === 'DUPLICATE_MARKET' || result.code === 'OUTCOME_LOCKED' || result.code === 'INVALID_STAKE' || result.code === 'STAKE_TOO_LOW' || result.code === 'DAILY_QUOTA' || result.code === 'MATCH_QUOTA'
         ? 400
         : result.code === 'NOT_FOUND' || result.code === 'BAD_OUTCOME'
         ? 404

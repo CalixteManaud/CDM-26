@@ -19,7 +19,12 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      // sharp@0.35 oublie la condition "types" dans son champ exports ; en
+      // moduleResolution "bundler" TS ignore le "types" legacy et ne trouve pas
+      // les déclarations. On pointe l'import sur le .d.ts (type-checker only ;
+      // Turbopack résout le vrai module au runtime). Retirable quand sharp corrige.
+      "sharp": ["./node_modules/sharp/lib/index.d.ts"]
     }
   },
   "include": [

@@ -140,7 +140,7 @@ export async function updateMatchStatus(input: {
   try {
     const match = await prisma.match.findUnique({
       where: { id: input.matchId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, homeScore: true, awayScore: true },
     });
     if (!match) return { success: false, error: 'Match introuvable' };
 
@@ -153,6 +153,20 @@ export async function updateMatchStatus(input: {
       return {
         success: false,
         error: `Transition ${match.status} → ${input.newStatus} non autorisée`,
+      };
+    }
+
+    // Garde-fou : un match ne peut pas être clôturé "à vide". Sans scores, il
+    // serait silencieusement ignoré par les stats et les standings. Pour clôturer,
+    // il faut passer par le formulaire de résultat (submit-result), qui écrit le
+    // score (et les stats joueurs) ET met le statut à FINISHED.
+    if (
+      input.newStatus === MatchStatus.FINISHED &&
+      (match.homeScore === null || match.awayScore === null)
+    ) {
+      return {
+        success: false,
+        error: 'Renseigne le score via le formulaire de résultat avant de clôturer le match.',
       };
     }
 
