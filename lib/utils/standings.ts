@@ -104,7 +104,13 @@ export async function recalculateStandings(tournamentId: string) {
     if (diffB !== diffA) return diffB - diffA;
 
     // 3. Par buts marqués (décroissant)
-    return b.goalsFor - a.goalsFor;
+    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+
+    // 4. Tie-break final stable : ordre alphabétique de l'id d'équipe.
+    // Évite un classement (et donc un bracket) non déterministe quand deux
+    // équipes sont parfaitement à égalité — Postgres renverrait sinon un ordre
+    // arbitraire qui change à chaque recalcul.
+    return a.teamId.localeCompare(b.teamId);
   };
 
   // Grouper les équipes par groupe

@@ -1,6 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { timingSafeEqual } from 'crypto';
 import { clerkClient } from '@clerk/nextjs/server';
 import type { UserRole } from '@/prisma/prisma-client/enums';
+
+/** Comparaison en temps constant du secret (évite un timing oracle). */
+function secretMatches(provided: unknown, expected: string): boolean {
+  if (typeof provided !== 'string') return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
 
 /**
  * Webhook Supabase → Clerk
@@ -76,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const provided = req.headers['x-supabase-webhook-secret'];
-  if (provided !== SECRET) {
+  if (!secretMatches(provided, SECRET)) {
     return res.status(401).json({ error: 'Invalid secret' });
   }
 

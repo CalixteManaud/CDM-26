@@ -3,6 +3,18 @@ import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserById } from '@/lib/clerk';
 import prisma from '@/lib/prisma';
 
+/** Accepte une URL http(s) valide, une chaîne vide ou undefined (= ne pas toucher). */
+function isValidOptionalUrl(value: unknown): boolean {
+  if (value === undefined || value === null || value === '') return true;
+  if (typeof value !== 'string') return false;
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -24,6 +36,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!matchId) {
       return res.status(400).json({ error: 'Match ID requis' });
+    }
+
+    // Validation des URLs fournies (les champs absents/vides sont tolérés)
+    if (
+      !isValidOptionalUrl(twitchUrl) ||
+      !isValidOptionalUrl(discordUrl) ||
+      !isValidOptionalUrl(youtubeUrl)
+    ) {
+      return res.status(400).json({ error: 'URL de diffusion invalide (http/https attendu)' });
     }
 
     // Récupérer le match avec les équipes

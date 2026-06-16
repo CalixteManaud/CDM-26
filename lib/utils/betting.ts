@@ -14,7 +14,7 @@
  */
 
 import prisma from '@/lib/prisma';
-import { BetOutcome, BetStatus } from '@/prisma/prisma-client/enums';
+import { BetOutcome, BetStatus, RefundStatus } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints } from '@/lib/wizebot';
 import { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS } from './odds';
 
@@ -210,6 +210,17 @@ export async function settleMatchBets(params: {
         };
       }
 
+      // Garde d'idempotence : si le match a déjà été réglé, on ne refait rien.
+      // Empêche un double-settlement (double soumission de résultat, retry) de
+      // re-créditer Wizebot. Les paris déjà settlés ne sont pas recalculés.
+      if (pool.settledAt) {
+        return {
+          winnersData: [] as { betId: string; userId: string; payout: number; twitchUsername: string | null }[],
+          refundData: [] as { betId: string; userId: string; payout: number; twitchUsername: string | null }[],
+          losersCount: 0,
+        };
+      }
+
       const finalTotal =
         pool.totalHomePool + pool.totalDrawPool + pool.totalAwayPool;
       const houseCut = Number(pool.housePercentage) / 100;
@@ -306,6 +317,24 @@ export async function settleMatchBets(params: {
             },
           });
           losersCount++;
+        }
+      }
+
+      // Reliquat d'arrondi : la somme des floor() est < distributablePool.
+      // On reverse le reste au plus gros gagnant pour ne pas laisser de points
+      // « perdus » (cumulés sur le volume, ça compte). House cut déjà déduit.
+      if (winnersData.length > 0) {
+        const distributed = winnersData.reduce((s, w) => s + w.payout, 0);
+        const remainder = distributablePool - distributed;
+        if (remainder > 0) {
+          const top = winnersData.reduce((best, w) =>
+            w.payout > best.payout ? w : best
+          );
+          top.payout += remainder;
+          await tx.bet.update({
+            where: { id: top.betId },
+            data: { actualPayout: top.payout },
+          });
         }
       }
 
@@ -455,4 +484,89 @@ export async function retryFailedCredits(): Promise<{
   }
 
   return { retried: failed.length, recovered, stillFailing };
+}
+
+/**
+ * Enregistre un remboursement à rejouer : cas où le débit Wizebot a réussi mais
+ * la création du pari a échoué juste après. Best-effort (ne throw jamais — on ne
+ * veut surtout pas masquer l'erreur initiale du call-site). Le crédit effectif
+ * est fait plus tard par `processPendingRefunds` (cron).
+ */
+export async function recordPendingRefund(params: {
+  userId: string;
+  twitchUsername: string | null;
+  amount: number;
+  reason: string;
+  wizebotDebitTxId?: string | null;
+}): Promise<void> {
+  try {
+    if (!params.twitchUsername || params.amount <= 0) {
+      console.error('[recordPendingRefund] données insuffisantes, refund non enregistré', params);
+      return;
+    }
+    await prisma.pendingRefund.create({
+      data: {
+        userId: params.userId,
+        twitchUsername: params.twitchUsername,
+        amount: params.amount,
+        reason: params.reason,
+        wizebotDebitTxId: params.wizebotDebitTxId ?? null,
+      },
+    });
+  } catch (err) {
+    // Dernier filet : on log très visiblement pour un rattrapage manuel.
+    console.error('[recordPendingRefund] ÉCHEC enregistrement refund — INTERVENTION MANUELLE REQUISE', params, err);
+  }
+}
+
+/**
+ * Rejoue les remboursements en attente (débits Wizebot orphelins). Crédite le
+ * compte Twitch et marque la ligne REFUNDED. Appelée par le cron
+ * /api/admin/bets/retry-failed (à côté de retryFailedCredits).
+ */
+export async function processPendingRefunds(): Promise<{
+  processed: number;
+  refunded: number;
+  stillFailing: number;
+}> {
+  const pending = await prisma.pendingRefund.findMany({
+    where: { status: { in: [RefundStatus.PENDING, RefundStatus.FAILED] } },
+    take: 100,
+  });
+
+  let refunded = 0;
+  let stillFailing = 0;
+
+  for (const r of pending) {
+    const credit = await creditWizebotPoints({
+      twitchUsername: r.twitchUsername,
+      amount: r.amount,
+      reason: `CDM 26 — remboursement (${r.reason})`,
+    });
+    if (credit.ok) {
+      await prisma.pendingRefund.update({
+        where: { id: r.id },
+        data: {
+          status: RefundStatus.REFUNDED,
+          refundTxId: credit.txId,
+          refundedAt: new Date(),
+          attempts: { increment: 1 },
+          lastError: null,
+        },
+      });
+      refunded++;
+    } else {
+      await prisma.pendingRefund.update({
+        where: { id: r.id },
+        data: {
+          status: RefundStatus.FAILED,
+          attempts: { increment: 1 },
+          lastError: credit.error,
+        },
+      });
+      stillFailing++;
+    }
+  }
+
+  return { processed: pending.length, refunded, stillFailing };
 }

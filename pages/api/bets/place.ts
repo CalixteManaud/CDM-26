@@ -15,7 +15,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserById } from '@/lib/clerk';
 import prisma from '@/lib/prisma';
-import { placeBet, BettingError, MIN_BET_POINTS, MAX_BET_POINTS } from '@/lib/utils/betting';
+import { placeBet, BettingError, MIN_BET_POINTS, MAX_BET_POINTS, recordPendingRefund } from '@/lib/utils/betting';
 import { debitWizebotPoints } from '@/lib/wizebot';
 import { BetOutcome } from '@/prisma/prisma-client/enums';
 import { isBettingOpen } from '@/lib/utils/odds';
@@ -147,7 +147,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   } catch (err) {
     // Edge case : Wizebot débité mais placement KO (race rare avec la fenêtre
-    // de paris). On log explicitement pour permettre un remboursement manuel.
+    // de paris). On enregistre un remboursement automatique (rejoué par le cron)
+    // + on log pour traçabilité.
     console.error('[bets/place] DEBIT DONE BUT BET FAILED', {
       userId: dbUser.id,
       matchId,
@@ -155,16 +156,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       debitTxId: debit.txId,
       err,
     });
+    await recordPendingRefund({
+      userId: dbUser.id,
+      twitchUsername: dbUser.twitchUsername,
+      amount: points,
+      reason: `pari 1X2 (match ${matchId})`,
+      wizebotDebitTxId: debit.txId,
+    });
 
     if (err instanceof BettingError) {
       return res.status(409).json({
-        error: `${err.message} — un débit Wizebot de ${points} pts a été effectué (tx ${debit.txId}), contacte un admin pour remboursement.`,
+        error: `${err.message} — un débit Wizebot de ${points} pts a été effectué (tx ${debit.txId}) ; il sera remboursé automatiquement sous quelques minutes.`,
         code: err.code,
         debitTxId: debit.txId,
       });
     }
     return res.status(500).json({
-      error: `Erreur interne — débit Wizebot de ${points} pts effectué (tx ${debit.txId}), contacte un admin.`,
+      error: `Erreur interne — débit Wizebot de ${points} pts effectué (tx ${debit.txId}) ; il sera remboursé automatiquement sous quelques minutes.`,
       code: 'INTERNAL',
       debitTxId: debit.txId,
     });

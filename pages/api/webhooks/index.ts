@@ -51,6 +51,17 @@ export default async function handler(
         });
       }
 
+      // Valider l'URL (http/https uniquement) — évite de stocker une cible
+      // invalide ou un schéma exotique (file://, etc.).
+      try {
+        const parsed = new URL(String(url));
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          throw new Error('bad protocol');
+        }
+      } catch {
+        return res.status(400).json({ error: 'URL invalide (http/https attendu)' });
+      }
+
       // Valider les événements
       const validEvents = [
         'MATCH_STARTED',

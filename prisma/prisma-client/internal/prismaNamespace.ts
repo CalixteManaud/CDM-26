@@ -395,6 +395,7 @@ export const ModelName = {
   Webhook: 'Webhook',
   MatchBettingPool: 'MatchBettingPool',
   Bet: 'Bet',
+  PendingRefund: 'PendingRefund',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -415,7 +416,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
+    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "pendingRefund" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1233,6 +1234,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PendingRefund: {
+      payload: Prisma.$PendingRefundPayload<ExtArgs>
+      fields: Prisma.PendingRefundFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PendingRefundFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PendingRefundFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>
+        }
+        findFirst: {
+          args: Prisma.PendingRefundFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PendingRefundFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>
+        }
+        findMany: {
+          args: Prisma.PendingRefundFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>[]
+        }
+        create: {
+          args: Prisma.PendingRefundCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>
+        }
+        createMany: {
+          args: Prisma.PendingRefundCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PendingRefundCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>[]
+        }
+        delete: {
+          args: Prisma.PendingRefundDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>
+        }
+        update: {
+          args: Prisma.PendingRefundUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>
+        }
+        deleteMany: {
+          args: Prisma.PendingRefundDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PendingRefundUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PendingRefundUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>[]
+        }
+        upsert: {
+          args: Prisma.PendingRefundUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PendingRefundPayload>
+        }
+        aggregate: {
+          args: Prisma.PendingRefundAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePendingRefund>
+        }
+        groupBy: {
+          args: Prisma.PendingRefundGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PendingRefundGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PendingRefundCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PendingRefundCountAggregateOutputType> | number
+        }
+      }
+    }
     BettingMarket: {
       payload: Prisma.$BettingMarketPayload<ExtArgs>
       fields: Prisma.BettingMarketFieldRefs
@@ -1835,6 +1910,25 @@ export const BetScalarFieldEnum = {
 export type BetScalarFieldEnum = (typeof BetScalarFieldEnum)[keyof typeof BetScalarFieldEnum]
 
 
+export const PendingRefundScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  twitchUsername: 'twitchUsername',
+  amount: 'amount',
+  reason: 'reason',
+  wizebotDebitTxId: 'wizebotDebitTxId',
+  status: 'status',
+  attempts: 'attempts',
+  lastError: 'lastError',
+  refundTxId: 'refundTxId',
+  refundedAt: 'refundedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PendingRefundScalarFieldEnum = (typeof PendingRefundScalarFieldEnum)[keyof typeof PendingRefundScalarFieldEnum]
+
+
 export const BettingMarketScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -2102,6 +2196,20 @@ export type ListEnumBetStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
 
 
 /**
+ * Reference to a field of type 'RefundStatus'
+ */
+export type EnumRefundStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'RefundStatus[]'
+ */
+export type ListEnumRefundStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'BettingMarketType'
  */
 export type EnumBettingMarketTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketType'>
@@ -2277,6 +2385,7 @@ export type GlobalOmitConfig = {
   webhook?: Prisma.WebhookOmit
   matchBettingPool?: Prisma.MatchBettingPoolOmit
   bet?: Prisma.BetOmit
+  pendingRefund?: Prisma.PendingRefundOmit
   bettingMarket?: Prisma.BettingMarketOmit
   marketPool?: Prisma.MarketPoolOmit
   marketBet?: Prisma.MarketBetOmit

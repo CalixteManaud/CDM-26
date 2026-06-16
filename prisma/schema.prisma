@@ -45,11 +45,12 @@ model User {
   twitchUserId   String? @unique // ID Twitch immuable (résiste aux renommages), fourni par Clerk OAuth
 
   // Relations
-  players      Player[]
-  coachedTeams Team[]   @relation("TeamCoach") // Teams where this user is the coach/admin
-  bets         Bet[]
-  marketBets   MarketBet[] @relation("MarketBetUser")
-  betSlips     BetSlip[]   @relation("BetSlipUser")
+  players       Player[]
+  coachedTeams  Team[]   @relation("TeamCoach") // Teams where this user is the coach/admin
+  bets          Bet[]
+  marketBets    MarketBet[]     @relation("MarketBetUser")
+  betSlips      BetSlip[]       @relation("BetSlipUser")
+  pendingRefunds PendingRefund[] @relation("UserRefunds")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -419,6 +420,45 @@ model Bet {
   @@index([status])
   @@index([matchId, status])
   @@index([userId, matchId])
+}
+
+// =================== REMBOURSEMENTS EN ATTENTE ===================
+//
+// File d'attente des débits Wizebot "orphelins" : cas (rare) où le débit a
+// réussi mais la création du pari a échoué juste après (race, coupure DB).
+// L'utilisateur a perdu ses points sans pari → on enregistre ici un
+// remboursement à rejouer, traité automatiquement par le cron
+// /api/admin/bets/retry-failed (processPendingRefunds).
+
+enum RefundStatus {
+  PENDING   // à rembourser
+  REFUNDED  // crédit Wizebot effectué
+  FAILED    // échec persistant (Wizebot down / twitch absent) — rejoué au prochain passage
+}
+
+model PendingRefund {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation("UserRefunds", fields: [userId], references: [id], onDelete: Restrict)
+
+  // Snapshot du compte Twitch sur lequel recréditer (au cas où il changerait ensuite)
+  twitchUsername   String
+  amount           Int // points à rembourser
+  reason           String // contexte lisible ("pari 1X2", "combiné 3 jambes"...)
+  wizebotDebitTxId String? // tx du débit initial (audit / réconciliation)
+
+  status     RefundStatus @default(PENDING)
+  attempts   Int          @default(0)
+  lastError  String?
+  refundTxId String? // tx Wizebot du crédit de remboursement
+  refundedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([userId])
 }
 
 // =================== MARCHÉS FLEXIBLES ===================

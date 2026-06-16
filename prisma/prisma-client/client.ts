@@ -97,6 +97,11 @@ export type MatchBettingPool = Prisma.MatchBettingPoolModel
  */
 export type Bet = Prisma.BetModel
 /**
+ * Model PendingRefund
+ * 
+ */
+export type PendingRefund = Prisma.PendingRefundModel
+/**
  * Model BettingMarket
  * 
  */

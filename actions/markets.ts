@@ -7,6 +7,7 @@ import {
   BetStatus,
 } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints, debitWizebotPoints } from '@/lib/wizebot';
+import { recordPendingRefund } from '@/lib/utils/betting';
 import { computeMarketOdds, isMarketOpen, generateExactScoreOutcomes, MIN_MARKET_STAKE, MAX_MARKET_STAKE } from '@/lib/utils/markets';
 import { checkBetWithinQuota, type QuotaAdditions } from '@/lib/utils/bet-quota';
 
@@ -431,9 +432,16 @@ export async function placeMarketBet(input: PlaceMarketBetInput) {
     return { success: true, data: bet };
   } catch (error) {
     console.error('Error creating market bet (debit succeeded):', error);
+    await recordPendingRefund({
+      userId: input.userId,
+      twitchUsername: input.twitchUsername,
+      amount: input.amount,
+      reason: `marché ${input.marketId.slice(0, 8)}`,
+      wizebotDebitTxId: debitTxId,
+    });
     return {
       success: false,
-      error: 'Pari KO après débit. Le débit Wizebot sera remboursé manuellement.',
+      error: 'Pari KO après débit. Le débit Wizebot sera remboursé automatiquement sous quelques minutes.',
       code: 'BET_CREATE_FAILED',
       debitTxId,
     };
@@ -491,10 +499,13 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
   // Validation + collecte des cotes
   const legOdds: Array<{ marketId: string; outcomeKey: string; odds: number; stake: number }> = [];
   let combinedOdds = 1;
-  const perLegStake = Math.floor(input.totalStake / input.legs.length);
-  if (perLegStake < 1) {
+  const baseStake = Math.floor(input.totalStake / input.legs.length);
+  if (baseStake < 1) {
     return { success: false, error: 'Mise par jambe trop faible', code: 'STAKE_TOO_LOW' };
   }
+  // Reliquat réparti +1 sur les premières jambes pour que la somme des mises
+  // par jambe == totalStake (sinon des points débités restaient non affectés).
+  let stakeRemainder = input.totalStake - baseStake * input.legs.length;
 
   for (const leg of input.legs) {
     const m = markets.find((mk) => mk.id === leg.marketId)!;
@@ -515,7 +526,9 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
     }
     const oddsMap = computeMarketOdds(m.pools, Number(m.housePercentage));
     const o = oddsMap[leg.outcomeKey] ?? 1.01;
-    legOdds.push({ marketId: m.id, outcomeKey: leg.outcomeKey, odds: o, stake: perLegStake });
+    const stake = baseStake + (stakeRemainder > 0 ? 1 : 0);
+    if (stakeRemainder > 0) stakeRemainder--;
+    legOdds.push({ marketId: m.id, outcomeKey: leg.outcomeKey, odds: o, stake });
     combinedOdds *= o;
   }
 
@@ -544,9 +557,9 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
   // Quota cumulatif : la mise totale compte au journalier, et chaque jambe impute
   // le match de son marché (combiné multi-marchés d'un même match = additionné).
   const perMatch: QuotaAdditions['perMatch'] = {};
-  for (const leg of input.legs) {
-    const m = markets.find((mk) => mk.id === leg.marketId)!;
-    if (m.matchId) perMatch[m.matchId] = (perMatch[m.matchId] ?? 0) + perLegStake;
+  for (const l of legOdds) {
+    const m = markets.find((mk) => mk.id === l.marketId)!;
+    if (m.matchId) perMatch[m.matchId] = (perMatch[m.matchId] ?? 0) + l.stake;
   }
   const quota = await checkBetWithinQuota(input.userId, {
     daily: input.totalStake,
@@ -615,9 +628,16 @@ export async function placeBetSlip(input: PlaceBetSlipInput) {
     return { success: true, data: { slipId: slip.id, combinedOdds, potentialPayout } };
   } catch (error) {
     console.error('Error creating bet slip (debit succeeded):', error);
+    await recordPendingRefund({
+      userId: input.userId,
+      twitchUsername: input.twitchUsername,
+      amount: input.totalStake,
+      reason: `combiné ${input.legs.length} jambes`,
+      wizebotDebitTxId: debitTxId,
+    });
     return {
       success: false,
-      error: 'Combiné KO après débit. Le débit Wizebot sera remboursé manuellement.',
+      error: 'Combiné KO après débit. Le débit Wizebot sera remboursé automatiquement sous quelques minutes.',
       code: 'SLIP_CREATE_FAILED',
       debitTxId,
     };
@@ -687,6 +707,12 @@ export async function settleMarket(input: SettleMarketInput) {
     });
 
     if (!market) return { success: false, error: 'Marché introuvable' };
+
+    // Garde d'idempotence : un marché déjà réglé ne doit pas être re-settlé
+    // (sinon risque de re-crédit Wizebot).
+    if (market.status === BettingMarketStatus.SETTLED) {
+      return { success: false, error: 'Ce marché a déjà été réglé' };
+    }
 
     const winnerPool = market.pools.find((p) => p.outcomeKey === input.winningOutcomeKey);
     if (!winnerPool) {
@@ -807,17 +833,21 @@ export async function evaluateBetSlip(slipId: string) {
         combinedOdds: true,
         potentialPayout: true,
         user: { select: { twitchUsername: true } },
-        bets: { select: { id: true, status: true } },
+        bets: { select: { id: true, status: true, oddsAtPlacement: true } },
       },
     });
     if (!slip) return { success: false, error: 'Slip introuvable' };
     if (slip.status !== BetStatus.PENDING) return { success: true, data: slip };
 
     const anyLost = slip.bets.some((b) => b.status === BetStatus.LOST);
+    // Une jambe VOID (marché annulé) est considérée comme « settled » et
+    // neutralisée dans le calcul de la cote (facteur ×1), comme chez les
+    // bookmakers : le combiné n'est pas perdu pour autant.
     const allSettled = slip.bets.every(
       (b) =>
         b.status === BetStatus.WON ||
         b.status === BetStatus.LOST ||
+        b.status === BetStatus.VOID ||
         b.status === BetStatus.CREDIT_FAILED
     );
 
@@ -833,8 +863,18 @@ export async function evaluateBetSlip(slipId: string) {
       return { success: true, data: { status: 'PENDING' } };
     }
 
-    // Tous gagnants : crédit Wizebot
-    const payout = slip.potentialPayout;
+    // Tous gagnants (jambes VOID neutralisées) : recalcule la cote effective en
+    // excluant les jambes annulées. Si toutes les jambes sont VOID, la cote
+    // effective vaut 1 → simple remboursement de la mise.
+    const anyVoid = slip.bets.some((b) => b.status === BetStatus.VOID);
+    let payout = slip.potentialPayout;
+    if (anyVoid) {
+      const effectiveOdds = slip.bets.reduce((acc, b) => {
+        if (b.status === BetStatus.VOID) return acc; // ×1
+        return acc * Number(b.oddsAtPlacement);
+      }, 1);
+      payout = Math.floor(slip.totalStake * effectiveOdds);
+    }
     let creditTxId: string | undefined;
     if (slip.user.twitchUsername && payout > 0) {
       const c = await creditWizebotPoints({

@@ -14,15 +14,25 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { timingSafeEqual } from 'crypto';
 import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserFromReq } from '@/lib/clerk';
-import { retryFailedCredits } from '@/lib/utils/betting';
+import { retryFailedCredits, processPendingRefunds } from '@/lib/utils/betting';
+
+/** Comparaison en temps constant (évite un timing oracle sur le secret). */
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 function isAuthorizedCron(req: NextApiRequest): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return process.env.NODE_ENV !== 'production';
   const header = req.headers.authorization;
-  return header === `Bearer ${secret}`;
+  if (!header) return false;
+  return safeEqual(header, `Bearer ${secret}`);
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -32,7 +42,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     try {
       const result = await retryFailedCredits();
-      return res.status(200).json({ success: true, source: 'cron', ...result });
+      const refunds = await processPendingRefunds();
+      return res.status(200).json({ success: true, source: 'cron', ...result, refunds });
     } catch (err) {
       console.error('[cron/retry-failed]', err);
       return res
@@ -55,7 +66,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const result = await retryFailedCredits();
-    return res.status(200).json({ success: true, source: 'admin', ...result });
+    const refunds = await processPendingRefunds();
+    return res.status(200).json({ success: true, source: 'admin', ...result, refunds });
   } catch (err) {
     console.error('[admin/bets/retry-failed]', err);
     return res

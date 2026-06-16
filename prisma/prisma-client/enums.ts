@@ -72,6 +72,15 @@ export const BetStatus = {
 export type BetStatus = (typeof BetStatus)[keyof typeof BetStatus]
 
 
+export const RefundStatus = {
+  PENDING: 'PENDING',
+  REFUNDED: 'REFUNDED',
+  FAILED: 'FAILED'
+} as const
+
+export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus]
+
+
 export const BettingMarketType = {
   MATCH_EXACT_SCORE: 'MATCH_EXACT_SCORE',
   MATCH_TOTAL_GOALS: 'MATCH_TOTAL_GOALS',

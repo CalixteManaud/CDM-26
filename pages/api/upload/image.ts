@@ -23,8 +23,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Non authentifié' });
     }
 
-    // Parse form data with formidable
-    const form = new IncomingForm();
+    // Parse form data with formidable — bornes anti-abus :
+    // - 1 seul fichier
+    // - 8 Mo max (évite OOM Sharp + coût Blob)
+    // - images uniquement (filtre le content-type au parsing)
+    const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+    const form = new IncomingForm({
+      maxFiles: 1,
+      maxFileSize: MAX_UPLOAD_BYTES,
+      filter: ({ mimetype }) => !!mimetype && mimetype.startsWith('image/'),
+    });
 
     const [fields, files] = await new Promise<[Fields, Files]>((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
@@ -37,6 +45,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!file) {
       return res.status(400).json({ error: 'Fichier non fourni' });
+    }
+
+    // Double check côté serveur (le filtre formidable peut être contourné si le
+    // client ment sur le content-type multipart).
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      await fs.promises.unlink(file.filepath).catch(() => {});
+      return res.status(400).json({ error: 'Seules les images sont acceptées' });
     }
 
     // Read file buffer

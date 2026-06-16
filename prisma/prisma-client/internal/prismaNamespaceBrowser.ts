@@ -62,6 +62,7 @@ export const ModelName = {
   Webhook: 'Webhook',
   MatchBettingPool: 'MatchBettingPool',
   Bet: 'Bet',
+  PendingRefund: 'PendingRefund',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -276,6 +277,25 @@ export const BetScalarFieldEnum = {
 } as const
 
 export type BetScalarFieldEnum = (typeof BetScalarFieldEnum)[keyof typeof BetScalarFieldEnum]
+
+
+export const PendingRefundScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  twitchUsername: 'twitchUsername',
+  amount: 'amount',
+  reason: 'reason',
+  wizebotDebitTxId: 'wizebotDebitTxId',
+  status: 'status',
+  attempts: 'attempts',
+  lastError: 'lastError',
+  refundTxId: 'refundTxId',
+  refundedAt: 'refundedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PendingRefundScalarFieldEnum = (typeof PendingRefundScalarFieldEnum)[keyof typeof PendingRefundScalarFieldEnum]
 
 
 export const BettingMarketScalarFieldEnum = {

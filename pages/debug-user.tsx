@@ -15,9 +15,15 @@ type PageProps = {
 export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => {
   const dbUser = await syncClerkUserFromReq(ctx.req);
 
+  // Page de debug : réservée aux admins. Pour tout autre visiteur on renvoie 404
+  // (pas de fuite d'infos de compte ni d'indication que la page existe).
+  if (!dbUser || dbUser.role !== 'ADMIN') {
+    return { notFound: true };
+  }
+
   return {
     props: {
-      dbUser: dbUser ? JSON.parse(JSON.stringify(dbUser)) : null,
+      dbUser: JSON.parse(JSON.stringify(dbUser)),
     },
   };
 };

@@ -330,4 +330,24 @@
       linear-gradient(to bottom, rgb(255 255 255 / 0.02) 1px, transparent 1px);
     background-size: 4rem 4rem;
   }
+
+  /* Skeleton de chargement (utilisé par components/ui/skeleton.tsx) */
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .animate-skeleton {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+/* Accessibilité : anneau de focus visible et cohérent au clavier sur tous les
+   éléments interactifs (les composants shadcn le gèrent déjà, ceci couvre le
+   reste : liens, éléments natifs, conteneurs tabindex). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring, #facc15);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 }

@@ -329,6 +329,19 @@ export async function generateKnockoutBracket(tournamentId: string) {
     throw new Error('La phase de poules doit être terminée avant de générer le bracket');
   }
 
+  // Blocage dur : re-vérifie directement en base que TOUS les matchs de poule
+  // sont FINISHED, indépendamment du flag `groupStageComplete` (qui pourrait être
+  // resté à true après l'ajout/réouverture d'un match). Sans ça, le bracket
+  // pourrait être généré sur un classement encore provisoire → mauvais qualifiés.
+  const unfinishedGroupMatches = await prisma.match.count({
+    where: { tournamentId, stage: 'GROUP', status: { not: 'FINISHED' } },
+  });
+  if (unfinishedGroupMatches > 0) {
+    throw new Error(
+      `Impossible de générer le bracket : ${unfinishedGroupMatches} match(s) de poule ne sont pas terminés. Termine tous les matchs de poule d'abord.`
+    );
+  }
+
   // Vérifier qu'il n'y a pas déjà de matchs knockout
   const existingKnockout = await prisma.match.count({
     where: {
