@@ -1,8 +1,8 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/router';
-import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Users,
   Shield,
@@ -16,6 +16,9 @@ import {
   Image as ImageIcon,
   ChevronRight,
   CircleDot,
+  Check,
+  Calendar,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -25,25 +28,23 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { ImageUpload } from '@/components/ui/image-upload';
 
-type Tournament = { id: string; name: string; startDate: string };
-type Group = { id: string; name: string; tournamentId: string };
+type Tournament = {
+  id: string;
+  name: string;
+  startDate: string;
+  groupCount: number;
+  teamsPerGroup: number;
+  _count: { teams: number };
+};
 
 type PageProps = {
   isSignedIn: boolean;
   canCreate: boolean;
   tournaments: Tournament[];
-  groups: Group[];
 };
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => {
@@ -53,7 +54,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
 
   const { userId } = getAuth(ctx.req);
   if (!userId) {
-    return { props: { isSignedIn: false, canCreate: false, tournaments: [], groups: [] } };
+    return { props: { isSignedIn: false, canCreate: false, tournaments: [] } };
   }
 
   const client = await clerkClient();
@@ -70,16 +71,11 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
   const tournamentsResult = await getTournaments();
   const tournaments = tournamentsResult.success && tournamentsResult.data ? tournamentsResult.data : [];
 
-  const groups = await prisma.group.findMany({
-    orderBy: [{ tournamentId: 'asc' }, { position: 'asc' }],
-  });
-
   return {
     props: {
       isSignedIn: true,
       canCreate,
       tournaments: JSON.parse(JSON.stringify(tournaments)),
-      groups: JSON.parse(JSON.stringify(groups)),
     },
   };
 };
@@ -89,7 +85,6 @@ type CreateTeamPayload = {
   shortName: string;
   logo: string;
   tournamentId: string;
-  groupId: string;
 };
 
 type Accent = 'emerald' | 'yellow' | 'red' | 'purple';
@@ -131,8 +126,17 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
     shortName: '',
     logo: '',
     tournamentId: '',
-    groupId: '',
   });
+
+  // Pré-sélection du tournoi via ?tournament=<id> (lien « Ajouter une équipe »
+  // depuis la page tournoi). On ne l'applique que si l'id existe dans la liste.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const t = router.query.tournament;
+    if (typeof t === 'string' && t && props.tournaments.some((x) => x.id === t)) {
+      setFormData((p) => (p.tournamentId ? p : { ...p, tournamentId: t }));
+    }
+  }, [router.isReady, router.query.tournament, props.tournaments]);
 
   if (!props.isSignedIn) {
     return (
@@ -156,14 +160,23 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
     );
   }
 
-  const availableGroups = formData.tournamentId
-    ? props.groups.filter((g) => g.tournamentId === formData.tournamentId)
-    : [];
+  // Capacité d'un tournoi = nb de groupes × équipes par groupe.
+  const capacityOf = (t: Tournament) => t.groupCount * t.teamsPerGroup;
+  const remainingOf = (t: Tournament) => Math.max(0, capacityOf(t) - t._count.teams);
+
+  const selectedTournament =
+    props.tournaments.find((t) => t.id === formData.tournamentId) ?? null;
+  const selectedRemaining = selectedTournament ? remainingOf(selectedTournament) : null;
+  const selectedFull = selectedRemaining === 0;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formData.tournamentId) {
       toast.error('Sélectionne un tournoi');
+      return;
+    }
+    if (selectedFull) {
+      toast.error('Tournoi complet — aucune place disponible');
       return;
     }
     startTransition(async () => {
@@ -176,7 +189,6 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
             shortName: formData.shortName,
             logo: formData.logo || undefined,
             tournamentId: formData.tournamentId,
-            groupId: formData.groupId || undefined,
           }),
         });
         const json: { id?: string; error?: string } = await res.json();
@@ -281,58 +293,100 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
                   </div>
                 </div>
 
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-mono">Tournoi</Label>
-                    <Select
-                      value={formData.tournamentId}
-                      onValueChange={(v) => setFormData((p) => ({ ...p, tournamentId: v, groupId: '' }))}
-                    >
-                      <SelectTrigger className="h-12 w-full bg-black/40 border-white/10 hover:border-white/30 text-white">
-                        <SelectValue placeholder="Sélectionner un tournoi…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {props.tournaments.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-mono">
+                      Choisis ton tournoi
+                    </Label>
+                    <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">
+                      {props.tournaments.length} dispo
+                    </span>
                   </div>
 
-                  <AnimatePresence initial={false}>
-                    {availableGroups.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-2 overflow-hidden"
-                      >
-                        <Label className="text-[10px] uppercase tracking-[0.25em] text-white/60 font-mono flex items-center gap-1.5">
-                          <Shield className="w-3 h-3 text-yellow-400" />
-                          Groupe
-                          <span className="text-[9px] text-white/30 normal-case">(optionnel)</span>
-                        </Label>
-                        <Select
-                          value={formData.groupId || 'none'}
-                          onValueChange={(v) => setFormData((p) => ({ ...p, groupId: v === 'none' ? '' : v }))}
-                        >
-                          <SelectTrigger className="h-12 w-full bg-black/40 border-white/10 hover:border-white/30 text-white">
-                            <SelectValue placeholder="Aucun groupe (assigné plus tard)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Aucun groupe (assigné plus tard)</SelectItem>
-                            {availableGroups.map((g) => (
-                              <SelectItem key={g.id} value={g.id}>
-                                {g.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {props.tournaments.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-white/10 bg-white/2 py-10 text-center">
+                      <Trophy className="w-8 h-8 text-white/20 mx-auto mb-3" />
+                      <p className="text-sm text-white/55">Aucun tournoi ouvert aux inscriptions.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {props.tournaments.map((t) => {
+                        const remaining = remainingOf(t);
+                        const full = remaining <= 0;
+                        const selected = formData.tournamentId === t.id;
+                        return (
+                          <button
+                            type="button"
+                            key={t.id}
+                            disabled={full}
+                            onClick={() => setFormData((p) => ({ ...p, tournamentId: t.id }))}
+                            aria-pressed={selected}
+                            className={`group relative overflow-hidden text-left rounded-xl border p-4 transition-all ${
+                              full
+                                ? 'border-white/5 bg-white/[0.01] opacity-50 cursor-not-allowed'
+                                : selected
+                                ? 'border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/30'
+                                : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-white/[0.03]'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-sm font-black text-white tracking-tight leading-tight">
+                                {t.name}
+                              </span>
+                              <span
+                                className={`shrink-0 flex items-center justify-center w-5 h-5 rounded-full border transition-colors ${
+                                  selected
+                                    ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300'
+                                    : 'border-white/15 text-transparent'
+                                }`}
+                              >
+                                <Check className="w-3 h-3" />
+                              </span>
+                            </div>
+
+                            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-white/40">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(t.startDate).toLocaleDateString('fr-FR', {
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between gap-2">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.2em] text-white/45 tabular-nums">
+                                <Users className="w-3 h-3" />
+                                {t._count.teams}/{capacityOf(t)}
+                              </span>
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.2em] ${
+                                  full
+                                    ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                                    : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                                }`}
+                              >
+                                {full ? (
+                                  <>
+                                    <Lock className="w-2.5 h-2.5" /> Complet
+                                  </>
+                                ) : (
+                                  `${remaining} place${remaining > 1 ? 's' : ''}`
+                                )}
+                              </span>
+                            </div>
+
+                            {selected && !full && (
+                              <BorderBeam size={80} duration={8} colorFrom="#10b981" colorTo="#facc15" borderWidth={1} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-white/40 font-mono uppercase tracking-[0.22em] flex items-center gap-1.5">
+                    <Shield className="w-3 h-3 text-yellow-400" />
+                    Le groupe est attribué au tirage au sort
+                  </p>
                 </div>
               </Card>
 
@@ -429,7 +483,7 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
               <div className="pt-2">
                 <ShimmerButton
                   type="submit"
-                  disabled={isPending}
+                  disabled={isPending || selectedFull}
                   shimmerColor="#ffffff"
                   background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
                   className="w-full px-7 py-5 font-black uppercase tracking-[0.18em] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -438,6 +492,11 @@ export default function NewTeamPage(props: InferGetServerSidePropsType<typeof ge
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Création en cours…
+                    </>
+                  ) : selectedFull ? (
+                    <>
+                      <Shield className="w-5 h-5 mr-2" />
+                      Tournoi complet
                     </>
                   ) : (
                     <>

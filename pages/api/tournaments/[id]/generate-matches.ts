@@ -3,6 +3,7 @@ import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserFromReq } from '@/lib/clerk';
 import { generateGroupMatches } from '@/lib/utils/group-match-generator';
 import { generateKnockoutBracket } from '@/lib/utils/bracket-generator';
+import { ensureStandardMarketsForTournament } from '@/actions/markets';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -42,6 +43,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const result = await generateGroupMatches(tournamentId, opts);
+      // Génère les marchés de paris standard pour les matchs fraîchement créés.
+      await ensureStandardMarketsForTournament(tournamentId).catch((e) =>
+        console.error('[generate-matches] markets:', e)
+      );
       const skipped = result.diagnostics.skippedGroupNames;
       const skipNote =
         skipped.length > 0 ? ` · ${skipped.length} groupe(s) ignoré(s) : ${skipped.join(', ')}` : '';
@@ -56,6 +61,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     } else {
       const result = await generateKnockoutBracket(tournamentId);
+      await ensureStandardMarketsForTournament(tournamentId).catch((e) =>
+        console.error('[generate-matches] markets:', e)
+      );
       return res.status(200).json({
         success: true,
         data: {

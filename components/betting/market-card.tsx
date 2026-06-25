@@ -52,6 +52,8 @@ export type Market = {
     | 'MATCH_EXACT_SCORE'
     | 'MATCH_TOTAL_GOALS'
     | 'MATCH_BTTS'
+    | 'MATCH_DRAW_NO_BET'
+    | 'MATCH_ODD_EVEN'
     | 'TOURNAMENT_TOP_SCORER'
     | 'TOURNAMENT_MVP'
     | 'TOURNAMENT_WINNER';
@@ -86,6 +88,8 @@ const TYPE_ICON: Record<Market['type'], { Icon: typeof Goal; cls: string }> = {
   MATCH_EXACT_SCORE: { Icon: Goal, cls: 'text-emerald-300' },
   MATCH_TOTAL_GOALS: { Icon: TrendingUp, cls: 'text-yellow-300' },
   MATCH_BTTS: { Icon: Users, cls: 'text-purple-300' },
+  MATCH_DRAW_NO_BET: { Icon: Trophy, cls: 'text-emerald-300' },
+  MATCH_ODD_EVEN: { Icon: TrendingUp, cls: 'text-purple-300' },
   TOURNAMENT_TOP_SCORER: { Icon: Star, cls: 'text-yellow-300' },
   TOURNAMENT_MVP: { Icon: Trophy, cls: 'text-purple-300' },
   TOURNAMENT_WINNER: { Icon: Trophy, cls: 'text-emerald-300' },
@@ -93,6 +97,11 @@ const TYPE_ICON: Record<Market['type'], { Icon: typeof Goal; cls: string }> = {
 
 function outcomeLabel(market: Market, pool: Pool): string {
   if (market.type === 'MATCH_BTTS') return pool.outcomeKey === 'YES' ? 'Oui' : 'Non';
+  if (market.type === 'MATCH_ODD_EVEN') return pool.outcomeKey === 'ODD' ? 'Impair' : 'Pair';
+  if (market.type === 'MATCH_DRAW_NO_BET') {
+    if (pool.outcomeKey === 'HOME') return market.match?.homeTeam.shortName ?? 'Domicile';
+    return market.match?.awayTeam.shortName ?? 'Extérieur';
+  }
   if (market.type === 'MATCH_TOTAL_GOALS') {
     return `${pool.outcomeKey === 'OVER' ? '+' : '−'} ${market.param ?? ''}`;
   }
@@ -200,17 +209,19 @@ export function MarketCard({ market }: { market: Market }) {
   const potential = selectedOdds && Number.isFinite(stake) ? Math.floor(stake * selectedOdds) : 0;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
       {/* Header */}
       <div className="border-b border-white/10 bg-white/[0.03] px-4 py-3 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2.5">
-          <Icon className={cn('w-4 h-4', meta.cls)} />
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/10 grid place-items-center shrink-0">
+            <Icon className={cn('w-4 h-4', meta.cls)} />
+          </span>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-black text-white tracking-tight">
               {MARKET_LABEL[market.type]}
-              {market.param && <span className="text-white/40 ml-1.5 text-xs font-mono">/ ligne {market.param}</span>}
+              {market.param && <span className="text-white/40 ml-1.5 text-xs font-mono">ligne {market.param}</span>}
             </span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/40 mt-0.5">
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/40 mt-0.5">
               {totalBets} paris · {totalPool.toLocaleString('fr-FR')} pts
             </span>
           </div>
@@ -271,23 +282,23 @@ export function MarketCard({ market }: { market: Market }) {
                       refreshQuota();
                     }}
                     className={cn(
-                      'group relative flex flex-col items-center justify-center gap-1 rounded-lg border bg-black/40 px-2 py-3 transition-all',
+                      'group relative flex flex-col items-center justify-center gap-1.5 rounded-xl border bg-white/[0.02] px-2 py-3.5 transition-all',
                       open_ && isSignedIn
-                        ? 'border-white/10 hover:border-yellow-400/50 hover:bg-yellow-500/[0.04]'
+                        ? 'border-white/10 hover:border-yellow-400/50 hover:bg-yellow-500/[0.05]'
                         : 'border-white/5 opacity-50 cursor-not-allowed'
                     )}
                   >
-                    <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/55 leading-none truncate max-w-full">
+                    <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-white/55 leading-none truncate max-w-full">
                       {outcomeLabel(market, p)}
                     </span>
                     {sub && (
-                      <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/35 leading-none truncate max-w-full">
+                      <span className="text-[9px] font-mono uppercase tracking-[0.16em] text-white/35 leading-none truncate max-w-full">
                         {sub}
                       </span>
                     )}
                     <span
                       className={cn(
-                        'text-base font-black tabular-nums tracking-tight',
+                        'text-lg font-black tabular-nums tracking-tight',
                         o == null ? 'text-white/30' : 'text-yellow-300 group-hover:text-yellow-200'
                       )}
                     >

@@ -1,7 +1,8 @@
 /**
  * /api/admin/bets/retry-failed
  *
- * Rejoue les paris dont le crédit Wizebot a échoué (status CREDIT_FAILED).
+ * Rejoue les paris dont le crédit Wizebot a échoué (status CREDIT_FAILED) ET
+ * les remboursements en attente (débits orphelins).
  *
  * Deux modes d'accès :
  *  - POST + admin authentifié (Clerk) : déclenchement manuel depuis l'admin UI
@@ -14,18 +15,10 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { timingSafeEqual } from 'crypto';
 import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserFromReq } from '@/lib/clerk';
 import { retryFailedCredits, processPendingRefunds } from '@/lib/utils/betting';
-
-/** Comparaison en temps constant (évite un timing oracle sur le secret). */
-function safeEqual(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
-}
+import { safeEqual } from '@/lib/utils/safe-equal';
 
 function isAuthorizedCron(req: NextApiRequest): boolean {
   const secret = process.env.CRON_SECRET;
@@ -35,21 +28,36 @@ function isAuthorizedCron(req: NextApiRequest): boolean {
   return safeEqual(header, `Bearer ${secret}`);
 }
 
+/**
+ * Lance les deux passes (crédits ratés + remboursements) en parallèle et de
+ * manière INDÉPENDANTE : un échec de l'une (ex: table absente, Wizebot down)
+ * ne doit pas effacer le résultat de l'autre. On renvoie toujours 200 avec le
+ * détail par passe.
+ */
+async function runRetries() {
+  const [credits, refunds] = await Promise.allSettled([
+    retryFailedCredits(),
+    processPendingRefunds(),
+  ]);
+  return {
+    credits:
+      credits.status === 'fulfilled'
+        ? credits.value
+        : { error: credits.reason instanceof Error ? credits.reason.message : 'failed' },
+    refunds:
+      refunds.status === 'fulfilled'
+        ? refunds.value
+        : { error: refunds.reason instanceof Error ? refunds.reason.message : 'failed' },
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     if (!isAuthorizedCron(req)) {
       return res.status(401).json({ error: 'Unauthorized cron' });
     }
-    try {
-      const result = await retryFailedCredits();
-      const refunds = await processPendingRefunds();
-      return res.status(200).json({ success: true, source: 'cron', ...result, refunds });
-    } catch (err) {
-      console.error('[cron/retry-failed]', err);
-      return res
-        .status(500)
-        .json({ error: err instanceof Error ? err.message : 'Erreur serveur' });
-    }
+    const result = await runRetries();
+    return res.status(200).json({ success: true, source: 'cron', ...result });
   }
 
   if (req.method !== 'POST') {
@@ -64,14 +72,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Admin requis' });
   }
 
-  try {
-    const result = await retryFailedCredits();
-    const refunds = await processPendingRefunds();
-    return res.status(200).json({ success: true, source: 'admin', ...result, refunds });
-  } catch (err) {
-    console.error('[admin/bets/retry-failed]', err);
-    return res
-      .status(500)
-      .json({ error: err instanceof Error ? err.message : 'Erreur serveur' });
-  }
+  const result = await runRetries();
+  return res.status(200).json({ success: true, source: 'admin', ...result });
 }

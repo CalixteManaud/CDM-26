@@ -212,8 +212,14 @@ export async function settleMatchBets(params: {
 
       // Garde d'idempotence : si le match a déjà été réglé, on ne refait rien.
       // Empêche un double-settlement (double soumission de résultat, retry) de
-      // re-créditer Wizebot. Les paris déjà settlés ne sont pas recalculés.
+      // re-créditer Wizebot. Les paris déjà settlés ne sont PAS recalculés : un
+      // résultat corrigé après settlement nécessite une intervention admin
+      // manuelle (reversal Wizebot) — d'où le log d'alerte ci-dessous plutôt
+      // qu'un no-op totalement silencieux.
       if (pool.settledAt) {
+        console.warn(
+          `[settleMatchBets] match ${matchId} déjà réglé (settledAt=${pool.settledAt.toISOString()}) — settlement ignoré. Une correction de résultat ne sera PAS répercutée automatiquement.`
+        );
         return {
           winnersData: [] as { betId: string; userId: string; payout: number; twitchUsername: string | null }[],
           refundData: [] as { betId: string; userId: string; payout: number; twitchUsername: string | null }[],
@@ -437,24 +443,30 @@ export function matchOutcomeFromScores(
 }
 
 /**
- * Rejoue les bets en CREDIT_FAILED (utile si Wizebot était down au moment
- * du settlement). Appelée par un endpoint admin ou un cron.
+ * Rejoue les crédits Wizebot tombés en CREDIT_FAILED (Wizebot down au settlement,
+ * ou Twitch non lié à ce moment-là). Couvre les trois supports de gain :
+ *  - Bet (1X2)
+ *  - MarketBet simple (marché flexible hors combiné)
+ *  - BetSlip (combiné)
+ * Appelée par un endpoint admin ou un cron.
  */
 export async function retryFailedCredits(): Promise<{
   retried: number;
   recovered: number;
   stillFailing: number;
 }> {
-  const failed = await prisma.bet.findMany({
+  let retried = 0;
+  let recovered = 0;
+  let stillFailing = 0;
+
+  // 1) Bets 1X2
+  const failedBets = await prisma.bet.findMany({
     where: { status: BetStatus.CREDIT_FAILED },
     include: { user: { select: { twitchUsername: true } } },
     take: 100,
   });
-
-  let recovered = 0;
-  let stillFailing = 0;
-
-  for (const bet of failed) {
+  for (const bet of failedBets) {
+    retried++;
     if (!bet.user.twitchUsername || bet.actualPayout <= 0) {
       stillFailing++;
       continue;
@@ -467,11 +479,7 @@ export async function retryFailedCredits(): Promise<{
     if (credit.ok) {
       await prisma.bet.update({
         where: { id: bet.id },
-        data: {
-          status: BetStatus.WON,
-          wizebotCreditTxId: credit.txId,
-          wizebotCreditError: null,
-        },
+        data: { status: BetStatus.WON, wizebotCreditTxId: credit.txId, wizebotCreditError: null },
       });
       recovered++;
     } else {
@@ -483,7 +491,67 @@ export async function retryFailedCredits(): Promise<{
     }
   }
 
-  return { retried: failed.length, recovered, stillFailing };
+  // 2) Paris simples sur marché flexible (hors combiné)
+  const failedMarketBets = await prisma.marketBet.findMany({
+    where: { status: BetStatus.CREDIT_FAILED, slipId: null },
+    include: { user: { select: { twitchUsername: true } } },
+    take: 100,
+  });
+  for (const mb of failedMarketBets) {
+    retried++;
+    if (!mb.user.twitchUsername || mb.actualPayout <= 0) {
+      stillFailing++;
+      continue;
+    }
+    const credit = await creditWizebotPoints({
+      twitchUsername: mb.user.twitchUsername,
+      amount: mb.actualPayout,
+      reason: `CDM 26 — retry credit (market bet ${mb.id})`,
+    });
+    if (credit.ok) {
+      await prisma.marketBet.update({
+        where: { id: mb.id },
+        data: { status: BetStatus.WON, wizebotCreditTxId: credit.txId, wizebotCreditError: null },
+      });
+      recovered++;
+    } else {
+      await prisma.marketBet.update({
+        where: { id: mb.id },
+        data: { wizebotCreditError: credit.error },
+      });
+      stillFailing++;
+    }
+  }
+
+  // 3) Combinés (BetSlip)
+  const failedSlips = await prisma.betSlip.findMany({
+    where: { status: BetStatus.CREDIT_FAILED },
+    include: { user: { select: { twitchUsername: true } } },
+    take: 100,
+  });
+  for (const slip of failedSlips) {
+    retried++;
+    if (!slip.user.twitchUsername || slip.actualPayout <= 0) {
+      stillFailing++;
+      continue;
+    }
+    const credit = await creditWizebotPoints({
+      twitchUsername: slip.user.twitchUsername,
+      amount: slip.actualPayout,
+      reason: `CDM 26 — retry credit (combiné ${slip.id})`,
+    });
+    if (credit.ok) {
+      await prisma.betSlip.update({
+        where: { id: slip.id },
+        data: { status: BetStatus.WON, wizebotCreditTxId: credit.txId },
+      });
+      recovered++;
+    } else {
+      stillFailing++;
+    }
+  }
+
+  return { retried, recovered, stillFailing };
 }
 
 /**
@@ -534,38 +602,45 @@ export async function processPendingRefunds(): Promise<{
     take: 100,
   });
 
+  const tasks = pending.map(
+    (r) => async (): Promise<'refunded' | 'failed' | 'skipped'> => {
+      // Claim atomique : on bascule la ligne en REFUNDED de manière conditionnelle
+      // (status toujours PENDING/FAILED). Si une exécution concurrente (cron qui
+      // déborde sur le tick suivant, ou trigger admin simultané) l'a déjà prise,
+      // `count === 0` → on ne crédite pas (évite le double-remboursement Wizebot).
+      const claim = await prisma.pendingRefund.updateMany({
+        where: { id: r.id, status: { in: [RefundStatus.PENDING, RefundStatus.FAILED] } },
+        data: { status: RefundStatus.REFUNDED, attempts: { increment: 1 } },
+      });
+      if (claim.count === 0) return 'skipped';
+
+      const credit = await creditWizebotPoints({
+        twitchUsername: r.twitchUsername,
+        amount: r.amount,
+        reason: `CDM 26 — remboursement (${r.reason})`,
+      });
+      if (credit.ok) {
+        await prisma.pendingRefund.update({
+          where: { id: r.id },
+          data: { refundTxId: credit.txId, refundedAt: new Date(), lastError: null },
+        });
+        return 'refunded';
+      }
+      // Échec : on relâche le claim (retour FAILED) pour rejeu au prochain passage.
+      await prisma.pendingRefund.update({
+        where: { id: r.id },
+        data: { status: RefundStatus.FAILED, lastError: credit.error },
+      });
+      return 'failed';
+    }
+  );
+
+  const results = await runWithConcurrency(tasks, SETTLEMENT_CONCURRENCY);
   let refunded = 0;
   let stillFailing = 0;
-
-  for (const r of pending) {
-    const credit = await creditWizebotPoints({
-      twitchUsername: r.twitchUsername,
-      amount: r.amount,
-      reason: `CDM 26 — remboursement (${r.reason})`,
-    });
-    if (credit.ok) {
-      await prisma.pendingRefund.update({
-        where: { id: r.id },
-        data: {
-          status: RefundStatus.REFUNDED,
-          refundTxId: credit.txId,
-          refundedAt: new Date(),
-          attempts: { increment: 1 },
-          lastError: null,
-        },
-      });
-      refunded++;
-    } else {
-      await prisma.pendingRefund.update({
-        where: { id: r.id },
-        data: {
-          status: RefundStatus.FAILED,
-          attempts: { increment: 1 },
-          lastError: credit.error,
-        },
-      });
-      stillFailing++;
-    }
+  for (const res of results) {
+    if (res === 'refunded') refunded++;
+    else if (res === 'failed') stillFailing++;
   }
 
   return { processed: pending.length, refunded, stillFailing };

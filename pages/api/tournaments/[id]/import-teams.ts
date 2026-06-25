@@ -6,10 +6,11 @@ import { importTeamsFromTournament } from '@/actions/tournaments';
 /**
  * POST /api/tournaments/[id]/import-teams
  *
- * Body: { sourceId: string } — UUID du tournoi source dont on clone les équipes.
+ * Body: { sourceId: string, teamIds?: string[] } — clone des équipes du source.
  *
- * Précondition : le tournoi cible (`[id]`) doit être vide (0 équipe).
- * Admin uniquement. Clone Team + Players (groupId du target reste null).
+ * Précondition : le tournoi cible (`[id]`) doit avoir assez de places libres
+ * (capacité = groupCount × teamsPerGroup). Admin uniquement.
+ * Clone Team + Players (groupId du target reste null).
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

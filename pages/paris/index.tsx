@@ -22,6 +22,7 @@ import { NumberTicker } from '@/components/ui/number-ticker';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 
 import { MatchBetCard } from '@/components/betting/match-bet-card';
+import { OpenMatchesFilter } from '@/components/betting/open-matches-filter';
 import { TopOddsLeaderboard } from '@/components/betting/top-odds-leaderboard';
 import { LiveBetsTable } from '@/components/betting/live-bets-table';
 import { HowToBetCard } from '@/components/betting/how-to-bet-card';
@@ -267,18 +268,7 @@ export default function ParisPage(props: InferGetServerSidePropsType<typeof getS
                     </div>
                   </div>
                 ) : (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {matches.map((m, i) => (
-                      <motion.div
-                        key={m.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                      >
-                        <MatchBetCard match={m} />
-                      </motion.div>
-                    ))}
-                  </div>
+                  <OpenMatchesFilter matches={matches} />
                 )}
               </div>
 

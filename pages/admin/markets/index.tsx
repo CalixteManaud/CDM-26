@@ -114,6 +114,8 @@ const MARKET_TYPES = [
   { value: 'MATCH_EXACT_SCORE', label: 'Score exact (match)', target: 'match' },
   { value: 'MATCH_TOTAL_GOALS', label: 'Plus / Moins de buts (match)', target: 'match' },
   { value: 'MATCH_BTTS', label: 'Both Teams To Score (match)', target: 'match' },
+  { value: 'MATCH_DRAW_NO_BET', label: 'Vainqueur, nul remboursé (match)', target: 'match' },
+  { value: 'MATCH_ODD_EVEN', label: 'Buts pair / impair (match)', target: 'match' },
   { value: 'TOURNAMENT_TOP_SCORER', label: 'Meilleur buteur (tournoi)', target: 'tournament' },
   { value: 'TOURNAMENT_MVP', label: 'MVP (tournoi)', target: 'tournament' },
   { value: 'TOURNAMENT_WINNER', label: 'Vainqueur du tournoi', target: 'tournament' },
@@ -131,8 +133,36 @@ export default function AdminMarketsPage(props: InferGetServerSidePropsType<type
   const [line, setLine] = useState('2.5');
   const [maxGoals, setMaxGoals] = useState('4');
   const [submitting, setSubmitting] = useState(false);
+  const [genTournamentId, setGenTournamentId] = useState('');
+  const [generating, setGenerating] = useState(false);
 
   const target = MARKET_TYPES.find((t) => t.value === type)?.target;
+
+  const onGenerateStandard = async () => {
+    if (!genTournamentId) {
+      toast.error('Sélectionne un tournoi');
+      return;
+    }
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/admin/markets/generate-standard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tournamentId: genTournamentId }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error ?? 'Erreur');
+        return;
+      }
+      toast.success(`${json.created ?? 0} marché(s) généré(s) sur ${json.matches ?? 0} match(s)`);
+      router.replace(router.asPath, undefined, { scroll: false });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erreur réseau');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const onCreate = async () => {
     if (target === 'match' && !matchId) {
@@ -332,6 +362,54 @@ export default function AdminMarketsPage(props: InferGetServerSidePropsType<type
                   <>
                     <Plus className="w-4 h-4 mr-1.5" />
                     Créer le marché
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
+
+          {/* GENERATE STANDARD MARKETS */}
+          <Card className="mt-6 bg-white/[0.02] border-white/10 p-6 md:p-8">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="w-4 h-4 text-yellow-400" />
+              <span className="text-[11px] font-mono uppercase tracking-[0.32em] text-yellow-300 font-bold">
+                / Génération rapide
+              </span>
+            </div>
+            <p className="text-white/55 text-sm mb-5 max-w-2xl">
+              Crée d&apos;un coup le pack standard (score exact, +/- buts, BTTS, vainqueur nul
+              remboursé, pair/impair) pour tous les matchs d&apos;un tournoi. Idempotent : ne
+              recrée pas un marché déjà présent. Le settlement est automatique à la saisie du score.
+            </p>
+            <div className="flex items-end gap-3 flex-wrap">
+              <div className="flex-1 min-w-[240px]">
+                <Label className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/55">
+                  Tournoi
+                </Label>
+                <Select value={genTournamentId} onValueChange={setGenTournamentId}>
+                  <SelectTrigger className="mt-2 bg-white/5 border-white/15">
+                    <SelectValue placeholder="Sélectionne un tournoi…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {props.tournaments.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name} · {format(new Date(t.startDate), 'MMM yyyy', { locale: fr })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={onGenerateStandard}
+                disabled={generating}
+                className="bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-[0.18em] text-xs"
+              >
+                {generating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                    Générer le pack standard
                   </>
                 )}
               </Button>

@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Loader2, Zap, Trophy, ArrowRight, CalendarClock } from 'lucide-react';
+import { Loader2, Zap, Trophy, ArrowRight, CalendarClock, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,8 @@ type Props = {
   tournamentId: string;
   type: 'group' | 'knockout';
   groupStageComplete?: boolean;
+  /** Nb d'équipes non assignées à un groupe — averti avant génération (type group). */
+  unassignedCount?: number;
 };
 
 const INTERVAL_PRESETS = [
@@ -46,9 +49,10 @@ function toLocalInputValue(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function GenerateMatchesButton({ tournamentId, type, groupStageComplete }: Props) {
+export function GenerateMatchesButton({ tournamentId, type, groupStageComplete, unassignedCount = 0 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const hasUnassigned = type === 'group' && unassignedCount > 0;
 
   // Défauts pour le dialog group : demain 20h00, espacement 24h.
   const tomorrow8pm = new Date();
@@ -182,6 +186,19 @@ export function GenerateMatchesButton({ tournamentId, type, groupStageComplete }
             </DialogHeader>
 
             <div className="space-y-5 py-2">
+              {hasUnassigned && (
+                <Alert className="border-amber-500/40 bg-amber-950/20 text-amber-100 [&>svg]:text-amber-400">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle className="font-black tracking-tight text-amber-200">
+                    {unassignedCount} équipe{unassignedCount > 1 ? 's' : ''} sans groupe
+                  </AlertTitle>
+                  <AlertDescription className="text-amber-100/80">
+                    {unassignedCount > 1 ? 'Elles seront exclues' : 'Elle sera exclue'} des matchs
+                    générés. Assigne{unassignedCount > 1 ? '-les' : '-la'} via le tirage au sort
+                    d&apos;abord si {unassignedCount > 1 ? 'elles doivent' : 'elle doit'} jouer.
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="space-y-2">
                 <Label
                   htmlFor="startDate"
@@ -244,7 +261,7 @@ export function GenerateMatchesButton({ tournamentId, type, groupStageComplete }
                 ) : (
                   <>
                     <Trophy className="w-4 h-4 mr-2" />
-                    Générer
+                    {hasUnassigned ? 'Générer quand même' : 'Générer'}
                   </>
                 )}
               </Button>

@@ -330,15 +330,26 @@ export async function generateKnockoutBracket(tournamentId: string) {
   }
 
   // Blocage dur : re-vérifie directement en base que TOUS les matchs de poule
-  // sont FINISHED, indépendamment du flag `groupStageComplete` (qui pourrait être
-  // resté à true après l'ajout/réouverture d'un match). Sans ça, le bracket
-  // pourrait être généré sur un classement encore provisoire → mauvais qualifiés.
-  const unfinishedGroupMatches = await prisma.match.count({
-    where: { tournamentId, stage: 'GROUP', status: { not: 'FINISHED' } },
+  // sont réellement TERMINÉS AVEC SCORE, indépendamment du flag
+  // `groupStageComplete` (qui pourrait être resté à true après l'ajout/la
+  // réouverture d'un match). Un match FINISHED sans score (null) est ignoré par
+  // recalculateStandings → le classement serait incomplet et le bracket
+  // qualifierait les mauvaises équipes. On compte donc tout match qui n'est PAS
+  // (FINISHED ET scores renseignés).
+  const incompleteGroupMatches = await prisma.match.count({
+    where: {
+      tournamentId,
+      stage: 'GROUP',
+      OR: [
+        { status: { not: 'FINISHED' } },
+        { homeScore: null },
+        { awayScore: null },
+      ],
+    },
   });
-  if (unfinishedGroupMatches > 0) {
+  if (incompleteGroupMatches > 0) {
     throw new Error(
-      `Impossible de générer le bracket : ${unfinishedGroupMatches} match(s) de poule ne sont pas terminés. Termine tous les matchs de poule d'abord.`
+      `Impossible de générer le bracket : ${incompleteGroupMatches} match(s) de poule ne sont pas terminés avec un score. Saisis le résultat de tous les matchs de poule d'abord.`
     );
   }
 

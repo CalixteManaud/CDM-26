@@ -2,7 +2,7 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Calendar,
   Trophy,
@@ -113,6 +113,16 @@ const stageMeta: Record<string, { label: string; code: string }> = {
   QUARTER_FINAL: { label: 'Quarts', code: 'QF' },
   SEMI_FINAL: { label: 'Demi-finales', code: 'SF' },
   FINAL: { label: 'Finale', code: 'F' },
+};
+
+// Couleur de l'onglet de stage sur le scorebug — alignée sur la liste /matches.
+const stageBarColor: Record<string, string> = {
+  GROUP: 'bg-emerald-500',
+  PLAYOFF: 'bg-blue-500',
+  ROUND_OF_16: 'bg-teal-400',
+  QUARTER_FINAL: 'bg-yellow-500',
+  SEMI_FINAL: 'bg-orange-500',
+  FINAL: 'bg-red-500',
 };
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => {
@@ -259,6 +269,21 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   const awayWin = !!finished && (match!.awayScore ?? 0) > (match!.homeScore ?? 0);
   useWinnerConfetti(!reduce && (homeWin || awayWin));
 
+  // Scorebug collant : apparaît une fois le hero scrollé hors-champ (overlay
+  // d'antenne qui suit le viewer pendant qu'il parie / lit le feed).
+  const heroRef = useRef<HTMLElement | null>(null);
+  const [showBug, setShowBug] = useState(false);
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setShowBug(!entry.isIntersecting),
+      { threshold: 0, rootMargin: '-72px 0px 0px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [match?.id]);
+
   if (!match) {
     return (
       <div className="relative bg-black text-white min-h-screen flex items-center justify-center px-4">
@@ -397,8 +422,24 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
+        {/* Scorebug d'antenne — apparaît au scroll, façon overlay de stream */}
+        <AnimatePresence>
+          {showBug && (
+            <motion.div
+              key="scorebug"
+              initial={reduce ? { opacity: 0 } : { y: '-100%', opacity: 0 }}
+              animate={reduce ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              exit={reduce ? { opacity: 0 } : { y: '-100%', opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed top-16 inset-x-0 z-30"
+            >
+              <StickyScorebug match={match} homeWin={homeWin} awayWin={awayWin} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ───────────────────────── HERO ───────────────────────── */}
-        <section className="relative bg-black border-b border-white/10 overflow-hidden">
+        <section ref={heroRef} className="relative bg-black border-b border-white/10 overflow-hidden">
           {/* Atmosphère */}
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
           {/* Halos colorés par camp (vert domicile / rouge extérieur) */}
@@ -847,6 +888,134 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
         </section>
       </div>
     </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STICKY SCOREBUG — overlay d'antenne qui se dock sous la nav au scroll
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BugLogo({ team }: { team: TeamSide }) {
+  return (
+    <span className="w-7 h-7 rounded-md overflow-hidden ring-1 ring-white/10 bg-white/5 shrink-0 grid place-items-center">
+      {team.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={team.logo} alt={team.name} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-[9px] font-black text-white/70">{team.shortName.slice(0, 2).toUpperCase()}</span>
+      )}
+    </span>
+  );
+}
+
+function StickyScorebug({
+  match,
+  homeWin,
+  awayWin,
+}: {
+  match: Match;
+  homeWin: boolean;
+  awayWin: boolean;
+}) {
+  const isLive = match.status === 'LIVE';
+  const isFinished = match.status === 'FINISHED';
+  const hs = match.homeScore;
+  const as = match.awayScore;
+  const bar = stageBarColor[match.stage] ?? 'bg-white/30';
+  const code = stageMeta[match.stage]?.code ?? match.stage.slice(0, 3);
+
+  return (
+    <div className="border-b border-white/10 bg-black/80 backdrop-blur-xl shadow-[0_10px_30px_-12px_rgba(0,0,0,0.9)]">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center gap-3 md:gap-5 h-14">
+          {/* stage tab + code */}
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
+            <span className={cn('w-1 h-7 rounded-full', bar)} />
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">{code}</span>
+          </div>
+
+          {/* home */}
+          <div className="flex items-center gap-2 min-w-0 flex-1 justify-end">
+            <span
+              className={cn(
+                'font-black text-sm tracking-tight truncate',
+                awayWin ? 'text-white/45' : homeWin ? 'text-emerald-200' : 'text-white'
+              )}
+            >
+              {match.homeTeam.shortName}
+            </span>
+            <BugLogo team={match.homeTeam} />
+          </div>
+
+          {/* score / kickoff */}
+          <div className="shrink-0 px-1">
+            {isFinished && hs != null && as != null ? (
+              <div className="flex items-center gap-1.5 text-xl font-black tabular-nums leading-none">
+                <span className={homeWin ? 'text-white' : 'text-white/40'}>{hs}</span>
+                <span className="text-white/20 italic text-base">:</span>
+                <span className={awayWin ? 'text-white' : 'text-white/40'}>{as}</span>
+              </div>
+            ) : isLive ? (
+              <div className="flex items-center gap-1.5 text-xl font-black tabular-nums leading-none text-red-400 drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]">
+                <span>{hs ?? 0}</span>
+                <span className="text-red-500/40 italic text-base animate-pulse">:</span>
+                <span>{as ?? 0}</span>
+              </div>
+            ) : (
+              <span className="font-mono text-sm font-black tabular-nums text-white/70">
+                {format(new Date(match.matchDate), 'HH:mm')}
+              </span>
+            )}
+          </div>
+
+          {/* away */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <BugLogo team={match.awayTeam} />
+            <span
+              className={cn(
+                'font-black text-sm tracking-tight truncate',
+                homeWin ? 'text-white/45' : awayWin ? 'text-emerald-200' : 'text-white'
+              )}
+            >
+              {match.awayTeam.shortName}
+            </span>
+          </div>
+
+          {/* right meta */}
+          <div className="hidden md:flex items-center gap-2.5 shrink-0">
+            {isLive ? (
+              <>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-black uppercase tracking-[0.22em] text-red-300">
+                  <span className="live-dot" />
+                  On Air
+                </span>
+                {match.twitchUrl && (
+                  <a
+                    href={match.twitchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#9146ff]/15 border border-[#9146ff]/40 px-3 py-1 text-[10px] font-mono font-black uppercase tracking-[0.2em] text-[#c9a8ff] hover:bg-[#9146ff]/25 transition"
+                  >
+                    <Tv className="w-3 h-3" />
+                    Regarder
+                  </a>
+                )}
+              </>
+            ) : isFinished ? (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-yellow-300/80">
+                <CheckCircle2 className="w-3 h-3" />
+                Score final
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.22em] text-blue-300">
+                <Hourglass className="w-3 h-3" />
+                À venir
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
-import { Coins, Lock, AlertTriangle, Info } from 'lucide-react';
+import { Coins, Lock, AlertTriangle, Info, Check, ArrowRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,21 +40,33 @@ const PRESETS = [50, 100, 500, 1000];
 
 type Outcome = 'HOME' | 'DRAW' | 'AWAY';
 
-const OUTCOME_META: Record<Outcome, { label: string; cls: string; activeCls: string }> = {
+const OUTCOME_META: Record<
+  Outcome,
+  { idx: string; label: string; base: string; active: string; chip: string; text: string }
+> = {
   HOME: {
+    idx: '1',
     label: 'Domicile',
-    cls: 'text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/5',
-    activeCls: 'bg-emerald-500/15 border-emerald-500 text-emerald-300',
+    base: 'border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/[0.04]',
+    active: 'border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30',
+    chip: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
+    text: 'text-emerald-300',
   },
   DRAW: {
+    idx: 'X',
     label: 'Nul',
-    cls: 'text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/5',
-    activeCls: 'bg-yellow-500/15 border-yellow-500 text-yellow-300',
+    base: 'border-white/10 hover:border-yellow-500/40 hover:bg-yellow-500/[0.04]',
+    active: 'border-yellow-500/60 bg-yellow-500/10 ring-1 ring-yellow-500/30',
+    chip: 'border-yellow-500/40 bg-yellow-500/15 text-yellow-300',
+    text: 'text-yellow-300',
   },
   AWAY: {
+    idx: '2',
     label: 'Extérieur',
-    cls: 'text-red-400 border-red-500/30 hover:bg-red-500/5',
-    activeCls: 'bg-red-500/15 border-red-500 text-red-300',
+    base: 'border-white/10 hover:border-red-500/40 hover:bg-red-500/[0.04]',
+    active: 'border-red-500/60 bg-red-500/10 ring-1 ring-red-500/30',
+    chip: 'border-red-500/40 bg-red-500/15 text-red-300',
+    text: 'text-red-300',
   },
 };
 
@@ -197,23 +209,23 @@ export function PlaceBetForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-white/10 bg-black/30 p-5 space-y-4"
+      className="rounded-2xl border border-white/10 bg-black/30 p-5 space-y-5"
     >
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-[11px] font-mono uppercase tracking-[0.3em] font-bold text-emerald-400">
-            / placer un pari
-          </div>
+      {/* Odds board — 1 · X · 2 : cote ET sélection en un seul geste */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/55">
+            Choisis une issue
+          </span>
           {live && (
-            <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.22em] text-emerald-300/80">
+            <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-300/80">
               <span className="block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              live · {totalPool.toLocaleString('fr-FR')} pts
-            </div>
+              cotes en direct
+            </span>
           )}
         </div>
 
-        {/* Outcome picker */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 md:gap-2.5">
           {(['HOME', 'DRAW', 'AWAY'] as Outcome[]).map((o) => {
             const meta = OUTCOME_META[o];
             const isActive = outcome === o;
@@ -223,17 +235,26 @@ export function PlaceBetForm({
                 key={o}
                 type="button"
                 onClick={() => setOutcome(o)}
+                aria-pressed={isActive}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 rounded-lg border bg-white/[0.02] px-3 py-3 transition',
-                  isActive ? meta.activeCls : meta.cls,
+                  'group relative flex flex-col items-center justify-center gap-2 rounded-xl border bg-white/[0.02] px-2 py-4 transition-all',
+                  isActive ? meta.active : meta.base
                 )}
               >
-                <span className="text-[9px] uppercase tracking-[0.24em] font-mono opacity-70">{o}</span>
-                <span className="text-lg font-black tabular-nums">
-                  {oddsValue != null ? oddsValue.toFixed(2) : '—'}
+                <span
+                  className={cn(
+                    'absolute top-2 left-2 inline-flex items-center justify-center w-5 h-5 rounded-md border text-[10px] font-mono font-black',
+                    isActive ? meta.chip : 'border-white/15 text-white/45'
+                  )}
+                >
+                  {meta.idx}
                 </span>
-                <span className="text-[10px] font-mono uppercase opacity-60 truncate max-w-full">
+                {isActive && <Check className={cn('absolute top-2.5 right-2.5 w-3.5 h-3.5', meta.text)} />}
+                <span className="mt-2 text-[11px] font-mono uppercase tracking-[0.14em] text-white/55 truncate max-w-full">
                   {labelByOutcome[o]}
+                </span>
+                <span className={cn('text-2xl font-black tabular-nums tracking-tight', isActive ? meta.text : 'text-white')}>
+                  {oddsValue != null ? oddsValue.toFixed(2) : '—'}
                 </span>
               </button>
             );
@@ -241,11 +262,11 @@ export function PlaceBetForm({
         </div>
       </div>
 
-      {/* Points input */}
-      <div>
+      {/* Stake */}
+      <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor="bet-points" className="text-[10px] font-mono uppercase tracking-[0.3em] text-white/50">
-            Mise (points de chaîne)
+          <Label htmlFor="bet-points" className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/55">
+            Ta mise
           </Label>
           {quota && (
             <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-white/40 tabular-nums">
@@ -253,24 +274,27 @@ export function PlaceBetForm({
             </span>
           )}
         </div>
-        <div className="mt-2 flex gap-2">
-          <Input
-            id="bet-points"
-            type="number"
-            min={1}
-            max={Math.max(1, effectiveMax)}
-            value={points}
-            disabled={quotaExhausted}
-            onChange={(e) =>
-              setPoints(
-                Math.min(
-                  Math.max(1, effectiveMax),
-                  Math.max(1, Number.parseInt(e.target.value || '0', 10) || 0)
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-400/70 pointer-events-none" />
+            <Input
+              id="bet-points"
+              type="number"
+              min={1}
+              max={Math.max(1, effectiveMax)}
+              value={points}
+              disabled={quotaExhausted}
+              onChange={(e) =>
+                setPoints(
+                  Math.min(
+                    Math.max(1, effectiveMax),
+                    Math.max(1, Number.parseInt(e.target.value || '0', 10) || 0)
+                  )
                 )
-              )
-            }
-            className="bg-white/[0.02] border-white/15 text-white tabular-nums font-bold disabled:opacity-50"
-          />
+              }
+              className="pl-9 bg-white/[0.02] border-white/15 text-white tabular-nums font-black text-base disabled:opacity-50"
+            />
+          </div>
           <div className="flex gap-1">
             {PRESETS.map((p) => (
               <button
@@ -279,10 +303,10 @@ export function PlaceBetForm({
                 disabled={p > effectiveMax}
                 onClick={() => setPoints(p)}
                 className={cn(
-                  'px-2.5 rounded-md border text-[10px] font-mono uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed',
+                  'px-2.5 rounded-lg border text-[11px] font-mono font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed',
                   points === p
-                    ? 'bg-yellow-500/15 border-yellow-500 text-yellow-300'
-                    : 'border-white/10 text-white/60 hover:bg-white/5',
+                    ? 'bg-yellow-500/15 border-yellow-500/60 text-yellow-300'
+                    : 'border-white/10 text-white/60 hover:bg-white/5 hover:text-white'
                 )}
               >
                 {p >= 1000 ? `${p / 1000}k` : p}
@@ -291,26 +315,34 @@ export function PlaceBetForm({
           </div>
         </div>
         {quotaExhausted && (
-          <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-red-300/80">
-            / quota épuisé — reviens demain ou sur un autre match
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-red-300/80">
+            Quota épuisé — reviens demain ou tente un autre match.
           </p>
         )}
       </div>
 
-      {/* Estimated return */}
-      <div className="flex items-center justify-between rounded-md border border-dashed border-white/10 bg-white/[0.02] px-3 py-2">
-        <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/50">
-          Gain estimé (cote actuelle)
-        </span>
-        <span className="text-base font-black tabular-nums text-yellow-300">
-          {expectedReturn != null ? `${expectedReturn.toLocaleString('fr-FR')} pts` : '—'}
-        </span>
+      {/* Payout readout */}
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+        <div className="min-w-0">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45">Gain potentiel</div>
+          <div className="text-2xl font-black tabular-nums text-emerald-300 leading-none mt-1">
+            {expectedReturn != null ? expectedReturn.toLocaleString('fr-FR') : '—'}
+            <span className="text-sm text-white/40 font-bold ml-1">pts</span>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-white/20 shrink-0" />
+        <div className="text-right">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45">Bénéfice</div>
+          <div className="text-lg font-black tabular-nums text-yellow-300 leading-none mt-1">
+            +{expectedReturn != null ? Math.max(0, expectedReturn - points).toLocaleString('fr-FR') : '0'}
+          </div>
+        </div>
       </div>
 
       {alreadyBetSite && (
-        <div className="flex gap-2 items-start text-[10px] font-mono uppercase tracking-[0.22em] text-white/50">
+        <div className="flex gap-2 items-start text-[10px] font-mono uppercase tracking-[0.2em] text-white/50">
           <Info className="h-3 w-3 text-yellow-400/70 flex-shrink-0 mt-0.5" />
-          <span>tu as déjà un pari sur ce match — tu peux en placer d&apos;autres</span>
+          <span>Tu as déjà un pari sur ce match — tu peux en cumuler d&apos;autres.</span>
         </div>
       )}
 
@@ -319,15 +351,19 @@ export function PlaceBetForm({
         disabled={isPending || !outcome || quotaExhausted || points > effectiveMax}
         background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
         shimmerColor="#ffffff"
-        className="w-full px-5 py-3 font-black uppercase tracking-[0.18em] text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-5 py-3.5 font-black uppercase tracking-[0.18em] text-xs disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Coins className="w-4 h-4 mr-2" />
-        {isPending ? 'Placement…' : `Parier ${points.toLocaleString('fr-FR')} pts`}
+        {isPending
+          ? 'Placement…'
+          : outcome
+          ? `Parier ${points.toLocaleString('fr-FR')} pts`
+          : 'Choisis une issue'}
       </ShimmerButton>
 
-      <p className="text-[10px] text-white/35 leading-relaxed font-mono">
-        Le débit est effectué sur tes points de chaîne Wizebot avant le placement. Cote affichée = cote au
-        moment du placement, payout final recalculé au coup d&apos;envoi.
+      <p className="text-[10px] text-white/35 leading-relaxed">
+        Mise débitée sur tes points de chaîne Wizebot. La cote affichée est figée au placement ; le
+        gain final est recalculé au coup d&apos;envoi.
       </p>
     </form>
   );

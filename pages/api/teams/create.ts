@@ -25,6 +25,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Validate input
     const validated = teamSchema.parse(req.body);
 
+    // Contrôle de capacité : nb de groupes × équipes par groupe.
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: validated.tournamentId },
+      select: { groupCount: true, teamsPerGroup: true, _count: { select: { teams: true } } },
+    });
+    if (!tournament) {
+      return res.status(404).json({ error: 'Tournoi introuvable' });
+    }
+    const capacity = tournament.groupCount * tournament.teamsPerGroup;
+    if (tournament._count.teams >= capacity) {
+      return res.status(400).json({
+        error: `Tournoi complet : ${tournament._count.teams}/${capacity} équipes. Aucune place disponible.`,
+      });
+    }
+
     // Create the team with the current user as coach
     const team = await prisma.team.create({
       data: {

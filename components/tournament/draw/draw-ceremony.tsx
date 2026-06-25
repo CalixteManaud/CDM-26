@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Play,
   Pause,
+  StepForward,
   ArrowRight,
   ChevronRight,
   Crown,
@@ -177,7 +178,28 @@ export function DrawCeremony({ tournament, groups, teams }: DrawPageProps) {
     if (phase === 'running') setPhase('paused');
   };
 
+  // ───── Pas-à-pas : tire UNE seule équipe puis se remet en pause ─────
+  const singleStepRef = useRef(false);
+
+  const onStep = () => {
+    if (phase === 'idle') {
+      if (tournament.hasGroupMatches) {
+        toast.error('Des matchs de poules existent déjà — supprime-les avant le tirage.');
+        return;
+      }
+      setAssignments([]);
+      setCurrentIndex(0);
+      setStep('lift');
+      singleStepRef.current = true;
+      setPhase('running');
+    } else if (phase === 'paused') {
+      singleStepRef.current = true;
+      setPhase('running');
+    }
+  };
+
   const onReset = () => {
+    singleStepRef.current = false;
     setPhase('idle');
     setAssignments([]);
     setCurrentIndex(0);
@@ -212,10 +234,16 @@ export function DrawCeremony({ tournament, groups, teams }: DrawPageProps) {
     } else if (step === 'gap') {
       id = window.setTimeout(() => {
         if (currentIndex + 1 >= sequence.length) {
+          singleStepRef.current = false;
           setPhase('complete');
         } else {
           setCurrentIndex((i) => i + 1);
           setStep('lift');
+          // Mode pas-à-pas : on s'arrête après cette unique équipe.
+          if (singleStepRef.current) {
+            singleStepRef.current = false;
+            setPhase('paused');
+          }
         }
       }, GAP_MS / mult);
     }
@@ -357,6 +385,7 @@ export function DrawCeremony({ tournament, groups, teams }: DrawPageProps) {
               onSpeedChange={setSpeed}
               onStart={onStart}
               onPause={onPause}
+              onStep={onStep}
               onReset={onReset}
               onReshuffle={onReshuffle}
               drawIndex={currentIndex}
@@ -623,6 +652,7 @@ function StageArea({
   onSpeedChange,
   onStart,
   onPause,
+  onStep,
   onReset,
   onReshuffle,
   drawIndex,
@@ -638,6 +668,7 @@ function StageArea({
   onSpeedChange: (v: string) => void;
   onStart: () => void;
   onPause: () => void;
+  onStep: () => void;
   onReset: () => void;
   onReshuffle: () => void;
   drawIndex: number;
@@ -784,6 +815,16 @@ function StageArea({
                     <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                     Re-shuffle
                   </Button>
+                  <Button
+                    type="button"
+                    onClick={onStep}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:text-emerald-300 text-white font-black uppercase tracking-[0.18em] text-[10px] px-3"
+                  >
+                    <StepForward className="w-3.5 h-3.5 mr-1.5" />
+                    Pas à pas
+                  </Button>
                   <ShimmerButton
                     onClick={onStart}
                     background="linear-gradient(110deg, #16a34a 0%, #facc15 50%, #dc2626 100%)"
@@ -818,6 +859,15 @@ function StageArea({
                     className="border-white/20 hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-300 text-white font-black uppercase tracking-[0.18em] text-[10px] px-3"
                   >
                     Reset
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={onStep}
+                    variant="outline"
+                    className="border-emerald-500/40 bg-emerald-500/5 text-emerald-300 hover:bg-emerald-500/15 hover:text-emerald-200 font-black uppercase tracking-[0.18em] text-xs px-4"
+                  >
+                    <StepForward className="w-4 h-4 mr-2" />
+                    Suivant
                   </Button>
                   <ShimmerButton
                     onClick={onStart}

@@ -8,7 +8,17 @@ import {
 } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints, debitWizebotPoints } from '@/lib/wizebot';
 import { recordPendingRefund } from '@/lib/utils/betting';
-import { computeMarketOdds, isMarketOpen, generateExactScoreOutcomes, MIN_MARKET_STAKE, MAX_MARKET_STAKE } from '@/lib/utils/markets';
+import {
+  computeMarketOdds,
+  isMarketOpen,
+  generateExactScoreOutcomes,
+  resolveMatchMarketOutcome,
+  SCORE_DERIVED_MATCH_TYPES,
+  DEFAULT_TOTAL_GOALS_LINE,
+  MIN_MARKET_STAKE,
+  MAX_MARKET_STAKE,
+  type BettingMarketType as MarketTypeKey,
+} from '@/lib/utils/markets';
 import { checkBetWithinQuota, type QuotaAdditions } from '@/lib/utils/bet-quota';
 
 const TEAM_SELECT = {
@@ -218,6 +228,174 @@ export async function adminCreateMatchBttsMarket(input: {
   } catch (error) {
     console.error('Error creating BTTS market:', error);
     return { success: false, error: 'Impossible de créer le marché BTTS' };
+  }
+}
+
+export async function adminCreateMatchDrawNoBetMarket(input: {
+  matchId: string;
+  closesAt: Date;
+  housePercentage?: number;
+}) {
+  try {
+    const market = await prisma.bettingMarket.create({
+      data: {
+        type: BettingMarketType.MATCH_DRAW_NO_BET,
+        matchId: input.matchId,
+        closesAt: input.closesAt,
+        housePercentage: input.housePercentage ?? 0,
+        pools: { create: [{ outcomeKey: 'HOME' }, { outcomeKey: 'AWAY' }] },
+      },
+      select: MARKET_SELECT,
+    });
+    return { success: true, data: market };
+  } catch (error) {
+    console.error('Error creating Draw No Bet market:', error);
+    return { success: false, error: 'Impossible de créer le marché Draw No Bet' };
+  }
+}
+
+export async function adminCreateMatchOddEvenMarket(input: {
+  matchId: string;
+  closesAt: Date;
+  housePercentage?: number;
+}) {
+  try {
+    const market = await prisma.bettingMarket.create({
+      data: {
+        type: BettingMarketType.MATCH_ODD_EVEN,
+        matchId: input.matchId,
+        closesAt: input.closesAt,
+        housePercentage: input.housePercentage ?? 0,
+        pools: { create: [{ outcomeKey: 'ODD' }, { outcomeKey: 'EVEN' }] },
+      },
+      select: MARKET_SELECT,
+    });
+    return { success: true, data: market };
+  } catch (error) {
+    console.error('Error creating Odd/Even market:', error);
+    return { success: false, error: 'Impossible de créer le marché Pair/Impair' };
+  }
+}
+
+// =================== Génération standard + settlement auto ===================
+
+/**
+ * Set de marchés standard généré automatiquement pour chaque match FIFA.
+ * Tous se règlent depuis le seul score final (cf. resolveMatchMarketOutcome).
+ */
+const STANDARD_MATCH_MARKET_SPECS: Array<{
+  type: BettingMarketType;
+  param?: string;
+  outcomes: string[];
+}> = [
+  { type: BettingMarketType.MATCH_EXACT_SCORE, outcomes: generateExactScoreOutcomes(4) },
+  { type: BettingMarketType.MATCH_TOTAL_GOALS, param: DEFAULT_TOTAL_GOALS_LINE, outcomes: ['OVER', 'UNDER'] },
+  { type: BettingMarketType.MATCH_BTTS, outcomes: ['YES', 'NO'] },
+  { type: BettingMarketType.MATCH_DRAW_NO_BET, outcomes: ['HOME', 'AWAY'] },
+  { type: BettingMarketType.MATCH_ODD_EVEN, outcomes: ['ODD', 'EVEN'] },
+];
+
+/**
+ * Crée les marchés standard manquants pour un match (idempotent : ne recrée pas
+ * un type déjà présent). `closesAt` = coup d'envoi du match en général.
+ */
+export async function createStandardMatchMarkets(matchId: string, closesAt: Date) {
+  try {
+    const existing = await prisma.bettingMarket.findMany({
+      where: { matchId },
+      select: { type: true },
+    });
+    const have = new Set(existing.map((m) => m.type));
+
+    let created = 0;
+    for (const spec of STANDARD_MATCH_MARKET_SPECS) {
+      if (have.has(spec.type)) continue;
+      await prisma.bettingMarket.create({
+        data: {
+          type: spec.type,
+          matchId,
+          param: spec.param ?? null,
+          closesAt,
+          housePercentage: 0,
+          pools: { create: spec.outcomes.map((outcomeKey) => ({ outcomeKey })) },
+        },
+      });
+      created++;
+    }
+    return { success: true, data: { created } };
+  } catch (error) {
+    console.error('Error creating standard match markets:', error);
+    return { success: false, error: 'Impossible de générer les marchés standard' };
+  }
+}
+
+/**
+ * Génère les marchés standard pour TOUS les matchs d'un tournoi qui n'en ont pas
+ * encore (closesAt = date du match). Idempotent. Appelé après la génération des
+ * matchs et exposé en endpoint admin pour rattrapage.
+ */
+export async function ensureStandardMarketsForTournament(tournamentId: string) {
+  try {
+    const matches = await prisma.match.findMany({
+      where: { tournamentId },
+      select: { id: true, matchDate: true },
+    });
+    let created = 0;
+    for (const m of matches) {
+      const r = await createStandardMatchMarkets(m.id, new Date(m.matchDate));
+      created += r.success ? r.data?.created ?? 0 : 0;
+    }
+    return { success: true, data: { matches: matches.length, created } };
+  } catch (error) {
+    console.error('Error ensuring standard markets:', error);
+    return { success: false, error: 'Impossible de générer les marchés du tournoi' };
+  }
+}
+
+/**
+ * Règle automatiquement tous les marchés "match" dérivés du score (score exact,
+ * +/- buts, BTTS, draw no bet, pair/impair) à partir du score final. Appelé en
+ * fire-and-forget depuis submit-result, juste après le settlement du 1X2.
+ * - issue normale → settleMarket(winningOutcomeKey)
+ * - cas VOID (Draw No Bet sur nul) → voidMarket (remboursement)
+ */
+export async function autoSettleMatchScoreMarkets(
+  matchId: string,
+  homeScore: number,
+  awayScore: number,
+) {
+  try {
+    const markets = await prisma.bettingMarket.findMany({
+      where: {
+        matchId,
+        type: { in: SCORE_DERIVED_MATCH_TYPES as unknown as BettingMarketType[] },
+        status: { in: [BettingMarketStatus.OPEN, BettingMarketStatus.LOCKED] },
+      },
+      select: { id: true, type: true, param: true, pools: { select: { outcomeKey: true } } },
+    });
+
+    let settled = 0;
+    let voided = 0;
+    for (const m of markets) {
+      const res = resolveMatchMarketOutcome(m.type as MarketTypeKey, m.param, homeScore, awayScore);
+      if (res.kind === 'void') {
+        const r = await voidMarket({ marketId: m.id });
+        if (r.success) voided++;
+        continue;
+      }
+      // Score exact : retombe sur "OTHER" si le score réel n'est pas dans la grille.
+      let key = res.outcomeKey;
+      if (!m.pools.some((p) => p.outcomeKey === key)) {
+        if (m.pools.some((p) => p.outcomeKey === 'OTHER')) key = 'OTHER';
+        else continue;
+      }
+      const r = await settleMarket({ marketId: m.id, winningOutcomeKey: key });
+      if (r.success) settled++;
+    }
+    return { success: true, data: { settled, voided } };
+  } catch (error) {
+    console.error('Error auto-settling match score markets:', error);
+    return { success: false, error: 'Erreur settlement auto des marchés' };
   }
 }
 
@@ -685,136 +863,261 @@ type SettleMarketInput = {
  */
 export async function settleMarket(input: SettleMarketInput) {
   try {
-    const market = await prisma.bettingMarket.findUnique({
-      where: { id: input.marketId },
-      select: {
-        id: true,
-        status: true,
-        housePercentage: true,
-        finalTotalPool: true,
-        pools: { select: { outcomeKey: true, totalPool: true } },
-        bets: {
-          select: {
-            id: true,
-            outcomeKey: true,
-            pointsWagered: true,
-            slipId: true,
-            user: { select: { id: true, twitchUsername: true } },
+    // Phase 1 — DB atomique : garde d'idempotence + bascule SETTLED + marquage
+    // de tous les paris, le tout dans une transaction. Deux settlements
+    // concurrents : le premier commit SETTLED, le second relit SETTLED et abort
+    // → pas de double-crédit (les crédits Wizebot, eux, se font hors transaction
+    // pour ne pas tenir une transaction ouverte sur des appels réseau).
+    type SimpleWinner = { betId: string; twitchUsername: string | null; payout: number };
+    const phase1 = await prisma.$transaction(async (tx) => {
+      const market = await tx.bettingMarket.findUnique({
+        where: { id: input.marketId },
+        select: {
+          id: true,
+          status: true,
+          housePercentage: true,
+          finalTotalPool: true,
+          pools: { select: { outcomeKey: true, totalPool: true } },
+          bets: {
+            select: {
+              id: true,
+              outcomeKey: true,
+              pointsWagered: true,
+              slipId: true,
+              user: { select: { id: true, twitchUsername: true } },
+            },
+            where: { status: BetStatus.PENDING },
           },
-          where: { status: BetStatus.PENDING },
         },
-      },
-    });
+      });
 
-    if (!market) return { success: false, error: 'Marché introuvable' };
-
-    // Garde d'idempotence : un marché déjà réglé ne doit pas être re-settlé
-    // (sinon risque de re-crédit Wizebot).
-    if (market.status === BettingMarketStatus.SETTLED) {
-      return { success: false, error: 'Ce marché a déjà été réglé' };
-    }
-
-    const winnerPool = market.pools.find((p) => p.outcomeKey === input.winningOutcomeKey);
-    if (!winnerPool) {
-      return { success: false, error: 'Outcome gagnant inconnu' };
-    }
-
-    const totalPool =
-      market.finalTotalPool ?? market.pools.reduce((s, p) => s + p.totalPool, 0);
-    const houseRatio = 1 - Number(market.housePercentage) / 100;
-    const distributable = Math.floor(totalPool * houseRatio);
-
-    // Update market
-    await prisma.bettingMarket.update({
-      where: { id: input.marketId },
-      data: {
-        status: BettingMarketStatus.SETTLED,
-        settledOutcomeKey: input.winningOutcomeKey,
-        settledAt: new Date(),
-        finalTotalPool: totalPool,
-      },
-    });
-
-    const slipsToReevaluate = new Set<string>();
-
-    for (const bet of market.bets) {
-      const isWin = bet.outcomeKey === input.winningOutcomeKey;
-      let payout = 0;
-      if (isWin && winnerPool.totalPool > 0) {
-        payout = Math.floor((bet.pointsWagered / winnerPool.totalPool) * distributable);
+      if (!market) return { error: 'Marché introuvable' as const };
+      if (market.status === BettingMarketStatus.SETTLED) {
+        return { error: 'Ce marché a déjà été réglé' as const };
       }
+      const winnerPool = market.pools.find((p) => p.outcomeKey === input.winningOutcomeKey);
+      if (!winnerPool) return { error: 'Outcome gagnant inconnu' as const };
 
-      // Pour un MarketBet en slip, on ne crédite pas individuellement.
-      // On marque juste le statut. Le slip décide à la fin.
-      if (bet.slipId) {
-        await prisma.marketBet.update({
-          where: { id: bet.id },
-          data: {
-            status: isWin ? BetStatus.WON : BetStatus.LOST,
-            actualPayout: 0, // settled au niveau slip
-            settledAt: new Date(),
-          },
-        });
-        slipsToReevaluate.add(bet.slipId);
-        continue;
-      }
+      const totalPool =
+        market.finalTotalPool ?? market.pools.reduce((s, p) => s + p.totalPool, 0);
+      const houseRatio = 1 - Number(market.housePercentage) / 100;
+      const distributable = Math.floor(totalPool * houseRatio);
 
-      // Pari simple : credit Wizebot fire-and-forget si gagnant
-      if (isWin) {
-        if (bet.user.twitchUsername && payout > 0) {
-          const credit = await creditWizebotPoints({
-            twitchUsername: bet.user.twitchUsername,
-            amount: payout,
-            reason: `Gain pari ${market.id.slice(0, 8)}`,
-          });
-          if (credit.ok) {
-            await prisma.marketBet.update({
-              where: { id: bet.id },
-              data: {
-                status: BetStatus.WON,
-                actualPayout: payout,
-                settledAt: new Date(),
-                wizebotCreditTxId: credit.txId,
-              },
-            });
-          } else {
-            await prisma.marketBet.update({
-              where: { id: bet.id },
-              data: {
-                status: BetStatus.CREDIT_FAILED,
-                actualPayout: payout,
-                settledAt: new Date(),
-                wizebotCreditError: credit.error,
-              },
-            });
-          }
-        } else {
-          await prisma.marketBet.update({
+      // Bascule SETTLED (claim atomique)
+      await tx.bettingMarket.update({
+        where: { id: input.marketId },
+        data: {
+          status: BettingMarketStatus.SETTLED,
+          settledOutcomeKey: input.winningOutcomeKey,
+          settledAt: new Date(),
+          finalTotalPool: totalPool,
+        },
+      });
+
+      const slipsToReevaluate = new Set<string>();
+      const simpleWinners: SimpleWinner[] = [];
+
+      for (const bet of market.bets) {
+        const isWin = bet.outcomeKey === input.winningOutcomeKey;
+        const payout =
+          isWin && winnerPool.totalPool > 0
+            ? Math.floor((bet.pointsWagered / winnerPool.totalPool) * distributable)
+            : 0;
+
+        if (bet.slipId) {
+          // Pari en combiné : statut seulement, le slip décide à la fin.
+          await tx.marketBet.update({
             where: { id: bet.id },
             data: {
-              status: BetStatus.WON,
-              actualPayout: payout,
+              status: isWin ? BetStatus.WON : BetStatus.LOST,
+              actualPayout: 0,
               settledAt: new Date(),
             },
           });
+          slipsToReevaluate.add(bet.slipId);
+          continue;
         }
+
+        if (isWin) {
+          // Marqué WON ici ; crédit Wizebot en phase 2 (hors transaction).
+          await tx.marketBet.update({
+            where: { id: bet.id },
+            data: { status: BetStatus.WON, actualPayout: payout, settledAt: new Date() },
+          });
+          if (payout > 0) {
+            simpleWinners.push({ betId: bet.id, twitchUsername: bet.user.twitchUsername, payout });
+          }
+        } else {
+          await tx.marketBet.update({
+            where: { id: bet.id },
+            data: { status: BetStatus.LOST, settledAt: new Date() },
+          });
+        }
+      }
+
+      return {
+        marketIdShort: market.id.slice(0, 8),
+        simpleWinners,
+        slipsToReevaluate: [...slipsToReevaluate],
+        betCount: market.bets.length,
+      };
+    });
+
+    if ('error' in phase1) {
+      return { success: false, error: phase1.error };
+    }
+
+    // Phase 2 — crédits Wizebot des paris simples gagnants (hors transaction).
+    // En cas d'échec/Twitch manquant → CREDIT_FAILED (trail pour rattrapage).
+    for (const w of phase1.simpleWinners) {
+      if (!w.twitchUsername) {
+        await prisma.marketBet.update({
+          where: { id: w.betId },
+          data: { status: BetStatus.CREDIT_FAILED, wizebotCreditError: 'twitchUsername absent au settlement' },
+        });
+        continue;
+      }
+      const credit = await creditWizebotPoints({
+        twitchUsername: w.twitchUsername,
+        amount: w.payout,
+        reason: `Gain pari ${phase1.marketIdShort}`,
+      });
+      if (credit.ok) {
+        await prisma.marketBet.update({
+          where: { id: w.betId },
+          data: { wizebotCreditTxId: credit.txId, wizebotCreditError: null },
+        });
       } else {
         await prisma.marketBet.update({
-          where: { id: bet.id },
-          data: { status: BetStatus.LOST, settledAt: new Date() },
+          where: { id: w.betId },
+          data: { status: BetStatus.CREDIT_FAILED, wizebotCreditError: credit.error },
         });
       }
     }
 
-    // Re-évaluation des combinés impactés
-    for (const slipId of slipsToReevaluate) {
+    // Phase 3 — re-évaluation des combinés impactés.
+    for (const slipId of phase1.slipsToReevaluate) {
       await evaluateBetSlip(slipId);
     }
 
-    return { success: true, data: { settled: market.bets.length } };
+    return { success: true, data: { settled: phase1.betCount } };
   } catch (error) {
     console.error('Error settling market:', error);
     return { success: false, error: 'Erreur de settlement' };
+  }
+}
+
+/**
+ * Annule (VOID) un marché : rembourse les paris simples (mise rendue) et
+ * neutralise les jambes de combiné (le combiné est recalculé sans cette jambe
+ * via evaluateBetSlip). À utiliser quand un marché ne peut pas être tranché
+ * (ex: joueur retiré, match annulé). Idempotent (refuse SETTLED/VOID).
+ */
+export async function voidMarket(input: { marketId: string }) {
+  try {
+    type Refund = { betId: string; userId: string; twitchUsername: string | null; amount: number };
+    const phase1 = await prisma.$transaction(async (tx) => {
+      const market = await tx.bettingMarket.findUnique({
+        where: { id: input.marketId },
+        select: {
+          id: true,
+          status: true,
+          bets: {
+            select: {
+              id: true,
+              pointsWagered: true,
+              slipId: true,
+              user: { select: { id: true, twitchUsername: true } },
+            },
+            where: { status: BetStatus.PENDING },
+          },
+        },
+      });
+      if (!market) return { error: 'Marché introuvable' as const };
+      if (market.status === BettingMarketStatus.SETTLED) {
+        return { error: 'Marché déjà réglé — impossible de l’annuler' as const };
+      }
+      if (market.status === BettingMarketStatus.VOID) {
+        return { error: 'Marché déjà annulé' as const };
+      }
+
+      await tx.bettingMarket.update({
+        where: { id: input.marketId },
+        data: { status: BettingMarketStatus.VOID, settledAt: new Date() },
+      });
+
+      const slipsToReevaluate = new Set<string>();
+      const refunds: Refund[] = [];
+
+      for (const bet of market.bets) {
+        if (bet.slipId) {
+          // Jambe de combiné : marquée VOID, le slip est recalculé (cote ×1 sur
+          // cette jambe). Pas de remboursement individuel.
+          await tx.marketBet.update({
+            where: { id: bet.id },
+            data: { status: BetStatus.VOID, actualPayout: 0, settledAt: new Date() },
+          });
+          slipsToReevaluate.add(bet.slipId);
+          continue;
+        }
+        // Pari simple : VOID + remboursement de la mise (crédit en phase 2).
+        await tx.marketBet.update({
+          where: { id: bet.id },
+          data: { status: BetStatus.VOID, actualPayout: bet.pointsWagered, settledAt: new Date() },
+        });
+        refunds.push({
+          betId: bet.id,
+          userId: bet.user.id,
+          twitchUsername: bet.user.twitchUsername,
+          amount: bet.pointsWagered,
+        });
+      }
+
+      return {
+        marketIdShort: market.id.slice(0, 8),
+        refunds,
+        slipsToReevaluate: [...slipsToReevaluate],
+        betCount: market.bets.length,
+      };
+    });
+
+    if ('error' in phase1) {
+      return { success: false, error: phase1.error };
+    }
+
+    // Phase 2 — remboursements Wizebot des paris simples (hors transaction).
+    // En cas d'échec, on file la créance dans PendingRefund (rejeu par le cron).
+    for (const r of phase1.refunds) {
+      if (!r.twitchUsername || r.amount <= 0) continue;
+      const credit = await creditWizebotPoints({
+        twitchUsername: r.twitchUsername,
+        amount: r.amount,
+        reason: `Marché annulé ${phase1.marketIdShort} — remboursement`,
+      });
+      if (credit.ok) {
+        await prisma.marketBet.update({
+          where: { id: r.betId },
+          data: { wizebotCreditTxId: credit.txId, wizebotCreditError: null },
+        });
+      } else {
+        await recordPendingRefund({
+          userId: r.userId,
+          twitchUsername: r.twitchUsername,
+          amount: r.amount,
+          reason: `marché annulé ${phase1.marketIdShort}`,
+        });
+      }
+    }
+
+    // Phase 3 — recalcul des combinés touchés (les jambes VOID sont neutralisées).
+    for (const slipId of phase1.slipsToReevaluate) {
+      await evaluateBetSlip(slipId);
+    }
+
+    return { success: true, data: { voided: phase1.betCount } };
+  } catch (error) {
+    console.error('Error voiding market:', error);
+    return { success: false, error: "Erreur lors de l'annulation du marché" };
   }
 }
 
@@ -875,30 +1178,50 @@ export async function evaluateBetSlip(slipId: string) {
       }, 1);
       payout = Math.floor(slip.totalStake * effectiveOdds);
     }
-    let creditTxId: string | undefined;
-    if (slip.user.twitchUsername && payout > 0) {
+    // payout est en pratique toujours > 0 ici (totalStake > 0 et cotes ≥ 1).
+    // Si le crédit ne peut pas aboutir (Twitch non lié, ou Wizebot KO), on NE
+    // marque PAS WON sans avoir payé : on passe le slip en CREDIT_FAILED avec le
+    // payout stocké, ce qui laisse une trace et permet le rejeu automatique par
+    // retryFailedCredits (qui scanne aussi les BetSlip).
+    if (payout > 0) {
+      if (!slip.user.twitchUsername) {
+        await prisma.betSlip.update({
+          where: { id: slipId },
+          data: { status: BetStatus.CREDIT_FAILED, actualPayout: payout, settledAt: new Date() },
+        });
+        return { success: false, error: 'Twitch non lié — gain en attente de crédit (CREDIT_FAILED)' };
+      }
       const c = await creditWizebotPoints({
         twitchUsername: slip.user.twitchUsername,
         amount: payout,
         reason: `Combiné gagnant (×${Number(slip.combinedOdds).toFixed(2)})`,
       });
       if (!c.ok) {
-        // On laisse le slip en PENDING pour retry manuel
+        await prisma.betSlip.update({
+          where: { id: slipId },
+          data: { status: BetStatus.CREDIT_FAILED, actualPayout: payout, settledAt: new Date() },
+        });
         console.error('BetSlip credit failed:', c.error);
         return { success: false, error: 'Crédit Wizebot échoué — à rejouer' };
       }
-      creditTxId = c.txId;
+      await prisma.betSlip.update({
+        where: { id: slipId },
+        data: {
+          status: BetStatus.WON,
+          actualPayout: payout,
+          settledAt: new Date(),
+          wizebotCreditTxId: c.txId,
+        },
+      });
+      return { success: true, data: { status: 'WON', payout } };
     }
+
+    // Cas théorique payout === 0 : gagnant sans gain à créditer.
     await prisma.betSlip.update({
       where: { id: slipId },
-      data: {
-        status: BetStatus.WON,
-        actualPayout: payout,
-        settledAt: new Date(),
-        wizebotCreditTxId: creditTxId,
-      },
+      data: { status: BetStatus.WON, actualPayout: 0, settledAt: new Date() },
     });
-    return { success: true, data: { status: 'WON', payout } };
+    return { success: true, data: { status: 'WON', payout: 0 } };
   } catch (error) {
     console.error('Error evaluating bet slip:', error);
     return { success: false, error: 'Erreur évaluation combiné' };

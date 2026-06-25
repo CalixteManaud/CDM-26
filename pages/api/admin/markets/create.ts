@@ -58,6 +58,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     adminCreateMatchExactScoreMarket,
     adminCreateMatchTotalGoalsMarket,
     adminCreateMatchBttsMarket,
+    adminCreateMatchDrawNoBetMarket,
+    adminCreateMatchOddEvenMarket,
     adminCreateTournamentPlayerMarket,
     adminCreateTournamentWinnerMarket,
   } = await import('@/actions/markets');
@@ -86,6 +88,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case 'MATCH_BTTS':
       if (!body.matchId) return res.status(400).json({ error: 'matchId requis' });
       result = await adminCreateMatchBttsMarket({
+        matchId: body.matchId,
+        closesAt,
+        housePercentage: body.housePercentage,
+      });
+      break;
+    case 'MATCH_DRAW_NO_BET':
+      if (!body.matchId) return res.status(400).json({ error: 'matchId requis' });
+      result = await adminCreateMatchDrawNoBetMarket({
+        matchId: body.matchId,
+        closesAt,
+        housePercentage: body.housePercentage,
+      });
+      break;
+    case 'MATCH_ODD_EVEN':
+      if (!body.matchId) return res.status(400).json({ error: 'matchId requis' });
+      result = await adminCreateMatchOddEvenMarket({
         matchId: body.matchId,
         closesAt,
         housePercentage: body.housePercentage,

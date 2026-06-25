@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
 import { saveUploadedFileToBlob } from '@/lib/save-file-and-images';
-import { IncomingForm, Fields, Files } from 'formidable';
+import { IncomingForm, Files } from 'formidable';
 import fs from 'fs';
 
 // Disable body parsing, formidable will handle it
@@ -34,12 +34,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       filter: ({ mimetype }) => !!mimetype && mimetype.startsWith('image/'),
     });
 
-    const [fields, files] = await new Promise<[Fields, Files]>((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        resolve([fields, files]);
+    let files: Files;
+    try {
+      files = await new Promise<Files>((resolve, reject) => {
+        form.parse(req, (err, _fields, files) => {
+          if (err) reject(err);
+          else resolve(files);
+        });
       });
-    });
+    } catch (parseErr) {
+      // formidable lève sur dépassement de taille ou type filtré → 400/413 clair
+      const code = (parseErr as { code?: number })?.code;
+      // 1009 = biggerThanMaxFileSize (formidable)
+      if (code === 1009) {
+        return res.status(413).json({ error: 'Fichier trop volumineux (8 Mo max)' });
+      }
+      return res.status(400).json({ error: 'Fichier invalide (image de 8 Mo max attendue)' });
+    }
 
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
 

@@ -480,6 +480,8 @@ enum BettingMarketType {
   MATCH_EXACT_SCORE       // outcomeKey = "<home>-<away>"
   MATCH_TOTAL_GOALS       // outcomeKey = "OVER" | "UNDER" ; param = ligne ex "2.5"
   MATCH_BTTS              // outcomeKey = "YES" | "NO"
+  MATCH_DRAW_NO_BET       // outcomeKey = "HOME" | "AWAY" ; remboursé (VOID) si nul
+  MATCH_ODD_EVEN          // outcomeKey = "ODD" | "EVEN" (parité du total de buts)
   TOURNAMENT_TOP_SCORER   // outcomeKey = playerId
   TOURNAMENT_MVP          // outcomeKey = playerId
   TOURNAMENT_WINNER       // outcomeKey = teamId

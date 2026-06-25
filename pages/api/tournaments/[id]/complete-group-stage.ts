@@ -41,13 +41,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Tournoi introuvable' });
     }
 
-    // Vérifier que tous les matchs de groupe sont terminés
+    // Vérifier que tous les matchs de groupe sont terminés AVEC un score.
+    // Un match FINISHED sans score est ignoré par le calcul du classement, donc
+    // valider la phase de poules dans cet état produirait des standings (et un
+    // bracket) incomplets.
     const groupMatches = tournament.matches;
-    const allFinished = groupMatches.length > 0 && groupMatches.every((m) => m.status === 'FINISHED');
+    const allFinished =
+      groupMatches.length > 0 &&
+      groupMatches.every(
+        (m) => m.status === 'FINISHED' && m.homeScore !== null && m.awayScore !== null
+      );
 
     if (!allFinished) {
       return res.status(400).json({
-        error: 'Tous les matchs de poule doivent être terminés avant de valider cette étape'
+        error: 'Tous les matchs de poule doivent être terminés avec un score avant de valider cette étape'
       });
     }
 

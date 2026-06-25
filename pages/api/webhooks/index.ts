@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
+import { isValidHttpUrl } from '@/lib/utils/url';
 
 export default async function handler(
   req: NextApiRequest,
@@ -53,12 +54,7 @@ export default async function handler(
 
       // Valider l'URL (http/https uniquement) — évite de stocker une cible
       // invalide ou un schéma exotique (file://, etc.).
-      try {
-        const parsed = new URL(String(url));
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-          throw new Error('bad protocol');
-        }
-      } catch {
+      if (!isValidHttpUrl(String(url))) {
         return res.status(400).json({ error: 'URL invalide (http/https attendu)' });
       }
 

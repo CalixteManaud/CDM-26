@@ -20,6 +20,7 @@ import {
   Archive,
   ArchiveRestore,
   Sparkles,
+  UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -37,8 +38,10 @@ import { MatchList } from '@/components/tournament/match-list';
 import { TeamsList } from '@/components/tournament/teams-list';
 import { GenerateMatchesButton } from '@/components/tournament/generate-matches-button';
 import { CompleteGroupStageButton } from '@/components/tournament/complete-group-stage-button';
+import { ResetGroupStageButton } from '@/components/tournament/reset-group-stage-button';
 import { TournamentStatisticsView } from '@/components/tournament/tournament-statistics';
 import { ImportTeamsDialog } from '@/components/tournament/import-teams-dialog';
+import { UnassignedTeamsAlert } from '@/components/tournament/unassigned-teams-alert';
 import { useUser } from '@clerk/nextjs';
 import type { TournamentStatistics } from '@/lib/utils/tournament-stats';
 
@@ -88,6 +91,7 @@ type Team = {
   name: string;
   shortName: string;
   logo?: string | null;
+  disqualified?: boolean;
   group?: GroupLite | null;
   players?: Player[];
   standings?: TeamStanding[];
@@ -98,6 +102,7 @@ type Tournament = {
   name: string;
   startDate: string;
   groupCount: number;
+  teamsPerGroup: number;
   groupStageComplete: boolean;
   archivedAt: string | null;
   teams?: Team[];
@@ -238,8 +243,20 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
   const knockoutMatches = matches.filter((m): m is Match => m.stage !== 'GROUP' && !!m.homeTeam && !!m.awayTeam);
   const groupMatches = matches.filter((m) => m.stage === 'GROUP');
   const allGroupMatchesFinished = groupMatches.length > 0 && groupMatches.every((m) => m.status === 'FINISHED');
+  const hasGroupMatches = groupMatches.length > 0;
+  const groupHasResults = groupMatches.some((m) => m.status === 'FINISHED');
+
+  // Équipes actives (non disqualifiées) pas encore assignées à un groupe : elles
+  // seront exclues des matchs / classements tant que le tirage n'est pas fait.
+  const unassignedTeams = (tournament.teams ?? []).filter((t) => !t.disqualified && !t.group);
+  const assignedTeamsCount = (tournament.teams ?? []).filter((t) => !t.disqualified && t.group).length;
+  // « Groupes faits » = le tirage a réparti les équipes : au moins une équipe
+  // assignée ET aucune équipe active laissée sans groupe.
+  const groupsReady = assignedTeamsCount > 0 && unassignedTeams.length === 0;
 
   const teamsCount = tournament.teams?.length ?? 0;
+  const capacity = (tournament.groupCount ?? 0) * (tournament.teamsPerGroup ?? 0);
+  const remainingSlots = Math.max(0, capacity - teamsCount);
   const playersCount = tournament.teams?.reduce((acc, team) => acc + (team.players?.length ?? 0), 0) ?? 0;
   const finishedMatches = matches.filter((m) => m.status === 'FINISHED').length;
 
@@ -323,6 +340,20 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
             </div>
           </div>
         </section>
+
+        {/* ALERTE ADMIN — équipes sans groupe (exclues des matchs tant que pas tirées) */}
+        {isAdmin && !isArchived && teamsCount > 0 && unassignedTeams.length > 0 && (
+          <section className="relative bg-black">
+            <div className="container mx-auto px-4 pt-8">
+              <UnassignedTeamsAlert
+                tournamentId={tournament.id}
+                unassignedTeams={unassignedTeams}
+                hasGroupMatches={hasGroupMatches}
+                onViewTeams={() => setActiveTab('teams')}
+              />
+            </div>
+          </section>
+        )}
 
         {/* TABS */}
         <section className="relative bg-black border-b border-white/10 py-12 md:py-16">
@@ -457,12 +488,45 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
               {/* TEAMS */}
               <TabsContent value="teams" className="mt-0">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  {isAdmin && !isArchived && teamsCount === 0 && (
-                    <div className="flex justify-end">
-                      <ImportTeamsDialog
-                        targetTournamentId={tournament.id}
-                        onDone={handleRefresh}
-                      />
+                  {isAdmin && !isArchived && (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span
+                        className={`text-[11px] font-mono uppercase tracking-[0.22em] ${
+                          remainingSlots <= 0 ? 'text-red-300' : 'text-white/50'
+                        }`}
+                      >
+                        {teamsCount}/{capacity} équipes
+                        {remainingSlots > 0
+                          ? ` · ${remainingSlots} place${remainingSlots > 1 ? 's' : ''} libre${remainingSlots > 1 ? 's' : ''}`
+                          : ' · complet'}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {remainingSlots > 0 ? (
+                          <Link href={`/teams/new?tournament=${tournament.id}`}>
+                            <Button className="bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs">
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              Ajouter une équipe
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button
+                            disabled
+                            className="bg-white/10 text-white/50 font-black uppercase tracking-[0.18em] text-xs"
+                          >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Tournoi complet
+                          </Button>
+                        )}
+                        <ImportTeamsDialog
+                          targetTournamentId={tournament.id}
+                          onDone={handleRefresh}
+                          remainingSlots={remainingSlots}
+                          existingTeams={(tournament.teams ?? []).map((t) => ({
+                            name: t.name,
+                            shortName: t.shortName,
+                          }))}
+                        />
+                      </div>
                     </div>
                   )}
                   {isAdmin &&
@@ -513,14 +577,46 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
               {/* MATCHES */}
               <TabsContent value="matches" className="mt-0">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  {isAdmin && !isArchived && matches.filter((m) => m.stage === 'GROUP').length === 0 && (
-                    <GenerateMatchesButton tournamentId={tournament.id} type="group" />
+                  {isAdmin && !isArchived && groupMatches.length === 0 && groupsReady && (
+                    <GenerateMatchesButton
+                      tournamentId={tournament.id}
+                      type="group"
+                      unassignedCount={unassignedTeams.length}
+                    />
+                  )}
+                  {isAdmin && !isArchived && groupMatches.length === 0 && !groupsReady && teamsCount > 0 && (
+                    <Link href={`/tournaments/${tournament.id}/draw`} className="block">
+                      <Card className="relative overflow-hidden bg-white/2 border-white/10 hover:border-emerald-500/40 transition-all p-6 md:p-7 group cursor-pointer">
+                        <div className="flex items-start gap-4">
+                          <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-5 h-5 text-yellow-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-yellow-400 mb-1.5">
+                              § Étape requise · TIRAGE AU SORT
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-black text-white tracking-tight mb-1.5 leading-tight">
+                              Fais le tirage avant de générer les matchs
+                            </h3>
+                            <p className="text-sm text-white/60 leading-relaxed">
+                              Les matchs de poules ne peuvent être générés qu&apos;une fois toutes les
+                              équipes réparties dans les groupes. Lance le tirage au sort pour
+                              continuer.
+                            </p>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-white/30 group-hover:translate-x-1 group-hover:text-emerald-300 transition shrink-0 self-center" />
+                        </div>
+                      </Card>
+                    </Link>
                   )}
                   {isAdmin && !isArchived && !tournament.groupStageComplete && groupMatches.length > 0 && (
                     <CompleteGroupStageButton
                       tournamentId={tournament.id}
                       allGroupMatchesFinished={allGroupMatchesFinished}
                     />
+                  )}
+                  {isAdmin && !isArchived && groupMatches.length > 0 && !groupHasResults && (
+                    <ResetGroupStageButton tournamentId={tournament.id} matchCount={groupMatches.length} />
                   )}
                   <MatchList matches={matches} title="Tous les matchs" />
                 </motion.div>

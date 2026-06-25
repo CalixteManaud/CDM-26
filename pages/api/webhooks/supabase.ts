@@ -1,15 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { timingSafeEqual } from 'crypto';
 import { clerkClient } from '@clerk/nextjs/server';
 import type { UserRole } from '@/prisma/prisma-client/enums';
+import { safeEqual } from '@/lib/utils/safe-equal';
 
 /** Comparaison en temps constant du secret (évite un timing oracle). */
 function secretMatches(provided: unknown, expected: string): boolean {
-  if (typeof provided !== 'string') return false;
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return typeof provided === 'string' && safeEqual(provided, expected);
 }
 
 /**

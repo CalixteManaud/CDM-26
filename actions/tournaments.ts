@@ -275,7 +275,12 @@ export async function importTeamsFromTournament(
     const [target, source] = await Promise.all([
       prisma.tournament.findUnique({
         where: { id: targetId },
-        select: { id: true, _count: { select: { teams: true } } },
+        select: {
+          id: true,
+          groupCount: true,
+          teamsPerGroup: true,
+          teams: { select: { name: true, shortName: true } },
+        },
       }),
       prisma.tournament.findUnique({
         where: { id: sourceId },
@@ -292,15 +297,18 @@ export async function importTeamsFromTournament(
     if (!target) return { success: false, error: 'Tournoi cible introuvable' };
     if (!source) return { success: false, error: 'Tournoi source introuvable' };
 
-    if (target._count.teams > 0) {
-      return {
-        success: false,
-        error: 'Le tournoi cible doit être vide avant l\'import (aucune équipe)',
-      };
-    }
-
     if (source.teams.length === 0) {
       return { success: false, error: 'Le tournoi source ne contient aucune équipe' };
+    }
+
+    // Capacité du tournoi cible = nb de groupes × équipes par groupe.
+    const capacity = target.groupCount * target.teamsPerGroup;
+    const remaining = capacity - target.teams.length;
+    if (remaining <= 0) {
+      return {
+        success: false,
+        error: `Tournoi complet : ${target.teams.length}/${capacity} équipes. Aucune place disponible.`,
+      };
     }
 
     const filteredTeams =
@@ -312,11 +320,35 @@ export async function importTeamsFromTournament(
       return { success: false, error: 'Aucune équipe sélectionnée à importer' };
     }
 
+    // Déduplication : on ne réimporte pas une équipe déjà présente dans la cible
+    // (même code court — clé unique — OU même nom, insensible à la casse).
+    const norm = (s: string) => s.trim().toLowerCase();
+    const existingNames = new Set(target.teams.map((t) => norm(t.name)));
+    const existingShorts = new Set(target.teams.map((t) => norm(t.shortName)));
+    const toImport = filteredTeams.filter(
+      (t) => !existingShorts.has(norm(t.shortName)) && !existingNames.has(norm(t.name))
+    );
+    const skipped = filteredTeams.length - toImport.length;
+
+    if (toImport.length === 0) {
+      return {
+        success: false,
+        error: 'Toutes les équipes sélectionnées sont déjà présentes dans ce tournoi.',
+      };
+    }
+
+    if (toImport.length > remaining) {
+      return {
+        success: false,
+        error: `Plus assez de place : ${remaining} place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}, tu essaies d'importer ${toImport.length} équipe${toImport.length > 1 ? 's' : ''}.`,
+      };
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       let teamsCreated = 0;
       let playersCreated = 0;
 
-      for (const srcTeam of filteredTeams) {
+      for (const srcTeam of toImport) {
         const newTeam = await tx.team.create({
           data: {
             name: srcTeam.name,
@@ -345,12 +377,15 @@ export async function importTeamsFromTournament(
       return { teamsCreated, playersCreated };
     });
 
+    // `skipped` = équipes ignorées car déjà présentes dans la cible.
+    const data = { ...result, skipped };
+
     // Pas de revalidatePath ici : il vient du cache App Router et lève
     // "Invariant: static generation store missing" quand l'action est appelée
     // depuis une API route Pages Router. Le client refresh via `onDone` dans
     // le dialog d'import.
 
-    return { success: true, data: result };
+    return { success: true, data };
   } catch (error) {
     console.error('Error importing teams:', error);
     return {

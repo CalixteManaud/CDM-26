@@ -12,6 +12,7 @@ import {
   triggerBracketUpdatedWebhooks,
 } from '@/lib/webhooks';
 import { settleMatchBets, matchOutcomeFromScores } from '@/lib/utils/betting';
+import { autoSettleMatchScoreMarkets } from '@/actions/markets';
 
 interface PlayerStat {
   playerId: string;
@@ -195,6 +196,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (err) {
       console.error('[submit-result] Erreur settlement paris:', err);
       // On ne bloque PAS la réponse: le résultat du match est déjà enregistré.
+    }
+
+    // Settlement automatique des marchés flexibles dérivés du score (score exact,
+    // +/- buts, BTTS, draw no bet, pair/impair). L'admin n'a qu'à saisir le score.
+    try {
+      await autoSettleMatchScoreMarkets(matchId, homeScore, awayScore);
+    } catch (err) {
+      console.error('[submit-result] Erreur settlement auto marchés:', err);
     }
 
     // Si c'est un match knockout, vérifier la progression du bracket

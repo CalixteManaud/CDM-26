@@ -52,22 +52,21 @@ export function MatchBetWidget({
     : 0;
 
   return (
-    <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
+    <Card className="relative overflow-hidden bg-white/2 border-white/10 p-6 md:p-8">
       {open && total > 0 && (
         <BorderBeam size={120} duration={11} colorFrom="#facc15" colorTo="#dc2626" borderWidth={1.2} />
       )}
 
-      <div className="flex items-start gap-4 mb-7">
-        <div className="w-11 h-11 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
-          <Coins className="w-5 h-5 text-yellow-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-yellow-400 mb-1.5">
-            § Marché — Paris mutuel
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/30 grid place-items-center shrink-0">
+            <Coins className="w-5 h-5 text-yellow-400" />
           </div>
-          <h3 className="text-xl md:text-2xl font-black text-white tracking-tight">
-            {phase === 'LIVE' ? 'Live · cotes en direct' : open ? 'Cotes en direct' : 'Marché clôturé'}
-          </h3>
+          <div className="min-w-0">
+            <h3 className="text-lg md:text-xl font-black text-white tracking-tight leading-tight">Pari mutuel</h3>
+            <p className="text-[11px] text-white/45 mt-0.5">Cote = ta part du pool, calculée en direct</p>
+          </div>
         </div>
         {phase === 'LIVE' ? (
           <Badge className="bg-red-500/15 border-red-500/40 text-red-300 uppercase tracking-[0.22em] text-[10px] font-mono shrink-0 animate-pulse">
@@ -84,39 +83,44 @@ export function MatchBetWidget({
         )}
       </div>
 
-      {/* Pool stats — affiché seulement si quelqu'un a déjà parié */}
+      {/* Pool — distribution + chiffres (dès qu'il y a des paris) */}
       {pool && total > 0 && (
-        <>
-          <OddsDisplay
-            pool={pool}
-            homeShort={match.homeTeam.shortName}
-            awayShort={match.awayTeam.shortName}
-          />
-
-          <div className="mt-5 space-y-2">
-            <PoolDistributionBar pool={pool} />
-            <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono uppercase tracking-[0.22em] text-white/45">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5">
-                  <Coins className="w-3 h-3 text-yellow-400/70" />
-                  <span className="tabular-nums text-white/85 font-bold">{total.toLocaleString('fr-FR')}</span>
-                  <span>pts en jeu</span>
-                </span>
-                <span className="text-white/20">·</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Users className="w-3 h-3 text-purple-400/70" />
-                  <span className="tabular-nums text-white/85 font-bold">{pool.uniqueBettors}</span>
-                  <span>parieurs</span>
-                </span>
-                <span className="text-white/20">·</span>
-                <span className="tabular-nums text-white/70">{pool.betCount} paris</span>
-              </div>
-              <span className="text-white/40">
-                Maison : <span className="text-white/70 tabular-nums">{Number(pool.housePercentage).toFixed(1)}%</span>
+        <div className="space-y-2.5 mb-6">
+          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.2em]">
+            <span className="text-emerald-300/80">{match.homeTeam.shortName}</span>
+            <span className="text-yellow-300/80">Nul</span>
+            <span className="text-red-300/80">{match.awayTeam.shortName}</span>
+          </div>
+          <PoolDistributionBar pool={pool} className="h-2" />
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] font-mono uppercase tracking-[0.2em] text-white/45 pt-1">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5">
+                <Coins className="w-3 h-3 text-yellow-400/70" />
+                <span className="tabular-nums text-white/85 font-bold">{total.toLocaleString('fr-FR')}</span>
+                <span>pts</span>
+              </span>
+              <span className="text-white/20">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="w-3 h-3 text-purple-400/70" />
+                <span className="tabular-nums text-white/85 font-bold">{pool.uniqueBettors}</span>
+                <span>parieurs</span>
               </span>
             </div>
+            <span className="text-white/40">
+              Maison <span className="text-white/70 tabular-nums">{Number(pool.housePercentage).toFixed(1)}%</span>
+            </span>
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Cotes en lecture seule — uniquement marché fermé (sinon le coupon les porte) */}
+      {pool && total > 0 && !open && (
+        <OddsDisplay
+          pool={pool}
+          homeShort={match.homeTeam.shortName}
+          awayShort={match.awayTeam.shortName}
+          className="mb-6"
+        />
       )}
 
       {/* Placeholder "premier pari" — uniquement si marché ouvert ET vide */}

@@ -157,6 +157,22 @@ export async function createTeam(input: TeamInput) {
 
     const validated = teamSchema.parse(input);
 
+    // Contrôle de capacité : nb de groupes × équipes par groupe.
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: validated.tournamentId },
+      select: { groupCount: true, teamsPerGroup: true, _count: { select: { teams: true } } },
+    });
+    if (!tournament) {
+      return { success: false, error: 'Tournoi introuvable' };
+    }
+    const capacity = tournament.groupCount * tournament.teamsPerGroup;
+    if (tournament._count.teams >= capacity) {
+      return {
+        success: false,
+        error: `Tournoi complet : ${tournament._count.teams}/${capacity} équipes. Aucune place disponible.`,
+      };
+    }
+
     const team = await prisma.team.create({
       data: {
         name: validated.name,
