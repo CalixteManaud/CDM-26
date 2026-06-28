@@ -16,12 +16,12 @@
 import prisma from '@/lib/prisma';
 import { BetOutcome, BetStatus, RefundStatus } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints } from '@/lib/wizebot';
-import { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS } from './odds';
+import { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS, BET_EDIT_WINDOW_MS } from './odds';
 
 // Helpers purs ré-exportés pour les imports serveur déjà en place.
 // Les composants client doivent importer directement depuis `@/lib/utils/odds`
 // (ce fichier-ci pull Prisma + wizebot et fuiterait dans le bundle browser).
-export { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS };
+export { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS, BET_EDIT_WINDOW_MS };
 export type { LiveOdds } from './odds';
 
 // Concurrence max sur les crédits Wizebot au settlement. 10 workers en parallèle
@@ -169,6 +169,214 @@ export async function placeBet(params: {
     });
 
     return { betId: bet.id, oddsAtPlacement: odds ?? 1 };
+  });
+}
+
+/** Champ du pool correspondant à une issue 1X2. */
+function poolFieldFor(
+  outcome: BetOutcome
+): 'totalHomePool' | 'totalDrawPool' | 'totalAwayPool' {
+  return outcome === BetOutcome.HOME_WIN
+    ? 'totalHomePool'
+    : outcome === BetOutcome.DRAW
+      ? 'totalDrawPool'
+      : 'totalAwayPool';
+}
+
+/** Vrai si un pari est encore dans sa fenêtre d'édition (3 min) ET le marché ouvert. */
+export function isBetEditable(
+  bet: { createdAt: Date | string; status: BetStatus },
+  match: { status: string; matchDate: Date | string }
+): boolean {
+  return (
+    bet.status === BetStatus.PENDING &&
+    Date.now() < new Date(bet.createdAt).getTime() + BET_EDIT_WINDOW_MS &&
+    isBettingOpen(match)
+  );
+}
+
+/** Garde commune aux opérations d'édition (ownership, statut, fenêtre, marché ouvert). */
+function assertBetEditable(
+  bet: { userId: string; status: BetStatus; createdAt: Date },
+  match: { status: string; matchDate: Date } | null,
+  userId: string
+) {
+  if (bet.userId !== userId) {
+    throw new BettingError("Ce pari ne t'appartient pas", 'FORBIDDEN');
+  }
+  if (bet.status !== BetStatus.PENDING) {
+    throw new BettingError('Ce pari ne peut plus être modifié', 'NOT_PENDING');
+  }
+  if (Date.now() > bet.createdAt.getTime() + BET_EDIT_WINDOW_MS) {
+    throw new BettingError('Fenêtre de modification expirée (3 min)', 'EDIT_WINDOW_EXPIRED');
+  }
+  if (!match || !isBettingOpen(match)) {
+    throw new BettingError('Les paris sont fermés sur ce match', 'BETTING_CLOSED');
+  }
+}
+
+/**
+ * Annule un pari encore dans sa fenêtre de 3 min : retire la mise du pool, passe
+ * le Bet en CANCELED et renvoie le montant à recréditer côté Wizebot (fait par
+ * l'API route après commit). `uniqueBettors` décrémente seulement si c'était le
+ * dernier pari PENDING du user sur ce match.
+ */
+export async function cancelBet(params: {
+  userId: string;
+  betId: string;
+}): Promise<{ refund: number; matchId: string; outcome: BetOutcome }> {
+  return prisma.$transaction(async (tx) => {
+    const bet = await tx.bet.findUnique({
+      where: { id: params.betId },
+      include: { match: { include: { bettingPool: true } } },
+    });
+    if (!bet) throw new BettingError('Pari introuvable', 'BET_NOT_FOUND');
+
+    assertBetEditable(bet, bet.match, params.userId);
+
+    const pool = bet.match.bettingPool;
+    if (pool) {
+      const others = await tx.bet.count({
+        where: {
+          matchId: bet.matchId,
+          userId: bet.userId,
+          status: BetStatus.PENDING,
+          id: { not: bet.id },
+        },
+      });
+      await tx.matchBettingPool.update({
+        where: { id: pool.id },
+        data: {
+          [poolFieldFor(bet.outcome)]: { decrement: bet.pointsWagered },
+          betCount: { decrement: 1 },
+          ...(others === 0 ? { uniqueBettors: { decrement: 1 } } : {}),
+        },
+      });
+    }
+
+    await tx.bet.update({
+      where: { id: bet.id },
+      data: { status: BetStatus.CANCELED },
+    });
+
+    return { refund: bet.pointsWagered, matchId: bet.matchId, outcome: bet.outcome };
+  });
+}
+
+/**
+ * Modifie un pari dans sa fenêtre de 3 min : change la mise et/ou l'issue.
+ * Re-répartit le pool en conséquence et renvoie le `delta` de mise (signé) pour
+ * que l'API route effectue le débit (delta > 0) ou le crédit (delta < 0) Wizebot.
+ *
+ * Le débit éventuel (augmentation) est fait AMONT par la route ; son txId est
+ * passé via `addedDebitTxId`. Changer d'issue n'est autorisé que si c'est le seul
+ * pari PENDING du user sur ce match (sinon on créerait une position éclatée sur
+ * deux issues, ce qu'interdit la règle "no switching sides").
+ */
+export async function applyBetModification(params: {
+  userId: string;
+  betId: string;
+  newOutcome: BetOutcome;
+  newPoints: number;
+  addedDebitTxId?: string;
+}): Promise<{
+  delta: number;
+  oddsAtPlacement: number;
+  outcome: BetOutcome;
+  pointsWagered: number;
+  matchId: string;
+}> {
+  if (!Number.isInteger(params.newPoints) || params.newPoints < MIN_BET_POINTS) {
+    throw new BettingError(`Mise minimum: ${MIN_BET_POINTS} pt`, 'MIN_BET');
+  }
+  if (params.newPoints > MAX_BET_POINTS) {
+    throw new BettingError(`Mise maximum: ${MAX_BET_POINTS} pts`, 'MAX_BET');
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const bet = await tx.bet.findUnique({
+      where: { id: params.betId },
+      include: { match: { include: { bettingPool: true } } },
+    });
+    if (!bet) throw new BettingError('Pari introuvable', 'BET_NOT_FOUND');
+
+    assertBetEditable(bet, bet.match, params.userId);
+
+    const match = bet.match;
+    const pool =
+      match.bettingPool ??
+      (await tx.matchBettingPool.create({ data: { matchId: match.id } }));
+
+    const outcomeChanged = params.newOutcome !== bet.outcome;
+    if (outcomeChanged) {
+      const others = await tx.bet.count({
+        where: {
+          matchId: match.id,
+          userId: bet.userId,
+          status: BetStatus.PENDING,
+          id: { not: bet.id },
+        },
+      });
+      if (others > 0) {
+        throw new BettingError(
+          "Tu as plusieurs paris sur ce match — annule les autres avant de changer d'issue.",
+          'OUTCOME_LOCKED_MULTI'
+        );
+      }
+    }
+
+    const delta = params.newPoints - bet.pointsWagered;
+
+    if (outcomeChanged) {
+      // Déplace l'ancienne mise vers la nouvelle issue (montant éventuellement changé).
+      await tx.matchBettingPool.update({
+        where: { id: pool.id },
+        data: {
+          [poolFieldFor(bet.outcome)]: { decrement: bet.pointsWagered },
+          [poolFieldFor(params.newOutcome)]: { increment: params.newPoints },
+        },
+      });
+    } else if (delta !== 0) {
+      await tx.matchBettingPool.update({
+        where: { id: pool.id },
+        data: { [poolFieldFor(params.newOutcome)]: { increment: delta } },
+      });
+    }
+
+    const freshPool = await tx.matchBettingPool.findUnique({ where: { id: pool.id } });
+    const odds = computeLiveOdds(freshPool!);
+    const oddsForOutcome =
+      params.newOutcome === BetOutcome.HOME_WIN
+        ? odds.home
+        : params.newOutcome === BetOutcome.DRAW
+          ? odds.draw
+          : odds.away;
+
+    const pickedTeamId =
+      params.newOutcome === BetOutcome.HOME_WIN
+        ? match.homeTeamId
+        : params.newOutcome === BetOutcome.AWAY_WIN
+          ? match.awayTeamId
+          : null;
+
+    await tx.bet.update({
+      where: { id: bet.id },
+      data: {
+        outcome: params.newOutcome,
+        pickedTeamId,
+        pointsWagered: params.newPoints,
+        oddsAtPlacement: oddsForOutcome ?? 1,
+        ...(params.addedDebitTxId ? { wizebotDebitTxId: params.addedDebitTxId } : {}),
+      },
+    });
+
+    return {
+      delta,
+      oddsAtPlacement: oddsForOutcome ?? 1,
+      outcome: params.newOutcome,
+      pointsWagered: params.newPoints,
+      matchId: match.id,
+    };
   });
 }
 

@@ -351,3 +351,71 @@
     border-radius: 2px;
   }
 }
+
+/* ===================================================================
+   /paris — « LE TOTEBOARD » : jetons d'identité scopés à la page Paris.
+   Métaphore du tableau de cotes en pari mutuel (tote board d'hippodrome) :
+   feutre vert-noir, chiffres ambre sodium, typographie de panneau de stade.
+   N'override PAS la typo globale du site — utilisé seulement par /paris.
+   =================================================================== */
+:root {
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-board: 'Spline Sans Mono', ui-monospace, 'Geist Mono', monospace;
+  /* Base quasi-noire (le vert ne doit PAS envahir la page) — l'identité vient
+     des chiffres ambre et de la typo, pas d'un lavis vert. */
+  --tote-base: #080809;
+  --tote-raised: #101113;
+  --tote-amber: #fbbf24;
+  --tote-chalk: #f1eee3;
+}
+
+.ff-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+.ff-board {
+  font-family: var(--font-board);
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Le feutre du tableau : noir profond + très léger halo ambre + trame de tissu.
+   Pas de vert dominant — juste une texture sombre qui laisse vivre les digits. */
+.bg-felt {
+  background-color: var(--tote-base);
+  background-image:
+    radial-gradient(115% 75% at 50% -20%, rgba(251, 191, 36, 0.045), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.009) 0 2px, transparent 2px 4px);
+}
+
+/* Cellule à clapet (split-flap) : digit ambre enchâssé, avec la couture centrale. */
+.flap-cell {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 4px;
+  background: linear-gradient(#0a0a0a, #141414);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--tote-amber);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -6px 10px rgba(0, 0, 0, 0.5);
+}
+.flap-cell::after {
+  content: '';
+  position: absolute;
+  inset-inline: 1px;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.85);
+  transform: translateY(-0.5px);
+}
+
+@keyframes tote-lamp {
+  0%, 100% { opacity: 1; box-shadow: 0 0 9px 1px rgba(255, 68, 56, 0.75); }
+  50% { opacity: 0.5; box-shadow: 0 0 2px 0 rgba(255, 68, 56, 0.25); }
+}
+.tote-lamp { animation: tote-lamp 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tote-lamp { animation: none; }
+}

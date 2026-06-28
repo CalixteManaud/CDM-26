@@ -13,10 +13,23 @@ type Match = Parameters<typeof MatchBetCard>[0]['match'];
  * direct ». Synchronise l'état avec l'URL (?tournoi=…&live=1) pour des liens
  * partageables, à la manière du filtre de /tournaments.
  */
-export function OpenMatchesFilter({ matches }: { matches: Match[] }) {
+export function OpenMatchesFilter({
+  matches,
+  userTwitchUsername = null,
+  onActivity,
+}: {
+  matches: Match[];
+  /** twitchUsername lié de l'user courant — transmis aux cartes pour le pari. */
+  userTwitchUsername?: string | null;
+  /** Notifie la page après un pari/modif (refresh wallet). */
+  onActivity?: () => void;
+}) {
   const router = useRouter();
   const [tournamentId, setTournamentId] = useState<string>('all');
   const [liveOnly, setLiveOnly] = useState(false);
+
+  // Deep-link ?bet=<matchId> → ouvre le dialog de pari de cette carte au mount.
+  const autoOpenId = typeof router.query.bet === 'string' ? router.query.bet : null;
 
   // Lit l'état initial depuis l'URL (au mount + sur navigation arrière/avant).
   useEffect(() => {
@@ -130,7 +143,12 @@ export function OpenMatchesFilter({ matches }: { matches: Match[] }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.03, 0.3) }}
             >
-              <MatchBetCard match={m} />
+              <MatchBetCard
+                match={m}
+                userTwitchUsername={userTwitchUsername}
+                defaultOpen={autoOpenId === m.id}
+                onActivity={onActivity}
+              />
             </motion.div>
           ))}
         </div>

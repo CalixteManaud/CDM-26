@@ -9,6 +9,7 @@
  */
 
 import prisma from '@/lib/prisma';
+import { BetStatus } from '@/prisma/prisma-client/enums';
 import {
   DAILY_POINT_QUOTA,
   PER_MATCH_POINT_QUOTA,
@@ -51,7 +52,13 @@ export async function getUserSpentToday(
   const [bets, marketBets, slipAgg] = await Promise.all([
     prisma.bet.groupBy({
       by: ['matchId'],
-      where: { userId, createdAt: { gte: since } },
+      // Les paris annulés (fenêtre 3 min) ou void (match annulé) rendent les
+      // points → ils ne doivent plus compter dans le quota du jour.
+      where: {
+        userId,
+        createdAt: { gte: since },
+        status: { notIn: [BetStatus.CANCELED, BetStatus.VOID] },
+      },
       _sum: { pointsWagered: true },
     }),
     prisma.marketBet.findMany({

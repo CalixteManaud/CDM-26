@@ -1,4 +1,5 @@
-import { Coins, Users, Lock, Flame, Radio } from 'lucide-react';
+import Link from 'next/link';
+import { Coins, Users, Lock, Flame, Radio, ArrowRight } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,6 @@ import { isBettingOpen, bettingPhase } from '@/lib/utils/odds';
 
 import { OddsDisplay, PoolDistributionBar } from './odds-display';
 import { RecentBetsFeed } from './recent-bets-feed';
-import { PlaceBetForm } from './place-bet-form';
 
 type Pool = {
   totalHomePool: number;
@@ -143,17 +143,26 @@ export function MatchBetWidget({
         </div>
       )}
 
-      {/* Form de pari + flux récent — toujours rendu si marché ouvert */}
+      {/* Pari → /paris (placement + édition se font sur la page Paris) */}
       <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_280px]">
         {open ? (
-          <PlaceBetForm
-            matchId={match.id}
-            homeShort={match.homeTeam.shortName}
-            awayShort={match.awayTeam.shortName}
-            pool={pool}
-            userTwitchUsername={userTwitchUsername}
-            alreadyBetSite={alreadyBetSite}
-          />
+          <Link
+            href={`/paris?bet=${match.id}`}
+            className="group flex items-center justify-between gap-4 rounded-2xl border border-yellow-500/40 bg-gradient-to-r from-emerald-500/10 via-yellow-500/10 to-red-500/10 px-5 py-4 hover:border-yellow-400/60 transition"
+          >
+            <div className="min-w-0">
+              <div className="text-sm font-black uppercase tracking-[0.16em] text-white flex items-center gap-2">
+                <Flame className="w-4 h-4 text-yellow-300" /> Parier sur ce match
+              </div>
+              <p className="text-[11px] text-white/55 mt-1 leading-relaxed">
+                Le placement et la modification des paris se font sur la page Paris.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.2em] text-yellow-300 shrink-0">
+              Aller parier
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </span>
+          </Link>
         ) : (
           total > 0 && (
             <div className="rounded-xl border border-white/10 bg-black/30 p-5">

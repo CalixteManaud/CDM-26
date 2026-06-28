@@ -1,10 +1,24 @@
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar, Coins, Users, ChevronRight, Tv, Radio } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Calendar, Coins, Users, ChevronRight, Tv, Radio, Ticket } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { isBettingOpen } from '@/lib/utils/odds';
 import { OddsDisplay, PoolDistributionBar } from './odds-display';
+import { PlaceBetForm } from './place-bet-form';
+import { MyMatchBets } from './my-match-bets';
+import { MatchMarketsLazy } from './match-markets-lazy';
 
 type Team = {
   id: string;
@@ -63,12 +77,38 @@ function TeamSide({ team, side }: { team: Team; side: 'L' | 'R' }) {
   );
 }
 
-export function MatchBetCard({ match }: { match: Match }) {
+export function MatchBetCard({
+  match,
+  userTwitchUsername = null,
+  defaultOpen = false,
+  onActivity,
+}: {
+  match: Match;
+  /** twitchUsername lié de l'user courant (null si pas lié). */
+  userTwitchUsername?: string | null;
+  /** Ouvre le dialog de pari au montage (deep-link ?bet=<matchId>). */
+  defaultOpen?: boolean;
+  /** Notifie le parent après un pari/modif pour rafraîchir le wallet de page. */
+  onActivity?: () => void;
+}) {
   const date = new Date(match.matchDate);
   const pool = match.bettingPool;
   const total = pool
     ? Number(pool.totalHomePool) + Number(pool.totalDrawPool) + Number(pool.totalAwayPool)
     : 0;
+  const open = isBettingOpen(match);
+
+  const [dialogOpen, setDialogOpen] = useState(defaultOpen);
+  // Signal de refresh partagé entre le formulaire (placement) et la liste éditable.
+  const [signal, setSignal] = useState(0);
+  const bump = () => {
+    setSignal((s) => s + 1);
+    onActivity?.();
+  };
+
+  useEffect(() => {
+    if (defaultOpen) setDialogOpen(true);
+  }, [defaultOpen]);
 
   return (
     <article className="group relative flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
@@ -149,6 +189,106 @@ export function MatchBetCard({ match }: { match: Match }) {
           </div>
         </div>
       </div>
+
+      {/* CTA pari — placement + édition se font ici, sur /paris */}
+      {open ? (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="ff-board mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--tote-amber)]/40 bg-[var(--tote-amber)]/[0.07] px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[var(--tote-amber)] transition hover:border-[var(--tote-amber)]/70 hover:bg-[var(--tote-amber)]/[0.13]"
+            >
+              <Ticket className="h-4 w-4" />
+              Parier
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-white/10 bg-[var(--tote-base)] p-0">
+            {/* Scorebug — l'en-tête du ticket */}
+            <div className="relative overflow-hidden border-b border-white/10 bg-black/40 px-6 pb-5 pt-6">
+              <div
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--tote-amber)]/70 to-transparent"
+              />
+              <div className="ff-board flex items-center justify-between text-[10px] uppercase tracking-[0.22em] text-white/45">
+                <span className="flex items-center gap-2">
+                  <span className="rounded border border-white/12 bg-black/40 px-1.5 py-0.5 text-white/60">
+                    {stageCode[match.stage] ?? match.stage}
+                  </span>
+                  <span className="truncate max-w-[150px]">{match.tournament.name}</span>
+                </span>
+                {match.status === 'LIVE' ? (
+                  <span className="flex items-center gap-1.5 text-red-300">
+                    <span className="tote-lamp inline-block h-1.5 w-1.5 rounded-full bg-red-500" /> Direct
+                  </span>
+                ) : (
+                  <span>{format(date, "dd MMM · HH'h'mm", { locale: fr })}</span>
+                )}
+              </div>
+
+              <DialogHeader className="mt-4 space-y-0">
+                <DialogTitle className="ff-display flex items-center justify-center gap-3 text-3xl font-black uppercase tracking-wide text-[var(--tote-chalk)] md:text-4xl">
+                  <Crest team={match.homeTeam} />
+                  <span>{match.homeTeam.shortName}</span>
+                  <span className="ff-board text-base font-normal text-white/25">vs</span>
+                  <span>{match.awayTeam.shortName}</span>
+                  <Crest team={match.awayTeam} />
+                </DialogTitle>
+                <DialogDescription className="ff-board pt-2 text-center text-[10px] uppercase tracking-[0.22em] text-white/40">
+                  Pari mutuel · {total.toLocaleString('fr-FR')} pts en jeu · {pool?.uniqueBettors ?? 0} parieurs
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            {/* Corps du ticket */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="space-y-5 px-6 pb-6 pt-5"
+            >
+              <PlaceBetForm
+                matchId={match.id}
+                homeShort={match.homeTeam.shortName}
+                awayShort={match.awayTeam.shortName}
+                pool={pool}
+                userTwitchUsername={userTwitchUsername}
+                onPlaced={bump}
+              />
+              <MyMatchBets
+                matchId={match.id}
+                homeShort={match.homeTeam.shortName}
+                awayShort={match.awayTeam.shortName}
+                refreshSignal={signal}
+                onChanged={bump}
+              />
+              {/* Marchés additionnels — déplacés depuis la page match */}
+              <MatchMarketsLazy matchId={match.id} refreshSignal={signal} />
+            </motion.div>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <div className="ff-board mt-1 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-center text-[10px] uppercase tracking-[0.22em] text-white/40">
+          Paris fermés sur ce match
+        </div>
+      )}
     </article>
+  );
+}
+
+function Crest({ team }: { team: Team }) {
+  if (team.logo) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={team.logo}
+        alt={team.name}
+        className="h-9 w-9 rounded-md border border-white/12 object-cover"
+      />
+    );
+  }
+  return (
+    <span className="ff-board grid h-9 w-9 place-items-center rounded-md border border-white/12 bg-white/5 text-[10px] font-bold text-white/55">
+      {team.shortName.slice(0, 3)}
+    </span>
   );
 }

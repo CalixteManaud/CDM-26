@@ -159,7 +159,7 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
   - **Mocké en dev** si la config manque (`WIZEBOT_API_KEY`), **erreur explicite en prod**.
 - **Twitch lié obligatoire** : un user qui veut parier DOIT avoir `User.twitchUsername` set (sinon les API routes renvoient `NO_TWITCH_LINK`). Le lien est posé via Clerk OAuth ou saisie manuelle sur `/profile`.
 - **Pari mutuel** : aucune cote stockée. Les odds sont calculées dynamiquement depuis `MatchBettingPool` via `computeLiveOdds(pool)` — formule `(total / poolX) × (1 - housePercentage/100)`.
-- **Verrouillage** : `isBettingOpen(match)` = `SCHEDULED && now < matchDate` OU `LIVE && now < matchDate + 25min` (fenêtre live betting). Pas de flag stocké.
+- **Verrouillage** : `isBettingOpen(match)` = `SCHEDULED && now < matchDate` uniquement. **Modèle pre-match only** : dès que le match passe en `LIVE` (ou que l'horaire est dépassé), les paris ferment. Pas de flag stocké, pas de fenêtre live betting.
 - **Qui peut parier** : tout user authentifié avec Twitch lié (admins inclus), SAUF :
   - Tout `Player` inscrit dans une équipe du tournoi concerné (info privilégiée)
   - Tout `Team.coachUserId` d'une équipe du tournoi concerné

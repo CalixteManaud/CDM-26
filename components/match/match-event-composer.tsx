@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   Goal,
@@ -13,6 +14,8 @@ import {
   Send,
   Clock,
   Megaphone,
+  Zap,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useMatchInputMode } from '@/hooks/use-match-input-mode';
 
 type EventType =
   | 'MATCH_STARTED'
@@ -79,6 +83,256 @@ export function MatchEventComposer({
   awayPlayers: Player[];
 }) {
   const router = useRouter();
+  const [mode] = useMatchInputMode();
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // POST partagé entre la saisie rapide et la console complète.
+  const postEvent = async (payload: {
+    type: EventType;
+    teamId?: string | null;
+    playerId?: string | null;
+    minute?: number | null;
+    description?: string | null;
+  }) => {
+    const res = await fetch(`/api/matches/${matchId}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: payload.type,
+        minute: payload.minute ?? null,
+        teamId: payload.teamId ?? null,
+        playerId: payload.playerId ?? null,
+        description: payload.description ?? null,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error ?? 'Erreur');
+    router.replace(router.asPath, undefined, { scroll: false });
+    return json;
+  };
+
+  const simple = mode === 'simple';
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 md:p-6">
+      <div className="flex items-start gap-3 mb-5">
+        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0">
+          <Flag className="w-4 h-4 text-purple-300" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-purple-300 mb-1.5">
+            § Console événements {simple ? '· mode simple' : ''}
+          </div>
+          <h3 className="text-base md:text-lg font-black text-white tracking-tight">
+            Publier un événement
+          </h3>
+          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/40 mt-1">
+            / chaque event toast tous les viewers en direct
+          </p>
+        </div>
+      </div>
+
+      {/* Saisie rapide (mode simple) : juste les buts, en 2 taps */}
+      {simple && (
+        <QuickGoal
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          homePlayers={homePlayers}
+          awayPlayers={awayPlayers}
+          onGoal={(teamId, playerId) =>
+            postEvent({ type: 'GOAL', teamId, playerId })
+          }
+        />
+      )}
+
+      {/* Bascule vers les options détaillées sans quitter le mode simple */}
+      {simple && (
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((s) => !s)}
+          className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.2em] text-white/45 hover:text-white/80 transition"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          {showAdvanced ? 'Masquer les options' : 'Plus d’options (cartons, remplacements…)'}
+        </button>
+      )}
+
+      {/* Console complète : toujours en mode complet, ou à la demande en simple */}
+      {(!simple || showAdvanced) && (
+        <div className={cn(simple && 'mt-4 border-t border-white/10 pt-5')}>
+          <AdvancedComposer
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            homePlayers={homePlayers}
+            awayPlayers={awayPlayers}
+            postEvent={postEvent}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────── Saisie rapide d'un but ─────────────────────────── */
+
+function QuickGoal({
+  homeTeam,
+  awayTeam,
+  homePlayers,
+  awayPlayers,
+  onGoal,
+}: {
+  homeTeam: Team;
+  awayTeam: Team;
+  homePlayers: Player[];
+  awayPlayers: Player[];
+  onGoal: (teamId: string, playerId: string) => Promise<unknown>;
+}) {
+  const [side, setSide] = useState<'HOME' | 'AWAY' | null>(null);
+  const [pendingPlayer, setPendingPlayer] = useState<string | null>(null);
+
+  const team = side === 'HOME' ? homeTeam : awayTeam;
+  const players = side === 'HOME' ? homePlayers : awayPlayers;
+
+  const scoreGoal = async (playerId: string) => {
+    setPendingPlayer(playerId);
+    try {
+      await onGoal(team.id, playerId);
+      const p = players.find((pl) => pl.id === playerId);
+      toast.success(`⚽ But — ${team.shortName} · ${p ? p.user.name : ''}`);
+      setSide(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erreur réseau');
+    } finally {
+      setPendingPlayer(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 gap-3">
+        <GoalButton
+          label={homeTeam.shortName}
+          accent="emerald"
+          active={side === 'HOME'}
+          onClick={() => setSide((s) => (s === 'HOME' ? null : 'HOME'))}
+        />
+        <GoalButton
+          label={awayTeam.shortName}
+          accent="red"
+          active={side === 'AWAY'}
+          onClick={() => setSide((s) => (s === 'AWAY' ? null : 'AWAY'))}
+        />
+      </div>
+
+      {side && (
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/30 p-3">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 font-bold mb-2.5">
+            Buteur · {team.shortName}
+          </div>
+          {players.length === 0 ? (
+            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/[0.07] px-3 py-2.5">
+              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-yellow-300 font-bold flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                Aucun joueur
+              </p>
+              <p className="mt-1 text-[11px] text-white/55 leading-relaxed">
+                {team.shortName} n&apos;a pas d&apos;effectif enregistré.{' '}
+                <Link
+                  href={`/teams/${team.id}/add-player`}
+                  className="text-yellow-300 underline underline-offset-2 hover:text-yellow-200"
+                >
+                  Ajouter des joueurs
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {players.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={pendingPlayer !== null}
+                  onClick={() => scoreGoal(p.id)}
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-all disabled:opacity-40',
+                    'border-white/10 bg-white/[0.03] hover:border-emerald-500/50 hover:bg-emerald-500/10'
+                  )}
+                >
+                  <span className="font-mono font-black tabular-nums text-sm text-white/85 w-6 shrink-0">
+                    {pendingPlayer === p.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-300" />
+                    ) : (
+                      `#${p.jerseyNumber}`
+                    )}
+                  </span>
+                  <span className="text-[12px] text-white/75 truncate">{p.user.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GoalButton({
+  label,
+  accent,
+  active,
+  onClick,
+}: {
+  label: string;
+  accent: 'emerald' | 'red';
+  active: boolean;
+  onClick: () => void;
+}) {
+  const tone =
+    accent === 'emerald'
+      ? active
+        ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-200'
+        : 'border-emerald-500/25 bg-emerald-500/[0.06] text-emerald-300 hover:bg-emerald-500/12'
+      : active
+        ? 'border-red-500/60 bg-red-500/15 text-red-200'
+        : 'border-red-500/25 bg-red-500/[0.06] text-red-300 hover:bg-red-500/12';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex items-center justify-center gap-2 rounded-xl border px-4 py-4 font-black uppercase tracking-[0.16em] text-sm transition-all',
+        tone
+      )}
+    >
+      <Zap className="w-4 h-4" />
+      +1 but {label}
+    </button>
+  );
+}
+
+/* ─────────────────────────── Console complète (historique) ─────────────────────────── */
+
+function AdvancedComposer({
+  homeTeam,
+  awayTeam,
+  homePlayers,
+  awayPlayers,
+  postEvent,
+}: {
+  homeTeam: Team;
+  awayTeam: Team;
+  homePlayers: Player[];
+  awayPlayers: Player[];
+  postEvent: (payload: {
+    type: EventType;
+    teamId?: string | null;
+    playerId?: string | null;
+    minute?: number | null;
+    description?: string | null;
+  }) => Promise<unknown>;
+}) {
   const [type, setType] = useState<EventType>('GOAL');
   const [teamSide, setTeamSide] = useState<'HOME' | 'AWAY'>('HOME');
   const [playerId, setPlayerId] = useState<string>('');
@@ -107,25 +361,15 @@ export function MatchEventComposer({
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/matches/${matchId}/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          minute: minute || null,
-          teamId: meta.needsTeam ? team.id : null,
-          playerId: meta.needsPlayer ? playerId : null,
-          description: description || null,
-        }),
+      await postEvent({
+        type,
+        minute: minute ? Number(minute) : null,
+        teamId: meta.needsTeam ? team.id : null,
+        playerId: meta.needsPlayer ? playerId : null,
+        description: description || null,
       });
-      const json = await res.json();
-      if (!res.ok) {
-        toast.error(json.error ?? 'Erreur');
-        return;
-      }
       toast.success(`Event publié — ${meta.label}`);
       reset();
-      router.replace(router.asPath, undefined, { scroll: false });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Erreur réseau');
     } finally {
@@ -134,24 +378,7 @@ export function MatchEventComposer({
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 md:p-6">
-      <div className="flex items-start gap-3 mb-5">
-        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0">
-          <Flag className="w-4 h-4 text-purple-300" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-purple-300 mb-1.5">
-            § Console événements
-          </div>
-          <h3 className="text-base md:text-lg font-black text-white tracking-tight">
-            Publier un événement
-          </h3>
-          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/40 mt-1">
-            / chaque event toast tous les viewers en direct
-          </p>
-        </div>
-      </div>
-
+    <>
       {/* Type chips */}
       <div className="flex flex-wrap gap-1.5 mb-4">
         {EVENT_OPTIONS.map((opt) => {
@@ -224,23 +451,37 @@ export function MatchEventComposer({
             <label className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/45 font-bold">
               Joueur ({team.shortName})
             </label>
-            <Select value={playerId} onValueChange={setPlayerId}>
-              <SelectTrigger className="mt-1.5 bg-white/5 border-white/15">
-                <SelectValue placeholder="Choisir…" />
-              </SelectTrigger>
-              <SelectContent>
-                {players.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    #{p.jerseyNumber} {p.user.name}
-                  </SelectItem>
-                ))}
-                {players.length === 0 && (
-                  <SelectItem value="_" disabled>
-                    Aucun joueur
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            {players.length === 0 ? (
+              <div className="mt-1.5 rounded-lg border border-yellow-500/30 bg-yellow-500/[0.07] px-3 py-2.5">
+                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-yellow-300 font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  Aucun joueur
+                </p>
+                <p className="mt-1 text-[11px] text-white/55 leading-relaxed">
+                  {team.shortName} n&apos;a pas d&apos;effectif enregistré.{' '}
+                  <Link
+                    href={`/teams/${team.id}/add-player`}
+                    className="text-yellow-300 underline underline-offset-2 hover:text-yellow-200"
+                  >
+                    Ajouter des joueurs
+                  </Link>
+                  {' '}pour pouvoir publier ce type d&apos;événement.
+                </p>
+              </div>
+            ) : (
+              <Select value={playerId} onValueChange={setPlayerId}>
+                <SelectTrigger className="mt-1.5 bg-white/5 border-white/15">
+                  <SelectValue placeholder="Choisir…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {players.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      #{p.jerseyNumber} {p.user.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         ) : (
           <div className="hidden md:block" />
@@ -298,6 +539,6 @@ export function MatchEventComposer({
           )}
         </Button>
       </div>
-    </div>
+    </>
   );
 }

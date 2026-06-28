@@ -1,6 +1,6 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
-import { useState, useTransition, useEffect, useRef } from 'react';
+import { useState, useTransition, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
@@ -25,6 +25,7 @@ import {
   Crown,
   Swords,
   Radio,
+  History,
 } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -44,11 +45,11 @@ import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { Ripple } from '@/components/ui/ripple';
 import { MatchBetWidget } from '@/components/betting/match-bet-widget';
-import { MatchMarketsList } from '@/components/betting/match-markets-list';
-import type { Market } from '@/components/betting/market-card';
 import { LivePoller } from '@/components/betting/live-poller';
 import { MatchStatusSwitcher } from '@/components/match/match-status-switcher';
 import { MatchEventComposer } from '@/components/match/match-event-composer';
+import { MatchInputModeToggle } from '@/components/match/match-input-mode-toggle';
+import { useMatchInputMode } from '@/hooks/use-match-input-mode';
 import { MatchEventFeed } from '@/components/match/match-event-feed';
 import type { MatchEvent as MatchEventRow } from '@/components/match/match-event-feed';
 import { StreamEmbed } from '@/components/match/stream-embed';
@@ -102,7 +103,6 @@ type PageProps = {
   match: Match | null;
   betting: BettingDetails;
   userBetting: UserBettingState;
-  markets: Market[];
   events: MatchEventRow[];
 };
 
@@ -131,14 +131,12 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
 
   const { getMatchById } = await import('@/actions/matches');
   const { getMatchBettingDetails, getUserBetStatusForMatch } = await import('@/actions/betting');
-  const { getMatchMarkets } = await import('@/actions/markets');
   const { getMatchEvents } = await import('@/actions/match-events');
   const { getCurrentDbUserFromReq } = await import('@/lib/auth/page-auth');
 
-  const [result, bettingRes, marketsRes, eventsRes, dbUser] = await Promise.all([
+  const [result, bettingRes, eventsRes, dbUser] = await Promise.all([
     getMatchById(matchId),
     getMatchBettingDetails(matchId),
-    getMatchMarkets(matchId),
     getMatchEvents(matchId),
     getCurrentDbUserFromReq(ctx.req),
   ]);
@@ -162,10 +160,6 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
           ? JSON.parse(JSON.stringify(bettingRes.data))
           : null,
       userBetting,
-      markets:
-        marketsRes.success && marketsRes.data
-          ? JSON.parse(JSON.stringify(marketsRes.data))
-          : [],
       events:
         eventsRes.success && eventsRes.data
           ? JSON.parse(JSON.stringify(eventsRes.data))
@@ -249,6 +243,66 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   });
 
   const [playerStats, setPlayerStats] = useState<PlayerStat[]>([]);
+  // Bump à chaque dérivation depuis le live → force le remount du PlayerStatsForm
+  // (son état interne est initialisé une fois depuis initialStats).
+  const [statsVersion, setStatsVersion] = useState(0);
+  const [inputMode] = useMatchInputMode();
+  const didAutoDerive = useRef(false);
+
+  // Reprend le score + les stats joueurs à partir des events déjà logués en
+  // direct : un but logué = +1 au score de l'équipe + 1 but pour le joueur.
+  // L'admin n'a plus à tout re-saisir — il vérifie et valide.
+  const deriveFromLive = useCallback(() => {
+    const m = props.match;
+    if (!m) return { home: 0, away: 0, goals: 0 };
+    let home = 0;
+    let away = 0;
+    const map = new Map<string, PlayerStat>();
+    const bump = (pid: string, field: keyof Omit<PlayerStat, 'playerId'>) => {
+      const cur = map.get(pid) ?? { playerId: pid, goals: 0, assists: 0, yellowCards: 0, redCards: 0 };
+      cur[field] += 1;
+      map.set(pid, cur);
+    };
+    let goals = 0;
+    for (const e of props.events) {
+      const teamId = e.team?.id ?? null;
+      const pid = e.player?.id ?? null;
+      if (e.type === 'GOAL' || e.type === 'PENALTY_SCORED') {
+        goals += 1;
+        if (teamId === m.homeTeam.id) home += 1;
+        else if (teamId === m.awayTeam.id) away += 1;
+        if (pid) bump(pid, 'goals');
+      } else if (e.type === 'OWN_GOAL') {
+        // But contre son camp : compte pour l'adversaire, pas de but personnel.
+        goals += 1;
+        if (teamId === m.homeTeam.id) away += 1;
+        else if (teamId === m.awayTeam.id) home += 1;
+      } else if (e.type === 'YELLOW_CARD') {
+        if (pid) bump(pid, 'yellowCards');
+      } else if (e.type === 'RED_CARD') {
+        if (pid) bump(pid, 'redCards');
+      }
+    }
+    setFormData({ homeScore: String(home), awayScore: String(away) });
+    setPlayerStats(Array.from(map.values()));
+    setStatsVersion((v) => v + 1);
+    return { home, away, goals };
+  }, [props.match, props.events]);
+
+  // Mode simple : pré-remplit automatiquement une fois si le score est vierge
+  // et que des buts ont déjà été logués en direct.
+  useEffect(() => {
+    if (didAutoDerive.current) return;
+    if (inputMode !== 'simple') return;
+    if (!props.match) return;
+    if (formData.homeScore !== '' || formData.awayScore !== '') return;
+    const hasGoals = props.events.some(
+      (e) => e.type === 'GOAL' || e.type === 'PENALTY_SCORED' || e.type === 'OWN_GOAL'
+    );
+    if (!hasGoals) return;
+    didAutoDerive.current = true;
+    deriveFromLive();
+  }, [inputMode, props.match, props.events, formData.homeScore, formData.awayScore, deriveFromLive]);
 
   const [editingStream, setEditingStream] = useState(false);
   const [streamData, setStreamData] = useState({
@@ -324,19 +378,24 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
       return;
     }
 
-    const homeGoals = playerStats
-      .filter((s) => match.homeTeam.players.some((p) => p.id === s.playerId))
-      .reduce((sum, s) => sum + s.goals, 0);
-    const awayGoals = playerStats
-      .filter((s) => match.awayTeam.players.some((p) => p.id === s.playerId))
-      .reduce((sum, s) => sum + s.goals, 0);
-
-    if (homeGoals !== homeScore || awayGoals !== awayScore) {
-      toast.error(`Buts saisis (${homeGoals}-${awayGoals}) ≠ score (${homeScore}-${awayScore})`);
-      return;
-    }
-
     const validPlayerStats = playerStats.filter((s) => s.playerId !== '');
+
+    // Les buteurs sont optionnels. Mais si on en saisit, leur total doit
+    // correspondre au score (sinon les stats seraient incohérentes). Un score
+    // sans aucun buteur reste accepté — utile pour aller vite.
+    if (validPlayerStats.length > 0) {
+      const homeGoals = validPlayerStats
+        .filter((s) => match.homeTeam.players.some((p) => p.id === s.playerId))
+        .reduce((sum, s) => sum + s.goals, 0);
+      const awayGoals = validPlayerStats
+        .filter((s) => match.awayTeam.players.some((p) => p.id === s.playerId))
+        .reduce((sum, s) => sum + s.goals, 0);
+
+      if (homeGoals !== homeScore || awayGoals !== awayScore) {
+        toast.error(`Buts saisis (${homeGoals}-${awayGoals}) ≠ score (${homeScore}-${awayScore})`);
+        return;
+      }
+    }
 
     startTransition(async () => {
       try {
@@ -579,6 +638,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
             {/* Pilotage admin/coach — status + event composer */}
             {canEditMatch && (
               <>
+                <MatchInputModeToggle />
                 <MatchStatusSwitcher matchId={match.id} currentStatus={match.status as 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED'} hasScore={match.homeScore !== null && match.awayScore !== null} />
                 {match.status === 'LIVE' && (
                   <MatchEventComposer
@@ -609,11 +669,6 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
               />
             )}
 
-            {/* Marchés additionnels (score exact, total buts, BTTS) */}
-            {!isDisqualified && props.markets.length > 0 && (
-              <MatchMarketsList markets={props.markets} />
-            )}
-
             {/* Submit result */}
             {canEditMatch && (
               <Card className="relative overflow-hidden bg-white/2 border-white/10 p-7 md:p-8">
@@ -637,6 +692,25 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Reprendre depuis le live — pré-remplit score + buteurs depuis
+                      les events déjà logués, pour éviter la double saisie. */}
+                  {props.events.some(
+                    (e) =>
+                      e.type === 'GOAL' || e.type === 'PENALTY_SCORED' || e.type === 'OWN_GOAL'
+                  ) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const { home, away } = deriveFromLive();
+                        toast.success(`Repris du live — score ${home}-${away}`);
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.07] px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-300 transition hover:border-emerald-500/60 hover:bg-emerald-500/12"
+                    >
+                      <History className="w-4 h-4" />
+                      Reprendre depuis le live
+                    </button>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     <ScoreInput
                       id="homeScore"
@@ -668,9 +742,11 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                         </span>
                       </div>
                       <p className="text-xs text-white/55 mb-4 leading-relaxed">
-                        Saisis les buteurs, passeurs et cartons. La somme des buts doit correspondre au score.
+                        Optionnel — tu peux valider le score sans détailler les buteurs. Si tu en
+                        saisis, la somme des buts doit correspondre au score.
                       </p>
                       <PlayerStatsForm
+                        key={statsVersion}
                         homeTeam={match.homeTeam}
                         awayTeam={match.awayTeam}
                         homeScore={Number(formData.homeScore)}

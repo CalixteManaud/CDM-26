@@ -13,6 +13,7 @@ import { canManageTeam } from '@/lib/utils/permissions';
 export async function getAllTeams() {
   try {
     const teams = await prisma.team.findMany({
+      where: { tournament: { archivedAt: null } },
       include: {
         group: true,
         tournament: {

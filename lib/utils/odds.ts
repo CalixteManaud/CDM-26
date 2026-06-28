@@ -12,6 +12,14 @@
 export const MIN_BET_POINTS = 1;
 export const MAX_BET_POINTS = 10_000;
 
+/**
+ * Fenêtre pendant laquelle un pari fraîchement placé reste modifiable / annulable
+ * par son auteur (3 min après `Bet.createdAt`). Au-delà, ou si les paris du match
+ * se ferment avant, le pari est figé. Appliqué côté serveur (autoritatif) ET
+ * affiché en compte à rebours côté client.
+ */
+export const BET_EDIT_WINDOW_MS = 3 * 60 * 1000;
+
 export type LiveOdds = {
   home: number | null;
   draw: number | null;
@@ -48,50 +56,33 @@ export function computeLiveOdds(pool: {
 }
 
 /**
- * Fenêtre live betting : on continue d'accepter des paris jusqu'à
- * `matchDate + LIVE_WINDOW_MINUTES`. À régler selon la durée moyenne d'un
- * match FIFA 26 (mi-temps + temps additionnel inclus).
- */
-const LIVE_WINDOW_MINUTES = 25;
-
-/**
  * Vrai si le match accepte encore des paris.
- * Logique :
+ * Modèle pre-match uniquement : les paris ferment au coup d'envoi.
  *  - SCHEDULED → ouvert tant qu'on est avant matchDate
- *  - LIVE → ouvert pendant la fenêtre live (matchDate + LIVE_WINDOW_MINUTES)
- *  - sinon → fermé
+ *  - LIVE (ou tout autre statut) → fermé
+ * Dès que le match est lancé, plus aucun pari n'est accepté.
  */
 export function isBettingOpen(match: {
   status: string;
   matchDate: Date | string;
 }): boolean {
-  const md = new Date(match.matchDate).getTime();
-  const now = Date.now();
-  if (match.status === 'SCHEDULED') return now < md;
-  if (match.status === 'LIVE') {
-    return now < md + LIVE_WINDOW_MINUTES * 60 * 1000;
-  }
-  return false;
+  if (match.status !== 'SCHEDULED') return false;
+  return Date.now() < new Date(match.matchDate).getTime();
 }
 
 /**
  * Phase courante du marché 1X2 sur ce match.
- *  - 'PRE'   → avant le coup d'envoi (cotes "stables")
- *  - 'LIVE'  → match en cours (cotes mouvantes — polling recommandé côté UI)
- *  - 'CLOSED' → match terminé / annulé / fermé
+ *  - 'PRE'   → avant le coup d'envoi, paris ouverts
+ *  - 'LIVE'  → match en cours (paris fermés, cotes figées en lecture seule)
+ *  - 'CLOSED' → match terminé / annulé / horaire dépassé sans lancement
  */
 export function bettingPhase(match: {
   status: string;
   matchDate: Date | string;
 }): 'PRE' | 'LIVE' | 'CLOSED' {
-  const md = new Date(match.matchDate).getTime();
-  const now = Date.now();
-  if (match.status === 'SCHEDULED' && now < md) return 'PRE';
-  if (
-    match.status === 'LIVE' &&
-    now < md + LIVE_WINDOW_MINUTES * 60 * 1000
-  ) {
-    return 'LIVE';
+  if (match.status === 'SCHEDULED' && Date.now() < new Date(match.matchDate).getTime()) {
+    return 'PRE';
   }
+  if (match.status === 'LIVE') return 'LIVE';
   return 'CLOSED';
 }
