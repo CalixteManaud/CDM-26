@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   ChevronRight,
   CircleDot,
+  ClipboardCheck,
+  Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -231,6 +233,18 @@ export default function AdminDashboardPage(
                     <CircleDot className="w-3 h-3 mr-1" /> Saison 2026
                   </Badge>
                   <SystemHealthBadge />
+                  <Link
+                    href="/admin/matchs-a-revoir"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-300 uppercase tracking-[0.22em] text-[10px] font-mono hover:bg-amber-500/15 transition"
+                  >
+                    <ClipboardCheck className="w-3 h-3" /> Matchs à revoir
+                  </Link>
+                  <Link
+                    href="/admin/tresorerie"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono hover:bg-yellow-500/15 transition"
+                  >
+                    <Wallet className="w-3 h-3" /> Trésorerie
+                  </Link>
                 </motion.div>
               </div>
             </motion.div>

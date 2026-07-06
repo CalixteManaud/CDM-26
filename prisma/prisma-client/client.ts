@@ -102,6 +102,16 @@ export type Bet = Prisma.BetModel
  */
 export type PendingRefund = Prisma.PendingRefundModel
 /**
+ * Model PointTransfer
+ * 
+ */
+export type PointTransfer = Prisma.PointTransferModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
  * Model BettingMarket
  * 
  */

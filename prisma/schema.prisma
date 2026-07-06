@@ -51,6 +51,9 @@ model User {
   marketBets    MarketBet[]     @relation("MarketBetUser")
   betSlips      BetSlip[]       @relation("BetSlipUser")
   pendingRefunds PendingRefund[] @relation("UserRefunds")
+  transfersSent     PointTransfer[] @relation("TransfersSent")
+  transfersReceived PointTransfer[] @relation("TransfersReceived")
+  notifications     Notification[]  @relation("UserNotifications")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -459,6 +462,81 @@ model PendingRefund {
 
   @@index([status])
   @@index([userId])
+}
+
+// =================== TRANSFERT DE POINTS ===================
+//
+// Un user peut donner une partie de ses points de chaîne Wizebot à un autre
+// user CDM 26 (identifié par son pseudo). Le transfert = débit Wizebot de
+// l'expéditeur + crédit Wizebot du destinataire, avec re-crédit de l'expéditeur
+// si le crédit échoue. PointTransfer garde la trace (audit + historique).
+
+enum TransferStatus {
+  COMPLETED // débit expéditeur + crédit destinataire OK
+  REFUNDED  // crédit destinataire échoué → expéditeur re-crédité
+  FAILED    // crédit ET re-crédit échoués → PendingRefund créé (rejoué par le cron)
+}
+
+model PointTransfer {
+  id String @id @default(uuid()) @db.Uuid
+
+  senderId String @db.Uuid
+  sender   User   @relation("TransfersSent", fields: [senderId], references: [id], onDelete: Restrict)
+
+  recipientId String @db.Uuid
+  recipient   User   @relation("TransfersReceived", fields: [recipientId], references: [id], onDelete: Restrict)
+
+  // Snapshots des comptes Twitch au moment du transfert (résistants aux renommages)
+  senderTwitch    String
+  recipientTwitch String
+
+  amount Int
+  note   String? // message optionnel de l'expéditeur
+
+  status TransferStatus @default(COMPLETED)
+
+  debitTxId  String? // tx Wizebot du débit expéditeur
+  creditTxId String? // tx Wizebot du crédit destinataire
+  error      String? // détail en cas d'échec
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+// =================== NOTIFICATIONS ===================
+//
+// Notifs in-app légères : transfert reçu, pari gagné, remboursement, échec de
+// crédit. Affichées dans la cloche du header. Créées en fire-and-forget par les
+// flux serveur (transferPoints, settleMatchBets) — jamais bloquantes.
+
+enum NotificationType {
+  TRANSFER_RECEIVED  // tu as reçu des points d'un autre membre
+  BET_WON            // un de tes paris est gagnant (crédité)
+  BET_REFUNDED       // pari remboursé (match annulé)
+  BET_CREDIT_FAILED  // gain en attente de crédit (Wizebot down / Twitch délié)
+  SYSTEM             // message générique
+}
+
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  type  NotificationType
+  title String
+  body  String
+  href  String? // lien cliquable (ex: /paris/mes-paris)
+  read  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 // =================== MARCHÉS FLEXIBLES ===================

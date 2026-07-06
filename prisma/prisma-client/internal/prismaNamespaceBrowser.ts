@@ -63,6 +63,8 @@ export const ModelName = {
   MatchBettingPool: 'MatchBettingPool',
   Bet: 'Bet',
   PendingRefund: 'PendingRefund',
+  PointTransfer: 'PointTransfer',
+  Notification: 'Notification',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -296,6 +298,39 @@ export const PendingRefundScalarFieldEnum = {
 } as const
 
 export type PendingRefundScalarFieldEnum = (typeof PendingRefundScalarFieldEnum)[keyof typeof PendingRefundScalarFieldEnum]
+
+
+export const PointTransferScalarFieldEnum = {
+  id: 'id',
+  senderId: 'senderId',
+  recipientId: 'recipientId',
+  senderTwitch: 'senderTwitch',
+  recipientTwitch: 'recipientTwitch',
+  amount: 'amount',
+  note: 'note',
+  status: 'status',
+  debitTxId: 'debitTxId',
+  creditTxId: 'creditTxId',
+  error: 'error',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PointTransferScalarFieldEnum = (typeof PointTransferScalarFieldEnum)[keyof typeof PointTransferScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  title: 'title',
+  body: 'body',
+  href: 'href',
+  read: 'read',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
 
 
 export const BettingMarketScalarFieldEnum = {

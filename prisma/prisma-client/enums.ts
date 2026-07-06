@@ -81,6 +81,26 @@ export const RefundStatus = {
 export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus]
 
 
+export const TransferStatus = {
+  COMPLETED: 'COMPLETED',
+  REFUNDED: 'REFUNDED',
+  FAILED: 'FAILED'
+} as const
+
+export type TransferStatus = (typeof TransferStatus)[keyof typeof TransferStatus]
+
+
+export const NotificationType = {
+  TRANSFER_RECEIVED: 'TRANSFER_RECEIVED',
+  BET_WON: 'BET_WON',
+  BET_REFUNDED: 'BET_REFUNDED',
+  BET_CREDIT_FAILED: 'BET_CREDIT_FAILED',
+  SYSTEM: 'SYSTEM'
+} as const
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
+
+
 export const BettingMarketType = {
   MATCH_EXACT_SCORE: 'MATCH_EXACT_SCORE',
   MATCH_TOTAL_GOALS: 'MATCH_TOTAL_GOALS',

@@ -4,7 +4,7 @@
 // Limites de mise unitaire sur un marché flexible (points de chaîne Wizebot).
 // Client-safe : consommées par les formulaires ET par actions/markets.ts.
 export const MIN_MARKET_STAKE = 50;
-export const MAX_MARKET_STAKE = 10_000;
+export const MAX_MARKET_STAKE = 50_000;
 
 // On déclare le type localement pour éviter de dépendre du prisma-client
 // dans les bundles client (et casser le build avant `prisma generate`).

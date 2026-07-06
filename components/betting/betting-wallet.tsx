@@ -6,6 +6,7 @@ import { Coins, Wallet, CalendarClock, RefreshCw, Link2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { DAILY_POINT_QUOTA } from '@/lib/utils/quota';
+import { MAX_BET_POINTS } from '@/lib/utils/odds';
 
 type Props = {
   /** Incrémenté par le parent après un pari/modif pour rafraîchir solde + quota. */
@@ -127,7 +128,7 @@ export function BettingWallet({ refreshSignal = 0, className }: Props) {
       <div className="flex items-center gap-2 px-5 py-2 border-t border-white/10 bg-black/20">
         <Coins className="w-3 h-3 text-yellow-400/60" />
         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">
-          Quota {DAILY_POINT_QUOTA.toLocaleString('fr-FR')} pts/jour · max 10 000 pts/pari · points de chaîne Twitch
+          Quota {DAILY_POINT_QUOTA.toLocaleString('fr-FR')} pts/jour · max {MAX_BET_POINTS.toLocaleString('fr-FR')} pts/pari · points de chaîne Twitch
         </span>
       </div>
     </div>

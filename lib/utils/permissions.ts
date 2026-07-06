@@ -216,6 +216,25 @@ export async function canUserBetOnMarket(
 }
 
 /**
+ * Vrai si l'user est joueur inscrit OU coach d'une équipe dans un tournoi encore
+ * actif (non archivé). Utilisé pour bloquer les transferts de points d'un
+ * "initié" vers un prête-nom qui parierait à sa place (intégrité des paris).
+ */
+export async function isActiveTournamentInsider(userId: string): Promise<boolean> {
+  const [player, coach] = await Promise.all([
+    prisma.player.findFirst({
+      where: { userId, team: { tournament: { archivedAt: null } } },
+      select: { id: true },
+    }),
+    prisma.team.findFirst({
+      where: { coachUserId: userId, tournament: { archivedAt: null } },
+      select: { id: true },
+    }),
+  ]);
+  return !!(player || coach);
+}
+
+/**
  * Helper pour produire un message FR lisible à partir d'un refus.
  */
 export function betRefusalMessage(reason: BetRefusal): string {

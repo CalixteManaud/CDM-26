@@ -8,10 +8,10 @@
  */
 
 /** Total de points qu'un user peut engager par jour, tous paris confondus. */
-export const DAILY_POINT_QUOTA = 10_000;
+export const DAILY_POINT_QUOTA = 100_000;
 
 /** Total de points qu'un user peut engager sur un même match (1X2 + marchés). */
-export const PER_MATCH_POINT_QUOTA = 5_000;
+export const PER_MATCH_POINT_QUOTA = 50_000;
 
 /** Fuseau de référence pour le « jour » de remise à zéro du quota. */
 export const QUOTA_TIMEZONE = 'Europe/Paris';

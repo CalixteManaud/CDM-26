@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
@@ -39,6 +39,9 @@ type Props = {
 
 const PRESETS = [50, 100, 500, 1000];
 
+/** Au-dessus de ce montant, on demande une confirmation explicite (jeu responsable). */
+const LARGE_BET_CONFIRM = 10_000;
+
 type Outcome = 'HOME' | 'DRAW' | 'AWAY';
 
 const OUTCOME_META: Record<Outcome, { idx: string; ring: string; chip: string; text: string }> = {
@@ -75,7 +78,13 @@ export function PlaceBetForm({
   const { isSignedIn } = useUser();
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [points, setPoints] = useState<number>(100);
+  const [awaitingConfirm, setAwaitingConfirm] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Toute modification de la mise ou de l'issue annule la confirmation en attente.
+  useEffect(() => {
+    setAwaitingConfirm(false);
+  }, [points, outcome]);
 
   const { data: live } = useLiveMatchPool(matchId);
 
@@ -154,6 +163,12 @@ export function PlaceBetForm({
           ? "Quota de mise épuisé pour aujourd'hui / ce match"
           : `Quota dépassé : max ${effectiveMax.toLocaleString('fr-FR')} pts possible ici`
       );
+      return;
+    }
+
+    // Jeu responsable : grosse mise → double confirmation.
+    if (points >= LARGE_BET_CONFIRM && !awaitingConfirm) {
+      setAwaitingConfirm(true);
       return;
     }
 
@@ -345,19 +360,36 @@ export function PlaceBetForm({
         </div>
       )}
 
+      {awaitingConfirm && (
+        <div className="flex items-start gap-2 rounded-xl border border-[var(--tote-amber)]/40 bg-[var(--tote-amber)]/[0.06] px-4 py-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--tote-amber)]" />
+          <div className="text-[11px] leading-relaxed text-white/75">
+            <span className="font-bold text-[var(--tote-amber)]">Grosse mise.</span> Tu es sur le
+            point de miser <span className="font-black text-white">{points.toLocaleString('fr-FR')} pts</span>.
+            Clique à nouveau pour confirmer — mise ferme, non remboursable une fois le match lancé.
+          </div>
+        </div>
+      )}
+
       <ShimmerButton
         type="submit"
         disabled={isPending || !outcome || quotaExhausted || points > effectiveMax}
-        background="linear-gradient(110deg, #1a1a1a 0%, #3a2f0a 45%, #1a1a1a 100%)"
+        background={
+          awaitingConfirm
+            ? 'linear-gradient(110deg, #3a1a0a 0%, #7a3f0a 45%, #3a1a0a 100%)'
+            : 'linear-gradient(110deg, #1a1a1a 0%, #3a2f0a 45%, #1a1a1a 100%)'
+        }
         shimmerColor="#fbbf24"
         className="ff-display w-full px-5 py-4 text-base font-black uppercase tracking-[0.16em] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Ticket className="mr-2 h-4 w-4 text-[var(--tote-amber)]" />
         {isPending
           ? 'Validation…'
-          : outcome
-            ? `Parier ${points.toLocaleString('fr-FR')} pts`
-            : 'Choisis une issue'}
+          : awaitingConfirm
+            ? `Confirmer ${points.toLocaleString('fr-FR')} pts`
+            : outcome
+              ? `Parier ${points.toLocaleString('fr-FR')} pts`
+              : 'Choisis une issue'}
       </ShimmerButton>
 
       <p className="ff-board text-[10px] leading-relaxed text-white/35">

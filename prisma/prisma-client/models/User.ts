@@ -236,6 +236,9 @@ export type UserWhereInput = {
   marketBets?: Prisma.MarketBetListRelationFilter
   betSlips?: Prisma.BetSlipListRelationFilter
   pendingRefunds?: Prisma.PendingRefundListRelationFilter
+  transfersSent?: Prisma.PointTransferListRelationFilter
+  transfersReceived?: Prisma.PointTransferListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -256,6 +259,9 @@ export type UserOrderByWithRelationInput = {
   marketBets?: Prisma.MarketBetOrderByRelationAggregateInput
   betSlips?: Prisma.BetSlipOrderByRelationAggregateInput
   pendingRefunds?: Prisma.PendingRefundOrderByRelationAggregateInput
+  transfersSent?: Prisma.PointTransferOrderByRelationAggregateInput
+  transfersReceived?: Prisma.PointTransferOrderByRelationAggregateInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -279,6 +285,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   marketBets?: Prisma.MarketBetListRelationFilter
   betSlips?: Prisma.BetSlipListRelationFilter
   pendingRefunds?: Prisma.PendingRefundListRelationFilter
+  transfersSent?: Prisma.PointTransferListRelationFilter
+  transfersReceived?: Prisma.PointTransferListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }, "id" | "email" | "clerkId" | "twitchUsername" | "twitchUserId" | "username">
 
 export type UserOrderByWithAggregationInput = {
@@ -333,6 +342,9 @@ export type UserCreateInput = {
   marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -353,6 +365,9 @@ export type UserUncheckedCreateInput = {
   marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -373,6 +388,9 @@ export type UserUpdateInput = {
   marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -393,6 +411,9 @@ export type UserUncheckedUpdateInput = {
   marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -563,6 +584,48 @@ export type UserUpdateOneRequiredWithoutPendingRefundsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPendingRefundsInput, Prisma.UserUpdateWithoutPendingRefundsInput>, Prisma.UserUncheckedUpdateWithoutPendingRefundsInput>
 }
 
+export type UserCreateNestedOneWithoutTransfersSentInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTransfersSentInput, Prisma.UserUncheckedCreateWithoutTransfersSentInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTransfersSentInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutTransfersReceivedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTransfersReceivedInput, Prisma.UserUncheckedCreateWithoutTransfersReceivedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTransfersReceivedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutTransfersSentNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTransfersSentInput, Prisma.UserUncheckedCreateWithoutTransfersSentInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTransfersSentInput
+  upsert?: Prisma.UserUpsertWithoutTransfersSentInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTransfersSentInput, Prisma.UserUpdateWithoutTransfersSentInput>, Prisma.UserUncheckedUpdateWithoutTransfersSentInput>
+}
+
+export type UserUpdateOneRequiredWithoutTransfersReceivedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTransfersReceivedInput, Prisma.UserUncheckedCreateWithoutTransfersReceivedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTransfersReceivedInput
+  upsert?: Prisma.UserUpsertWithoutTransfersReceivedInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTransfersReceivedInput, Prisma.UserUpdateWithoutTransfersReceivedInput>, Prisma.UserUncheckedUpdateWithoutTransfersReceivedInput>
+}
+
+export type UserCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.UserUpsertWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
 export type UserCreateNestedOneWithoutMarketBetsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutMarketBetsInput, Prisma.UserUncheckedCreateWithoutMarketBetsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutMarketBetsInput
@@ -608,6 +671,9 @@ export type UserCreateWithoutCoachedTeamsInput = {
   marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCoachedTeamsInput = {
@@ -627,6 +693,9 @@ export type UserUncheckedCreateWithoutCoachedTeamsInput = {
   marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCoachedTeamsInput = {
@@ -662,6 +731,9 @@ export type UserUpdateWithoutCoachedTeamsInput = {
   marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCoachedTeamsInput = {
@@ -681,6 +753,9 @@ export type UserUncheckedUpdateWithoutCoachedTeamsInput = {
   marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlayersInput = {
@@ -700,6 +775,9 @@ export type UserCreateWithoutPlayersInput = {
   marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlayersInput = {
@@ -719,6 +797,9 @@ export type UserUncheckedCreateWithoutPlayersInput = {
   marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlayersInput = {
@@ -754,6 +835,9 @@ export type UserUpdateWithoutPlayersInput = {
   marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlayersInput = {
@@ -773,6 +857,9 @@ export type UserUncheckedUpdateWithoutPlayersInput = {
   marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBetsInput = {
@@ -792,6 +879,9 @@ export type UserCreateWithoutBetsInput = {
   marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBetsInput = {
@@ -811,6 +901,9 @@ export type UserUncheckedCreateWithoutBetsInput = {
   marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBetsInput = {
@@ -846,6 +939,9 @@ export type UserUpdateWithoutBetsInput = {
   marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBetsInput = {
@@ -865,6 +961,9 @@ export type UserUncheckedUpdateWithoutBetsInput = {
   marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPendingRefundsInput = {
@@ -884,6 +983,9 @@ export type UserCreateWithoutPendingRefundsInput = {
   bets?: Prisma.BetCreateNestedManyWithoutUserInput
   marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPendingRefundsInput = {
@@ -903,6 +1005,9 @@ export type UserUncheckedCreateWithoutPendingRefundsInput = {
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
   marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPendingRefundsInput = {
@@ -938,6 +1043,9 @@ export type UserUpdateWithoutPendingRefundsInput = {
   bets?: Prisma.BetUpdateManyWithoutUserNestedInput
   marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPendingRefundsInput = {
@@ -957,6 +1065,321 @@ export type UserUncheckedUpdateWithoutPendingRefundsInput = {
   bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
   marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutTransfersSentInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutTransfersSentInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutTransfersSentInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutTransfersSentInput, Prisma.UserUncheckedCreateWithoutTransfersSentInput>
+}
+
+export type UserCreateWithoutTransfersReceivedInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutTransfersReceivedInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutTransfersReceivedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutTransfersReceivedInput, Prisma.UserUncheckedCreateWithoutTransfersReceivedInput>
+}
+
+export type UserUpsertWithoutTransfersSentInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutTransfersSentInput, Prisma.UserUncheckedUpdateWithoutTransfersSentInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutTransfersSentInput, Prisma.UserUncheckedCreateWithoutTransfersSentInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutTransfersSentInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutTransfersSentInput, Prisma.UserUncheckedUpdateWithoutTransfersSentInput>
+}
+
+export type UserUpdateWithoutTransfersSentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutTransfersSentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUpsertWithoutTransfersReceivedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutTransfersReceivedInput, Prisma.UserUncheckedUpdateWithoutTransfersReceivedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutTransfersReceivedInput, Prisma.UserUncheckedCreateWithoutTransfersReceivedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutTransfersReceivedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutTransfersReceivedInput, Prisma.UserUncheckedUpdateWithoutTransfersReceivedInput>
+}
+
+export type UserUpdateWithoutTransfersReceivedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutNotificationsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+}
+
+export type UserUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutMarketBetsInput = {
@@ -976,6 +1399,9 @@ export type UserCreateWithoutMarketBetsInput = {
   bets?: Prisma.BetCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMarketBetsInput = {
@@ -995,6 +1421,9 @@ export type UserUncheckedCreateWithoutMarketBetsInput = {
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
   betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMarketBetsInput = {
@@ -1030,6 +1459,9 @@ export type UserUpdateWithoutMarketBetsInput = {
   bets?: Prisma.BetUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMarketBetsInput = {
@@ -1049,6 +1481,9 @@ export type UserUncheckedUpdateWithoutMarketBetsInput = {
   bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
   betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBetSlipsInput = {
@@ -1068,6 +1503,9 @@ export type UserCreateWithoutBetSlipsInput = {
   bets?: Prisma.BetCreateNestedManyWithoutUserInput
   marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBetSlipsInput = {
@@ -1087,6 +1525,9 @@ export type UserUncheckedCreateWithoutBetSlipsInput = {
   bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
   marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBetSlipsInput = {
@@ -1122,6 +1563,9 @@ export type UserUpdateWithoutBetSlipsInput = {
   bets?: Prisma.BetUpdateManyWithoutUserNestedInput
   marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBetSlipsInput = {
@@ -1141,6 +1585,9 @@ export type UserUncheckedUpdateWithoutBetSlipsInput = {
   bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
   marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1155,6 +1602,9 @@ export type UserCountOutputType = {
   marketBets: number
   betSlips: number
   pendingRefunds: number
+  transfersSent: number
+  transfersReceived: number
+  notifications: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1164,6 +1614,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   marketBets?: boolean | UserCountOutputTypeCountMarketBetsArgs
   betSlips?: boolean | UserCountOutputTypeCountBetSlipsArgs
   pendingRefunds?: boolean | UserCountOutputTypeCountPendingRefundsArgs
+  transfersSent?: boolean | UserCountOutputTypeCountTransfersSentArgs
+  transfersReceived?: boolean | UserCountOutputTypeCountTransfersReceivedArgs
+  notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
 }
 
 /**
@@ -1218,6 +1671,27 @@ export type UserCountOutputTypeCountPendingRefundsArgs<ExtArgs extends runtime.T
   where?: Prisma.PendingRefundWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountTransfersSentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PointTransferWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountTransfersReceivedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PointTransferWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1237,6 +1711,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   marketBets?: boolean | Prisma.User$marketBetsArgs<ExtArgs>
   betSlips?: boolean | Prisma.User$betSlipsArgs<ExtArgs>
   pendingRefunds?: boolean | Prisma.User$pendingRefundsArgs<ExtArgs>
+  transfersSent?: boolean | Prisma.User$transfersSentArgs<ExtArgs>
+  transfersReceived?: boolean | Prisma.User$transfersReceivedArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1290,6 +1767,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   marketBets?: boolean | Prisma.User$marketBetsArgs<ExtArgs>
   betSlips?: boolean | Prisma.User$betSlipsArgs<ExtArgs>
   pendingRefunds?: boolean | Prisma.User$pendingRefundsArgs<ExtArgs>
+  transfersSent?: boolean | Prisma.User$transfersSentArgs<ExtArgs>
+  transfersReceived?: boolean | Prisma.User$transfersReceivedArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1304,6 +1784,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     marketBets: Prisma.$MarketBetPayload<ExtArgs>[]
     betSlips: Prisma.$BetSlipPayload<ExtArgs>[]
     pendingRefunds: Prisma.$PendingRefundPayload<ExtArgs>[]
+    transfersSent: Prisma.$PointTransferPayload<ExtArgs>[]
+    transfersReceived: Prisma.$PointTransferPayload<ExtArgs>[]
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1717,6 +2200,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   marketBets<T extends Prisma.User$marketBetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$marketBetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MarketBetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   betSlips<T extends Prisma.User$betSlipsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$betSlipsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BetSlipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pendingRefunds<T extends Prisma.User$pendingRefundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pendingRefundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PendingRefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  transfersSent<T extends Prisma.User$transfersSentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transfersSentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PointTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  transfersReceived<T extends Prisma.User$transfersReceivedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transfersReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PointTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2291,6 +2777,78 @@ export type User$pendingRefundsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.PendingRefundScalarFieldEnum | Prisma.PendingRefundScalarFieldEnum[]
+}
+
+/**
+ * User.transfersSent
+ */
+export type User$transfersSentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PointTransfer
+   */
+  select?: Prisma.PointTransferSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PointTransfer
+   */
+  omit?: Prisma.PointTransferOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PointTransferInclude<ExtArgs> | null
+  where?: Prisma.PointTransferWhereInput
+  orderBy?: Prisma.PointTransferOrderByWithRelationInput | Prisma.PointTransferOrderByWithRelationInput[]
+  cursor?: Prisma.PointTransferWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PointTransferScalarFieldEnum | Prisma.PointTransferScalarFieldEnum[]
+}
+
+/**
+ * User.transfersReceived
+ */
+export type User$transfersReceivedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PointTransfer
+   */
+  select?: Prisma.PointTransferSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PointTransfer
+   */
+  omit?: Prisma.PointTransferOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PointTransferInclude<ExtArgs> | null
+  where?: Prisma.PointTransferWhereInput
+  orderBy?: Prisma.PointTransferOrderByWithRelationInput | Prisma.PointTransferOrderByWithRelationInput[]
+  cursor?: Prisma.PointTransferWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PointTransferScalarFieldEnum | Prisma.PointTransferScalarFieldEnum[]
+}
+
+/**
+ * User.notifications
+ */
+export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
 }
 
 /**

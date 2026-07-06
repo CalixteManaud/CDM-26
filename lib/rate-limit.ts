@@ -110,6 +110,19 @@ export async function rateLimitBet(userId: string): Promise<RateLimitResult> {
 }
 
 /**
+ * Limite les transferts de points à 5 / minute / user (anti-spam / anti-abus).
+ * @param userId DB user ID de l'expéditeur.
+ */
+export async function rateLimitTransfer(userId: string): Promise<RateLimitResult> {
+  await ensureUpstash();
+  if (upstashLimiter) {
+    const r = await upstashLimiter.limit(`transfer:${userId}`);
+    return { success: r.success, remaining: r.remaining, resetAt: r.reset };
+  }
+  return inMemoryLimit(`transfer:${userId}`, 5, 60_000);
+}
+
+/**
  * Extrait l'IP du client pour un fallback si pas d'user authentifié.
  */
 export function getClientIp(req: NextApiRequest): string {

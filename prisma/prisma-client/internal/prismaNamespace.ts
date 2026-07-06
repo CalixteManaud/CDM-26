@@ -396,6 +396,8 @@ export const ModelName = {
   MatchBettingPool: 'MatchBettingPool',
   Bet: 'Bet',
   PendingRefund: 'PendingRefund',
+  PointTransfer: 'PointTransfer',
+  Notification: 'Notification',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -416,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "pendingRefund" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
+    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1308,6 +1310,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PointTransfer: {
+      payload: Prisma.$PointTransferPayload<ExtArgs>
+      fields: Prisma.PointTransferFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PointTransferFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PointTransferFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>
+        }
+        findFirst: {
+          args: Prisma.PointTransferFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PointTransferFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>
+        }
+        findMany: {
+          args: Prisma.PointTransferFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>[]
+        }
+        create: {
+          args: Prisma.PointTransferCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>
+        }
+        createMany: {
+          args: Prisma.PointTransferCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PointTransferCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>[]
+        }
+        delete: {
+          args: Prisma.PointTransferDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>
+        }
+        update: {
+          args: Prisma.PointTransferUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>
+        }
+        deleteMany: {
+          args: Prisma.PointTransferDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PointTransferUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PointTransferUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>[]
+        }
+        upsert: {
+          args: Prisma.PointTransferUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PointTransferPayload>
+        }
+        aggregate: {
+          args: Prisma.PointTransferAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePointTransfer>
+        }
+        groupBy: {
+          args: Prisma.PointTransferGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PointTransferGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PointTransferCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PointTransferCountAggregateOutputType> | number
+        }
+      }
+    }
+    Notification: {
+      payload: Prisma.$NotificationPayload<ExtArgs>
+      fields: Prisma.NotificationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NotificationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NotificationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        findFirst: {
+          args: Prisma.NotificationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NotificationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        findMany: {
+          args: Prisma.NotificationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+        }
+        create: {
+          args: Prisma.NotificationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        createMany: {
+          args: Prisma.NotificationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NotificationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+        }
+        delete: {
+          args: Prisma.NotificationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        update: {
+          args: Prisma.NotificationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        deleteMany: {
+          args: Prisma.NotificationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NotificationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NotificationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[]
+        }
+        upsert: {
+          args: Prisma.NotificationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>
+        }
+        aggregate: {
+          args: Prisma.NotificationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotification>
+        }
+        groupBy: {
+          args: Prisma.NotificationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NotificationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationCountAggregateOutputType> | number
+        }
+      }
+    }
     BettingMarket: {
       payload: Prisma.$BettingMarketPayload<ExtArgs>
       fields: Prisma.BettingMarketFieldRefs
@@ -1929,6 +2079,39 @@ export const PendingRefundScalarFieldEnum = {
 export type PendingRefundScalarFieldEnum = (typeof PendingRefundScalarFieldEnum)[keyof typeof PendingRefundScalarFieldEnum]
 
 
+export const PointTransferScalarFieldEnum = {
+  id: 'id',
+  senderId: 'senderId',
+  recipientId: 'recipientId',
+  senderTwitch: 'senderTwitch',
+  recipientTwitch: 'recipientTwitch',
+  amount: 'amount',
+  note: 'note',
+  status: 'status',
+  debitTxId: 'debitTxId',
+  creditTxId: 'creditTxId',
+  error: 'error',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PointTransferScalarFieldEnum = (typeof PointTransferScalarFieldEnum)[keyof typeof PointTransferScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  title: 'title',
+  body: 'body',
+  href: 'href',
+  read: 'read',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
 export const BettingMarketScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -2210,6 +2393,34 @@ export type ListEnumRefundStatusFieldRefInput<$PrismaModel> = FieldRefInputType<
 
 
 /**
+ * Reference to a field of type 'TransferStatus'
+ */
+export type EnumTransferStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransferStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'TransferStatus[]'
+ */
+export type ListEnumTransferStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TransferStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'NotificationType'
+ */
+export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType'>
+    
+
+
+/**
+ * Reference to a field of type 'NotificationType[]'
+ */
+export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType[]'>
+    
+
+
+/**
  * Reference to a field of type 'BettingMarketType'
  */
 export type EnumBettingMarketTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketType'>
@@ -2386,6 +2597,8 @@ export type GlobalOmitConfig = {
   matchBettingPool?: Prisma.MatchBettingPoolOmit
   bet?: Prisma.BetOmit
   pendingRefund?: Prisma.PendingRefundOmit
+  pointTransfer?: Prisma.PointTransferOmit
+  notification?: Prisma.NotificationOmit
   bettingMarket?: Prisma.BettingMarketOmit
   marketPool?: Prisma.MarketPoolOmit
   marketBet?: Prisma.MarketBetOmit

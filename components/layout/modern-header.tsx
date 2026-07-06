@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 
 import { BecomeParticipant } from '@/components/user/become-participant';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -458,6 +459,7 @@ export function ModernHeader() {
               {/* User section */}
               {isSignedIn ? (
                 <div className="flex items-center gap-2">
+                  <NotificationBell />
                   {isAdmin && (
                     <Link href="/admin/dashboard" className="hidden md:block">
                       <Button

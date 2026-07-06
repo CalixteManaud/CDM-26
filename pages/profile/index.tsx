@@ -36,6 +36,7 @@ import { Label } from '@/components/ui/label';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { NumberTicker } from '@/components/ui/number-ticker';
+import { TransferPointsCard } from '@/components/betting/transfer-points-card';
 
 type User = {
   id: string;
@@ -314,12 +315,15 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
                 </div>
 
                 {props.user.twitchUsername && (
-                  <PointsBalanceCard
-                    balance={balance}
-                    loading={balanceLoading}
-                    error={balanceError}
-                    onRefresh={fetchBalance}
-                  />
+                  <>
+                    <PointsBalanceCard
+                      balance={balance}
+                      loading={balanceLoading}
+                      error={balanceError}
+                      onRefresh={fetchBalance}
+                    />
+                    <TransferPointsCard balance={balance} onDone={fetchBalance} />
+                  </>
                 )}
 
                 <TwitchLinkCard

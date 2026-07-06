@@ -164,7 +164,7 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
   - Tout `Player` inscrit dans une équipe du tournoi concerné (info privilégiée)
   - Tout `Team.coachUserId` d'une équipe du tournoi concerné
   - Check centralisé dans `lib/utils/permissions.ts` : `canUserBetOnMatch`, `canUserBetOnMarket`, `canUserBetOnTournament`. Toutes les API routes (`bets/place`, `markets/place`, `markets/slip`) appellent ces helpers avant le débit Wizebot.
-- **Limite par pari** : `MAX_BET_POINTS = 10_000` (1X2 et marchés). Constantes exportées par `lib/utils/betting.ts` et `actions/markets.ts` — ajuste-les là pour propager partout.
+- **Limite par pari** : `MAX_BET_POINTS = 50_000` (1X2 et marchés). Constantes exportées par `lib/utils/betting.ts` et `actions/markets.ts` — ajuste-les là pour propager partout.
 - **No switching sides** : une fois qu'un user a parié sur un outcome d'un match (1X2) ou d'un marché flexible, il ne peut **plus changer de camp** — il peut uniquement cumuler sur son choix initial. Enforced dans `placeBet` (code `OUTCOME_LOCKED`), `placeMarketBet` et `placeBetSlip` (check par jambe).
 - **Rate limit** : `lib/rate-limit.ts` → `rateLimitBet(userId)` = 10 paris/min/user, appliqué dans les 3 API routes de placement. En mémoire process par défaut (suffit en dev / lambda solo) ; pour la prod multi-instance Vercel, brancher Upstash KV (instructions dans le fichier).
 - **Wizebot resilience** : `lib/wizebot.ts` wrap tous les `fetch` dans `wizebotFetch()` qui apporte timeout 8s + 1 retry exponentiel sur 5xx / erreurs réseau. **Pas de retry sur 4xx** (risque de double-débit).

@@ -14,8 +14,9 @@
  */
 
 import prisma from '@/lib/prisma';
-import { BetOutcome, BetStatus, RefundStatus } from '@/prisma/prisma-client/enums';
+import { BetOutcome, BetStatus, RefundStatus, NotificationType } from '@/prisma/prisma-client/enums';
 import { creditWizebotPoints } from '@/lib/wizebot';
+import { createNotifications } from '@/lib/utils/notifications';
 import { computeLiveOdds, isBettingOpen, MIN_BET_POINTS, MAX_BET_POINTS, BET_EDIT_WINDOW_MS } from './odds';
 
 // Helpers purs ré-exportés pour les imports serveur déjà en place.
@@ -626,6 +627,42 @@ export async function settleMatchBets(params: {
     else if (r === 'refunded') refunded++;
     else creditFailed++;
   }
+
+  // Notifs in-app (fire-and-forget). Agrégées par user pour une seule notif par
+  // personne même si elle avait cumulé plusieurs paris sur ce match.
+  const byUser = new Map<string, { won: number; refunded: number }>();
+  for (const w of winnersData) {
+    const e = byUser.get(w.userId) ?? { won: 0, refunded: 0 };
+    e.won += w.payout;
+    byUser.set(w.userId, e);
+  }
+  for (const r of refundData) {
+    const e = byUser.get(r.userId) ?? { won: 0, refunded: 0 };
+    e.refunded += r.payout;
+    byUser.set(r.userId, e);
+  }
+  const notifs = [];
+  for (const [uid, sums] of byUser) {
+    if (sums.won > 0) {
+      notifs.push({
+        userId: uid,
+        type: NotificationType.BET_WON,
+        title: `Pari gagné : +${sums.won.toLocaleString('fr-FR')} pts`,
+        body: `Tes points ont été crédités sur ta chaîne Twitch.`,
+        href: '/paris/mes-paris',
+      });
+    }
+    if (sums.refunded > 0) {
+      notifs.push({
+        userId: uid,
+        type: NotificationType.BET_REFUNDED,
+        title: `Pari remboursé : +${sums.refunded.toLocaleString('fr-FR')} pts`,
+        body: `Le match a été annulé — ta mise t'a été rendue.`,
+        href: '/paris/mes-paris',
+      });
+    }
+  }
+  await createNotifications(notifs);
 
   return {
     settled: winnersData.length + losersCount + refundData.length,
