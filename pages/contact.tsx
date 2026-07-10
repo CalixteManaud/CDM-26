@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
@@ -103,10 +103,11 @@ export default function ContactPage() {
 
   return (
     <>
-      <Head>
-        <title>Contact — CDM 26</title>
-        <meta name="description" content="Contacter l'équipe CDM 26 — e-mail, Twitch, réseaux sociaux, formulaire direct." />
-      </Head>
+      <PageHead
+        title="Contact"
+        description="Contacter l'équipe CDM 26 — e-mail, Twitch, réseaux sociaux, formulaire direct."
+        path="/contact"
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
         {/* HERO */}

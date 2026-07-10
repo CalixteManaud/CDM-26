@@ -1,0 +1,17 @@
+# CDM 26 — plateforme communautaire FIFA 26 sur Twitch.
+# Le contenu (tournois, équipes, matchs, paris) est réservé aux membres
+# connectés → non indexable. Seules la landing et les pages d'info publiques
+# sont ouvertes aux moteurs.
+User-agent: *
+Disallow: /tournaments
+Disallow: /teams
+Disallow: /matches
+Disallow: /paris
+Disallow: /profile
+Disallow: /admin
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /sso-callback
+Disallow: /api/
+
+Sitemap: https://cdm.rgtcity.fr/sitemap.xml

@@ -27,9 +27,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           property="og:description"
           content="Coupe du Monde FIFA 26 sur Twitch — tournois, équipes, matchs en direct et paris en points de chaîne."
         />
-        <meta property="og:image" content="/logo.png" />
+        <meta property="og:image" content="/og.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="/logo.png" />
+        <meta name="twitter:image" content="/og.png" />
       </Head>
       <ClerkProvider {...pageProps}>
         <BetSlipProvider>

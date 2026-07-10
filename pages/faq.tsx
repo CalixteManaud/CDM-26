@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -206,10 +206,11 @@ function FaqItem({ q, a, index, accent }: { q: string; a: string; index: number;
 export default function FaqPage() {
   return (
     <>
-      <Head>
-        <title>FAQ — CDM 26</title>
-        <meta name="description" content="Foire aux questions CDM 26 : tournoi, équipes, Twitch, paris en points de chaîne, inscription. Toutes les réponses." />
-      </Head>
+      <PageHead
+        title="FAQ"
+        description="Foire aux questions CDM 26 : tournoi, équipes, Twitch, paris en points de chaîne, inscription. Toutes les réponses."
+        path="/faq"
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
         {/* HERO */}

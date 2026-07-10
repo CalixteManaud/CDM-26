@@ -24,6 +24,7 @@ export default function SignUpPage() {
           name="description"
           content="Crée ton compte CDM 26 pour intégrer une nation, parier sur les matchs FIFA 26 et viser le sacre mondial sur Twitch."
         />
+        <meta name="robots" content="noindex,nofollow" />
       </Head>
 
       <AuthShell mode="sign-up">

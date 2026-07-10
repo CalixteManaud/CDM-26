@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -161,10 +161,11 @@ const ARTICLES = [
 export default function TermsPage() {
   return (
     <>
-      <Head>
-        <title>Conditions d'utilisation — CDM 26</title>
-        <meta name="description" content="Conditions générales d'utilisation CDM 26 — accès, conduite, paris, responsabilité, sanctions." />
-      </Head>
+      <PageHead
+        title="Conditions d'utilisation"
+        description="Conditions générales d'utilisation CDM 26 — accès, conduite, paris, responsabilité, sanctions."
+        path="/terms"
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
         {/* HERO */}

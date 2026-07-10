@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -148,10 +148,11 @@ const SECTIONS = [
 export default function PrivacyPage() {
   return (
     <>
-      <Head>
-        <title>Politique de confidentialité — CDM 26</title>
-        <meta name="description" content="Politique de confidentialité CDM 26. Données collectées, finalités, sous-traitants, droits RGPD." />
-      </Head>
+      <PageHead
+        title="Politique de confidentialité"
+        description="Politique de confidentialité CDM 26. Données collectées, finalités, sous-traitants, droits RGPD."
+        path="/privacy"
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
         {/* HERO */}

@@ -5,6 +5,8 @@ type PageHeadProps = {
   description?: string;
   /** Chemin ou URL absolue de l'image de partage (og:image). */
   image?: string;
+  /** Texte alternatif de l'image de partage. */
+  imageAlt?: string;
   /** Chemin de la page courante, ex "/tournois". */
   path?: string;
   noindex?: boolean;
@@ -15,7 +17,8 @@ const DEFAULT_DESCRIPTION =
   "Coupe du Monde FIFA 26 sur Twitch — tournois, équipes, matchs en direct et paris en points de chaîne.";
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cdm.rgtcity.fr";
-const DEFAULT_IMAGE = "/logo.png";
+/** Carte de partage 1200×630 (Discord / Twitter / Twitch). */
+const DEFAULT_IMAGE = "/og.png";
 
 /**
  * <Head> standardisé avec Open Graph + Twitter Card. À mettre en tête de chaque
@@ -27,12 +30,14 @@ export function PageHead({
   title,
   description = DEFAULT_DESCRIPTION,
   image = DEFAULT_IMAGE,
+  imageAlt = SITE_NAME,
   path,
   noindex = false,
 }: PageHeadProps) {
   const fullTitle = title === SITE_NAME ? title : `${title} — ${SITE_NAME}`;
   const url = path ? `${APP_URL}${path.startsWith("/") ? path : `/${path}`}` : APP_URL;
   const absoluteImage = image.startsWith("http") ? image : `${APP_URL}${image}`;
+  const isDefaultImage = image === DEFAULT_IMAGE;
 
   return (
     <Head>
@@ -44,16 +49,25 @@ export function PageHead({
       {/* Open Graph */}
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="fr_FR" />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:image" content={absoluteImage} />
+      <meta property="og:image:alt" content={imageAlt} />
+      {isDefaultImage && (
+        <>
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+        </>
+      )}
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={absoluteImage} />
+      <meta name="twitter:image:alt" content={imageAlt} />
     </Head>
   );
 }

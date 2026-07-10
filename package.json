@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "gen:og": "node scripts/generate-og.mjs",
     "seed": "tsx --env-file=.env.local prisma/seed.ts"
   },
   "prisma": {

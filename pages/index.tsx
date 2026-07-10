@@ -1,5 +1,5 @@
 import type { GetServerSideProps } from 'next';
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
@@ -674,13 +674,38 @@ export default function CDM26Home({ counts, fixtures, streamers, ticker }: CDM26
 
   return (
     <>
-      <Head>
-        <title>CDM 26 — Le Mondial FIFA 26 sur Twitch</title>
-        <meta
-          name="description"
-          content="La Coupe du Monde FIFA 26 en version esport. 32 nations, 8 groupes, des matchs diffusés en direct sur Twitch. Forme ta nation, joue les éliminatoires, hisse ton drapeau."
-        />
-      </Head>
+      <PageHead
+        title="Le Mondial FIFA 26 sur Twitch"
+        description="La Coupe du Monde FIFA 26 en version esport. 32 nations, 8 groupes, des matchs diffusés en direct sur Twitch. Forme ta nation, joue les éliminatoires, hisse ton drapeau."
+        path="/"
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': 'https://cdm.rgtcity.fr/#organization',
+                name: 'CDM 26',
+                url: 'https://cdm.rgtcity.fr',
+                logo: 'https://cdm.rgtcity.fr/logo.png',
+                description:
+                  'Coupe du Monde FIFA 26 sur Twitch — tournois, équipes, matchs en direct et paris en points de chaîne.',
+              },
+              {
+                '@type': 'WebSite',
+                '@id': 'https://cdm.rgtcity.fr/#website',
+                url: 'https://cdm.rgtcity.fr',
+                name: 'CDM 26',
+                inLanguage: 'fr-FR',
+                publisher: { '@id': 'https://cdm.rgtcity.fr/#organization' },
+              },
+            ],
+          }),
+        }}
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate">
         {/* ───── 01. HERO ───── */}

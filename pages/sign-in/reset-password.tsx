@@ -24,6 +24,7 @@ export default function ResetPasswordPage() {
           name="description"
           content="Réinitialise le mot de passe de ton compte CDM 26 pour retrouver tes paris et tes équipes."
         />
+        <meta name="robots" content="noindex,nofollow" />
       </Head>
 
       <AuthShell mode="sign-in">

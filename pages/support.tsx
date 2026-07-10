@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -89,10 +89,11 @@ function SectionEyebrow({ num, label, accent }: { num: string; label: string; ac
 export default function SupportPage() {
   return (
     <>
-      <Head>
-        <title>Support — CDM 26</title>
-        <meta name="description" content="Centre de support CDM 26. Aide pour ton compte, les paris (points Wizebot), le stream Twitch, les bugs." />
-      </Head>
+      <PageHead
+        title="Support"
+        description="Centre de support CDM 26. Aide pour ton compte, les paris (points Wizebot), le stream Twitch, les bugs."
+        path="/support"
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
         {/* HERO */}

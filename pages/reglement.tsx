@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import { PageHead } from '@/components/seo/page-head';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -124,10 +124,11 @@ function SectionEyebrow({ num, label, accent }: { num: string; label: string; ac
 export default function ReglementPage() {
   return (
     <>
-      <Head>
-        <title>Règlement officiel — CDM 26</title>
-        <meta name="description" content="Règlement officiel de la Coupe du Monde FIFA 26 sur Twitch. Format, composition, déroulement, sanctions, trophées." />
-      </Head>
+      <PageHead
+        title="Règlement officiel"
+        description="Règlement officiel de la Coupe du Monde FIFA 26 sur Twitch. Format, composition, déroulement, sanctions, trophées."
+        path="/reglement"
+      />
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
         {/* HERO */}

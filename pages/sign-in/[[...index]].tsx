@@ -24,6 +24,7 @@ export default function SignInPage() {
           name="description"
           content="Connecte-toi à CDM 26 pour suivre tes paris, gérer tes équipes et regarder la Coupe du Monde FIFA 26 sur Twitch."
         />
+        <meta name="robots" content="noindex,nofollow" />
       </Head>
 
       <AuthShell mode="sign-in">
