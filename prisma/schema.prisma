@@ -54,6 +54,7 @@ model User {
   transfersSent     PointTransfer[] @relation("TransfersSent")
   transfersReceived PointTransfer[] @relation("TransfersReceived")
   notifications     Notification[]  @relation("UserNotifications")
+  joinRequests      TeamJoinRequest[] @relation("JoinRequestUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -83,6 +84,9 @@ model Tournament {
 
   // Marchés tournoi (top buteur, MVP, vainqueur)
   bettingMarkets BettingMarket[] @relation("TournamentMarkets")
+
+  // Demandes d'adhésion des participants aux équipes du tournoi
+  joinRequests TeamJoinRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,6 +131,9 @@ model Team {
   coach      User?      @relation("TeamCoach", fields: [coachUserId], references: [id], onDelete: SetNull)
 
   players Player[]
+
+  // Demandes d'adhésion des participants à cette équipe
+  joinRequests TeamJoinRequest[]
 
   // Match relations (disambiguation)
   homeMatches   Match[] @relation("HomeTeam")
@@ -514,11 +521,14 @@ model PointTransfer {
 // flux serveur (transferPoints, settleMatchBets) — jamais bloquantes.
 
 enum NotificationType {
-  TRANSFER_RECEIVED  // tu as reçu des points d'un autre membre
-  BET_WON            // un de tes paris est gagnant (crédité)
-  BET_REFUNDED       // pari remboursé (match annulé)
-  BET_CREDIT_FAILED  // gain en attente de crédit (Wizebot down / Twitch délié)
-  SYSTEM             // message générique
+  TRANSFER_RECEIVED      // tu as reçu des points d'un autre membre
+  BET_WON                // un de tes paris est gagnant (crédité)
+  BET_REFUNDED           // pari remboursé (match annulé)
+  BET_CREDIT_FAILED      // gain en attente de crédit (Wizebot down / Twitch délié)
+  JOIN_REQUEST_RECEIVED  // un participant demande à rejoindre une de tes équipes (coach/admin)
+  JOIN_REQUEST_ACCEPTED  // ta demande d'adhésion a été acceptée
+  JOIN_REQUEST_REJECTED  // ta demande d'adhésion a été refusée
+  SYSTEM                 // message générique
 }
 
 model Notification {
@@ -537,6 +547,53 @@ model Notification {
 
   @@index([userId, read])
   @@index([userId, createdAt])
+}
+
+// =================== DEMANDES D'ADHÉSION ÉQUIPE ===================
+//
+// Pendant la phase d'inscription (tournoi actif, poules pas encore tirées,
+// équipe non pleine), un PARTICIPANT choisit une équipe et envoie une demande
+// d'adhésion avec le numéro + poste souhaités. Un admin OU le coach de l'équipe
+// valide (en ajustant éventuellement numéro/poste → création du Player) ou
+// refuse. Le participant peut retirer sa demande tant qu'elle est PENDING.
+//
+// Contraintes:
+//  - 1 seule demande PENDING par (user, tournoi) — index unique partiel en SQL.
+//  - Impossible si l'user est déjà Player d'une équipe du tournoi.
+
+enum JoinRequestStatus {
+  PENDING   // en attente de décision admin/coach
+  ACCEPTED  // acceptée → Player créé
+  REJECTED  // refusée
+  CANCELED  // retirée par le participant
+}
+
+model TeamJoinRequest {
+  id           String @id @default(uuid()) @db.Uuid
+  userId       String @db.Uuid
+  teamId       String @db.Uuid
+  tournamentId String @db.Uuid // dénormalisé : contrainte "1 pending / tournoi" + requêtes
+
+  status          JoinRequestStatus @default(PENDING)
+  desiredJersey   Int // numéro de maillot souhaité (1-99)
+  desiredPosition String // 'GK' | 'DEF' | 'MID' | 'ATT'
+  message         String? // mot du candidat (optionnel)
+
+  // Décision (admin/coach)
+  reviewedById String?   @db.Uuid // id DB du reviewer (pas de relation, cf. MatchEvent.createdById)
+  reviewedAt   DateTime?
+  reviewNote   String? // motif du refus / note à la validation
+
+  user       User       @relation("JoinRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId, status])
+  @@index([tournamentId, status])
+  @@index([userId])
 }
 
 // =================== MARCHÉS FLEXIBLES ===================

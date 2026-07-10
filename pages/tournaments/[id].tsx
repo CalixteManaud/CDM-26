@@ -570,6 +570,37 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
                         </Card>
                       </Link>
                     )}
+                  {userRole === 'PARTICIPANT' && !isArchived && !tournament.groupStageComplete && (
+                    <Link href={`/tournaments/${tournament.id}/rejoindre`} className="block">
+                      <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/30 via-black to-yellow-950/10 border-white/10 hover:border-emerald-500/40 transition-all p-6 md:p-7 group cursor-pointer">
+                        <div className="grid md:grid-cols-[auto_1fr_auto] gap-5 items-center">
+                          <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                            <UserPlus className="w-5 h-5 text-emerald-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-mono uppercase tracking-[0.3em] mb-1.5 text-emerald-400">
+                              § Inscription · REJOINDRE
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-black text-white tracking-tight mb-1.5 leading-tight">
+                              Rejoindre une équipe
+                            </h3>
+                            <p className="text-sm text-white/60 leading-relaxed">
+                              Choisis une équipe engagée, propose ton numéro et ton poste. Un coach ou un admin
+                              validera ta demande.
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            className="bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs px-6 shrink-0"
+                          >
+                            Postuler
+                            <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                          </Button>
+                        </div>
+                        <BorderBeam size={180} duration={9} colorFrom="#10b981" colorTo="#facc15" borderWidth={1} />
+                      </Card>
+                    </Link>
+                  )}
                   <TeamsList teams={tournament.teams || []} />
                 </motion.div>
               </TabsContent>

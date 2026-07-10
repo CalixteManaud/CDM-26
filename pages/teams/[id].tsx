@@ -7,6 +7,7 @@ import {
   Shield,
   Trophy,
   UserPlus,
+  UserCheck,
   Trash2,
   Target,
   TrendingUp,
@@ -90,6 +91,7 @@ type Team = {
 type PageProps = {
   team: Team | null;
   canManage: boolean;
+  pendingRequests: number;
 };
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => {
@@ -103,11 +105,16 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
   if (!result.success || !result.data) return { notFound: true };
 
   let canManage = false;
+  let pendingRequests = 0;
   if (userId) {
     const { syncClerkUserById } = await import('@/lib/clerk');
     const dbUser = await syncClerkUserById(userId);
     if (dbUser) {
       canManage = dbUser.role === 'ADMIN' || dbUser.id === result.data.coachUserId;
+      if (canManage) {
+        const { countTeamPendingRequests } = await import('@/lib/utils/join-requests');
+        pendingRequests = await countTeamPendingRequests(teamId);
+      }
     }
   }
 
@@ -115,6 +122,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
     props: {
       team: JSON.parse(JSON.stringify(result.data)),
       canManage,
+      pendingRequests,
     },
   };
 };
@@ -433,13 +441,31 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
                     <span className="text-gradient-worldcup">joueurs.</span>
                   </h2>
                 </div>
-                {props.canManage && canAddPlayers && (
-                  <Link href={`/teams/${team.id}/add-player`}>
-                    <Button className="bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs px-6">
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Ajouter un joueur
-                    </Button>
-                  </Link>
+                {props.canManage && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/teams/${team.id}/demandes`}>
+                      <Button
+                        variant="outline"
+                        className="relative border-white/20 hover:border-white/40 hover:bg-white/5 text-white font-black uppercase tracking-[0.18em] text-xs px-5"
+                      >
+                        <UserCheck className="w-4 h-4 mr-2" />
+                        Demandes
+                        {props.pendingRequests > 0 && (
+                          <span className="ml-2 min-w-5 h-5 px-1.5 rounded-full bg-emerald-500 text-black text-[10px] font-black grid place-items-center tabular-nums">
+                            {props.pendingRequests}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+                    {canAddPlayers && (
+                      <Link href={`/teams/${team.id}/add-player`}>
+                        <Button className="bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs px-6">
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Ajouter un joueur
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 )}
               </div>
 

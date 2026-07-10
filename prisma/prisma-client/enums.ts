@@ -95,10 +95,23 @@ export const NotificationType = {
   BET_WON: 'BET_WON',
   BET_REFUNDED: 'BET_REFUNDED',
   BET_CREDIT_FAILED: 'BET_CREDIT_FAILED',
+  JOIN_REQUEST_RECEIVED: 'JOIN_REQUEST_RECEIVED',
+  JOIN_REQUEST_ACCEPTED: 'JOIN_REQUEST_ACCEPTED',
+  JOIN_REQUEST_REJECTED: 'JOIN_REQUEST_REJECTED',
   SYSTEM: 'SYSTEM'
 } as const
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
+
+
+export const JoinRequestStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+  CANCELED: 'CANCELED'
+} as const
+
+export type JoinRequestStatus = (typeof JoinRequestStatus)[keyof typeof JoinRequestStatus]
 
 
 export const BettingMarketType = {

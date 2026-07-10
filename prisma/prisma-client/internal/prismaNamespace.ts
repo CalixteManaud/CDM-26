@@ -398,6 +398,7 @@ export const ModelName = {
   PendingRefund: 'PendingRefund',
   PointTransfer: 'PointTransfer',
   Notification: 'Notification',
+  TeamJoinRequest: 'TeamJoinRequest',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -418,7 +419,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
+    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "teamJoinRequest" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1458,6 +1459,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TeamJoinRequest: {
+      payload: Prisma.$TeamJoinRequestPayload<ExtArgs>
+      fields: Prisma.TeamJoinRequestFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TeamJoinRequestFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TeamJoinRequestFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>
+        }
+        findFirst: {
+          args: Prisma.TeamJoinRequestFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TeamJoinRequestFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>
+        }
+        findMany: {
+          args: Prisma.TeamJoinRequestFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>[]
+        }
+        create: {
+          args: Prisma.TeamJoinRequestCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>
+        }
+        createMany: {
+          args: Prisma.TeamJoinRequestCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TeamJoinRequestCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>[]
+        }
+        delete: {
+          args: Prisma.TeamJoinRequestDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>
+        }
+        update: {
+          args: Prisma.TeamJoinRequestUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>
+        }
+        deleteMany: {
+          args: Prisma.TeamJoinRequestDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TeamJoinRequestUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TeamJoinRequestUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>[]
+        }
+        upsert: {
+          args: Prisma.TeamJoinRequestUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamJoinRequestPayload>
+        }
+        aggregate: {
+          args: Prisma.TeamJoinRequestAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTeamJoinRequest>
+        }
+        groupBy: {
+          args: Prisma.TeamJoinRequestGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TeamJoinRequestGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TeamJoinRequestCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TeamJoinRequestCountAggregateOutputType> | number
+        }
+      }
+    }
     BettingMarket: {
       payload: Prisma.$BettingMarketPayload<ExtArgs>
       fields: Prisma.BettingMarketFieldRefs
@@ -2112,6 +2187,25 @@ export const NotificationScalarFieldEnum = {
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
 
 
+export const TeamJoinRequestScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  teamId: 'teamId',
+  tournamentId: 'tournamentId',
+  status: 'status',
+  desiredJersey: 'desiredJersey',
+  desiredPosition: 'desiredPosition',
+  message: 'message',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  reviewNote: 'reviewNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamJoinRequestScalarFieldEnum = (typeof TeamJoinRequestScalarFieldEnum)[keyof typeof TeamJoinRequestScalarFieldEnum]
+
+
 export const BettingMarketScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -2421,6 +2515,20 @@ export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
+ * Reference to a field of type 'JoinRequestStatus'
+ */
+export type EnumJoinRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JoinRequestStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'JoinRequestStatus[]'
+ */
+export type ListEnumJoinRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JoinRequestStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'BettingMarketType'
  */
 export type EnumBettingMarketTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketType'>
@@ -2599,6 +2707,7 @@ export type GlobalOmitConfig = {
   pendingRefund?: Prisma.PendingRefundOmit
   pointTransfer?: Prisma.PointTransferOmit
   notification?: Prisma.NotificationOmit
+  teamJoinRequest?: Prisma.TeamJoinRequestOmit
   bettingMarket?: Prisma.BettingMarketOmit
   marketPool?: Prisma.MarketPoolOmit
   marketBet?: Prisma.MarketBetOmit

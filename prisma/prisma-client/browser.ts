@@ -88,6 +88,11 @@ export type PointTransfer = Prisma.PointTransferModel
  */
 export type Notification = Prisma.NotificationModel
 /**
+ * Model TeamJoinRequest
+ * 
+ */
+export type TeamJoinRequest = Prisma.TeamJoinRequestModel
+/**
  * Model BettingMarket
  * 
  */

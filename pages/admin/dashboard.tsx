@@ -245,6 +245,12 @@ export default function AdminDashboardPage(
                   >
                     <Wallet className="w-3 h-3" /> Trésorerie
                   </Link>
+                  <Link
+                    href="/admin/demandes"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono hover:bg-emerald-500/15 transition"
+                  >
+                    <UserCheck className="w-3 h-3" /> Demandes d&apos;adhésion
+                  </Link>
                 </motion.div>
               </div>
             </motion.div>

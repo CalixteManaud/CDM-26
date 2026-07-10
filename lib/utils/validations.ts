@@ -32,6 +32,26 @@ export const playerSchema = z.object({
 
 export type PlayerInput = z.infer<typeof playerSchema>;
 
+// Demande d'adhésion à une équipe (le participant propose numéro + poste)
+export const joinRequestSchema = z.object({
+  teamId: z.string().uuid(),
+  jerseyNumber: z.coerce.number().min(1).max(99),
+  position: z.enum(['GK', 'DEF', 'MID', 'ATT']),
+  message: z.string().trim().max(280).optional().or(z.literal('')),
+});
+
+export type JoinRequestInput = z.infer<typeof joinRequestSchema>;
+
+// Décision d'un admin/coach sur une demande (accept avec ajustement, ou refus)
+export const joinReviewSchema = z.object({
+  action: z.enum(['accept', 'reject']),
+  jerseyNumber: z.coerce.number().min(1).max(99).optional(),
+  position: z.enum(['GK', 'DEF', 'MID', 'ATT']).optional(),
+  note: z.string().trim().max(280).optional().or(z.literal('')),
+});
+
+export type JoinReviewInput = z.infer<typeof joinReviewSchema>;
+
 // Match result validations
 export const matchResultSchema = z.object({
   homeScore: z.coerce.number().min(0),

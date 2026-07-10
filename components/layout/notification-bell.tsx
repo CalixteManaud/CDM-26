@@ -2,11 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bell, Check, Gift, Trophy, RotateCcw, AlertTriangle, Info } from 'lucide-react';
+import { Bell, Check, Gift, Trophy, RotateCcw, AlertTriangle, Info, UserPlus, UserCheck, UserX } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-type NotifType = 'TRANSFER_RECEIVED' | 'BET_WON' | 'BET_REFUNDED' | 'BET_CREDIT_FAILED' | 'SYSTEM';
+type NotifType =
+  | 'TRANSFER_RECEIVED'
+  | 'BET_WON'
+  | 'BET_REFUNDED'
+  | 'BET_CREDIT_FAILED'
+  | 'JOIN_REQUEST_RECEIVED'
+  | 'JOIN_REQUEST_ACCEPTED'
+  | 'JOIN_REQUEST_REJECTED'
+  | 'SYSTEM';
 
 type Notif = {
   id: string;
@@ -23,6 +31,9 @@ const ICON: Record<NotifType, typeof Bell> = {
   BET_WON: Trophy,
   BET_REFUNDED: RotateCcw,
   BET_CREDIT_FAILED: AlertTriangle,
+  JOIN_REQUEST_RECEIVED: UserPlus,
+  JOIN_REQUEST_ACCEPTED: UserCheck,
+  JOIN_REQUEST_REJECTED: UserX,
   SYSTEM: Info,
 };
 
@@ -31,6 +42,9 @@ const ICON_TONE: Record<NotifType, string> = {
   BET_WON: 'text-yellow-400',
   BET_REFUNDED: 'text-blue-400',
   BET_CREDIT_FAILED: 'text-red-400',
+  JOIN_REQUEST_RECEIVED: 'text-purple-400',
+  JOIN_REQUEST_ACCEPTED: 'text-emerald-400',
+  JOIN_REQUEST_REJECTED: 'text-red-400',
   SYSTEM: 'text-white/60',
 };
 

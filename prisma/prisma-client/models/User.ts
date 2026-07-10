@@ -239,6 +239,7 @@ export type UserWhereInput = {
   transfersSent?: Prisma.PointTransferListRelationFilter
   transfersReceived?: Prisma.PointTransferListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  joinRequests?: Prisma.TeamJoinRequestListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -262,6 +263,7 @@ export type UserOrderByWithRelationInput = {
   transfersSent?: Prisma.PointTransferOrderByRelationAggregateInput
   transfersReceived?: Prisma.PointTransferOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
+  joinRequests?: Prisma.TeamJoinRequestOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -288,6 +290,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   transfersSent?: Prisma.PointTransferListRelationFilter
   transfersReceived?: Prisma.PointTransferListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  joinRequests?: Prisma.TeamJoinRequestListRelationFilter
 }, "id" | "email" | "clerkId" | "twitchUsername" | "twitchUserId" | "username">
 
 export type UserOrderByWithAggregationInput = {
@@ -345,6 +348,7 @@ export type UserCreateInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -368,6 +372,7 @@ export type UserUncheckedCreateInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -391,6 +396,7 @@ export type UserUpdateInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -414,6 +420,7 @@ export type UserUncheckedUpdateInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -626,6 +633,20 @@ export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
 }
 
+export type UserCreateNestedOneWithoutJoinRequestsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutJoinRequestsInput, Prisma.UserUncheckedCreateWithoutJoinRequestsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutJoinRequestsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutJoinRequestsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutJoinRequestsInput, Prisma.UserUncheckedCreateWithoutJoinRequestsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutJoinRequestsInput
+  upsert?: Prisma.UserUpsertWithoutJoinRequestsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutJoinRequestsInput, Prisma.UserUpdateWithoutJoinRequestsInput>, Prisma.UserUncheckedUpdateWithoutJoinRequestsInput>
+}
+
 export type UserCreateNestedOneWithoutMarketBetsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutMarketBetsInput, Prisma.UserUncheckedCreateWithoutMarketBetsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutMarketBetsInput
@@ -674,6 +695,7 @@ export type UserCreateWithoutCoachedTeamsInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCoachedTeamsInput = {
@@ -696,6 +718,7 @@ export type UserUncheckedCreateWithoutCoachedTeamsInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCoachedTeamsInput = {
@@ -734,6 +757,7 @@ export type UserUpdateWithoutCoachedTeamsInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCoachedTeamsInput = {
@@ -756,6 +780,7 @@ export type UserUncheckedUpdateWithoutCoachedTeamsInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlayersInput = {
@@ -778,6 +803,7 @@ export type UserCreateWithoutPlayersInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlayersInput = {
@@ -800,6 +826,7 @@ export type UserUncheckedCreateWithoutPlayersInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlayersInput = {
@@ -838,6 +865,7 @@ export type UserUpdateWithoutPlayersInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlayersInput = {
@@ -860,6 +888,7 @@ export type UserUncheckedUpdateWithoutPlayersInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBetsInput = {
@@ -882,6 +911,7 @@ export type UserCreateWithoutBetsInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBetsInput = {
@@ -904,6 +934,7 @@ export type UserUncheckedCreateWithoutBetsInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBetsInput = {
@@ -942,6 +973,7 @@ export type UserUpdateWithoutBetsInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBetsInput = {
@@ -964,6 +996,7 @@ export type UserUncheckedUpdateWithoutBetsInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPendingRefundsInput = {
@@ -986,6 +1019,7 @@ export type UserCreateWithoutPendingRefundsInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPendingRefundsInput = {
@@ -1008,6 +1042,7 @@ export type UserUncheckedCreateWithoutPendingRefundsInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPendingRefundsInput = {
@@ -1046,6 +1081,7 @@ export type UserUpdateWithoutPendingRefundsInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPendingRefundsInput = {
@@ -1068,6 +1104,7 @@ export type UserUncheckedUpdateWithoutPendingRefundsInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTransfersSentInput = {
@@ -1090,6 +1127,7 @@ export type UserCreateWithoutTransfersSentInput = {
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTransfersSentInput = {
@@ -1112,6 +1150,7 @@ export type UserUncheckedCreateWithoutTransfersSentInput = {
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTransfersSentInput = {
@@ -1139,6 +1178,7 @@ export type UserCreateWithoutTransfersReceivedInput = {
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTransfersReceivedInput = {
@@ -1161,6 +1201,7 @@ export type UserUncheckedCreateWithoutTransfersReceivedInput = {
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTransfersReceivedInput = {
@@ -1199,6 +1240,7 @@ export type UserUpdateWithoutTransfersSentInput = {
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransfersSentInput = {
@@ -1221,6 +1263,7 @@ export type UserUncheckedUpdateWithoutTransfersSentInput = {
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutTransfersReceivedInput = {
@@ -1254,6 +1297,7 @@ export type UserUpdateWithoutTransfersReceivedInput = {
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
@@ -1276,6 +1320,7 @@ export type UserUncheckedUpdateWithoutTransfersReceivedInput = {
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -1298,6 +1343,7 @@ export type UserCreateWithoutNotificationsInput = {
   pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -1320,6 +1366,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -1358,6 +1405,7 @@ export type UserUpdateWithoutNotificationsInput = {
   pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -1380,6 +1428,115 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutJoinRequestsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutJoinRequestsInput = {
+  id?: string
+  email: string
+  name: string
+  username?: string | null
+  avatar?: string | null
+  role?: $Enums.UserRole
+  clerkId: string
+  twitchUsername?: string | null
+  twitchUserId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  players?: Prisma.PlayerUncheckedCreateNestedManyWithoutUserInput
+  coachedTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutCoachInput
+  bets?: Prisma.BetUncheckedCreateNestedManyWithoutUserInput
+  marketBets?: Prisma.MarketBetUncheckedCreateNestedManyWithoutUserInput
+  betSlips?: Prisma.BetSlipUncheckedCreateNestedManyWithoutUserInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedCreateNestedManyWithoutUserInput
+  transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
+  transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutJoinRequestsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutJoinRequestsInput, Prisma.UserUncheckedCreateWithoutJoinRequestsInput>
+}
+
+export type UserUpsertWithoutJoinRequestsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutJoinRequestsInput, Prisma.UserUncheckedUpdateWithoutJoinRequestsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutJoinRequestsInput, Prisma.UserUncheckedCreateWithoutJoinRequestsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutJoinRequestsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutJoinRequestsInput, Prisma.UserUncheckedUpdateWithoutJoinRequestsInput>
+}
+
+export type UserUpdateWithoutJoinRequestsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutJoinRequestsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  twitchUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  players?: Prisma.PlayerUncheckedUpdateManyWithoutUserNestedInput
+  coachedTeams?: Prisma.TeamUncheckedUpdateManyWithoutCoachNestedInput
+  bets?: Prisma.BetUncheckedUpdateManyWithoutUserNestedInput
+  marketBets?: Prisma.MarketBetUncheckedUpdateManyWithoutUserNestedInput
+  betSlips?: Prisma.BetSlipUncheckedUpdateManyWithoutUserNestedInput
+  pendingRefunds?: Prisma.PendingRefundUncheckedUpdateManyWithoutUserNestedInput
+  transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
+  transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMarketBetsInput = {
@@ -1402,6 +1559,7 @@ export type UserCreateWithoutMarketBetsInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMarketBetsInput = {
@@ -1424,6 +1582,7 @@ export type UserUncheckedCreateWithoutMarketBetsInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMarketBetsInput = {
@@ -1462,6 +1621,7 @@ export type UserUpdateWithoutMarketBetsInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMarketBetsInput = {
@@ -1484,6 +1644,7 @@ export type UserUncheckedUpdateWithoutMarketBetsInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBetSlipsInput = {
@@ -1506,6 +1667,7 @@ export type UserCreateWithoutBetSlipsInput = {
   transfersSent?: Prisma.PointTransferCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBetSlipsInput = {
@@ -1528,6 +1690,7 @@ export type UserUncheckedCreateWithoutBetSlipsInput = {
   transfersSent?: Prisma.PointTransferUncheckedCreateNestedManyWithoutSenderInput
   transfersReceived?: Prisma.PointTransferUncheckedCreateNestedManyWithoutRecipientInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBetSlipsInput = {
@@ -1566,6 +1729,7 @@ export type UserUpdateWithoutBetSlipsInput = {
   transfersSent?: Prisma.PointTransferUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBetSlipsInput = {
@@ -1588,6 +1752,7 @@ export type UserUncheckedUpdateWithoutBetSlipsInput = {
   transfersSent?: Prisma.PointTransferUncheckedUpdateManyWithoutSenderNestedInput
   transfersReceived?: Prisma.PointTransferUncheckedUpdateManyWithoutRecipientNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  joinRequests?: Prisma.TeamJoinRequestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1605,6 +1770,7 @@ export type UserCountOutputType = {
   transfersSent: number
   transfersReceived: number
   notifications: number
+  joinRequests: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1617,6 +1783,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   transfersSent?: boolean | UserCountOutputTypeCountTransfersSentArgs
   transfersReceived?: boolean | UserCountOutputTypeCountTransfersReceivedArgs
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
+  joinRequests?: boolean | UserCountOutputTypeCountJoinRequestsArgs
 }
 
 /**
@@ -1692,6 +1859,13 @@ export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.NotificationWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountJoinRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TeamJoinRequestWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1714,6 +1888,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   transfersSent?: boolean | Prisma.User$transfersSentArgs<ExtArgs>
   transfersReceived?: boolean | Prisma.User$transfersReceivedArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  joinRequests?: boolean | Prisma.User$joinRequestsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1770,6 +1945,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   transfersSent?: boolean | Prisma.User$transfersSentArgs<ExtArgs>
   transfersReceived?: boolean | Prisma.User$transfersReceivedArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  joinRequests?: boolean | Prisma.User$joinRequestsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1787,6 +1963,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     transfersSent: Prisma.$PointTransferPayload<ExtArgs>[]
     transfersReceived: Prisma.$PointTransferPayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
+    joinRequests: Prisma.$TeamJoinRequestPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2203,6 +2380,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   transfersSent<T extends Prisma.User$transfersSentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transfersSentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PointTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   transfersReceived<T extends Prisma.User$transfersReceivedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transfersReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PointTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  joinRequests<T extends Prisma.User$joinRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$joinRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamJoinRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2849,6 +3027,30 @@ export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
+}
+
+/**
+ * User.joinRequests
+ */
+export type User$joinRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TeamJoinRequest
+   */
+  select?: Prisma.TeamJoinRequestSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TeamJoinRequest
+   */
+  omit?: Prisma.TeamJoinRequestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TeamJoinRequestInclude<ExtArgs> | null
+  where?: Prisma.TeamJoinRequestWhereInput
+  orderBy?: Prisma.TeamJoinRequestOrderByWithRelationInput | Prisma.TeamJoinRequestOrderByWithRelationInput[]
+  cursor?: Prisma.TeamJoinRequestWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TeamJoinRequestScalarFieldEnum | Prisma.TeamJoinRequestScalarFieldEnum[]
 }
 
 /**

@@ -65,6 +65,7 @@ export const ModelName = {
   PendingRefund: 'PendingRefund',
   PointTransfer: 'PointTransfer',
   Notification: 'Notification',
+  TeamJoinRequest: 'TeamJoinRequest',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -331,6 +332,25 @@ export const NotificationScalarFieldEnum = {
 } as const
 
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const TeamJoinRequestScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  teamId: 'teamId',
+  tournamentId: 'tournamentId',
+  status: 'status',
+  desiredJersey: 'desiredJersey',
+  desiredPosition: 'desiredPosition',
+  message: 'message',
+  reviewedById: 'reviewedById',
+  reviewedAt: 'reviewedAt',
+  reviewNote: 'reviewNote',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamJoinRequestScalarFieldEnum = (typeof TeamJoinRequestScalarFieldEnum)[keyof typeof TeamJoinRequestScalarFieldEnum]
 
 
 export const BettingMarketScalarFieldEnum = {
