@@ -22,6 +22,8 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
+  UserPlus,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -49,11 +51,18 @@ type User = {
   twitchUserId: string | null;
 };
 
-type PageProps = { user: User };
+type JoinCta = {
+  tournamentId: string;
+  tournamentName: string;
+  hasPendingRequest: boolean;
+};
+
+type PageProps = { user: User; joinCta: JoinCta | null };
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => {
   const { getAuth } = await import('@clerk/nextjs/server');
   const { syncClerkUserFromReq } = await import('@/lib/clerk');
+  const { getParticipantJoinCta } = await import('@/lib/utils/join-requests');
 
   const { userId } = getAuth(ctx.req);
   if (!userId) return { redirect: { destination: '/sign-in', permanent: false } };
@@ -61,7 +70,10 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (ctx) => 
   const dbUser = await syncClerkUserFromReq(ctx.req);
   if (!dbUser) return { redirect: { destination: '/', permanent: false } };
 
-  return { props: { user: JSON.parse(JSON.stringify(dbUser)) } };
+  // CTA "rejoindre une équipe" : uniquement pour les participants sans équipe.
+  const joinCta = dbUser.role === 'PARTICIPANT' ? await getParticipantJoinCta(dbUser.id) : null;
+
+  return { props: { user: JSON.parse(JSON.stringify(dbUser)), joinCta } };
 };
 
 const roleLabels: Record<string, { label: string; tone: 'admin' | 'participant' | 'guest' }> = {
@@ -228,6 +240,50 @@ export default function ProfilePage(props: InferGetServerSidePropsType<typeof ge
             </div>
           </div>
         </section>
+
+        {/* CTA REJOINDRE UNE ÉQUIPE — participant sans équipe */}
+        {props.joinCta && (
+          <section className="relative bg-black border-b border-white/10 py-8">
+            <div className="container mx-auto px-4 max-w-3xl">
+              <Link
+                href={`/tournaments/${props.joinCta.tournamentId}/rejoindre`}
+                className="block group"
+              >
+                <Card className="relative overflow-hidden bg-linear-to-br from-emerald-950/40 via-black to-yellow-950/10 border-emerald-500/30 hover:border-emerald-500/50 transition-all p-6 md:p-7">
+                  <div className="grid md:grid-cols-[auto_1fr_auto] gap-5 items-center">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                      {props.joinCta.hasPendingRequest ? (
+                        <Clock className="w-5 h-5 text-yellow-400" />
+                      ) : (
+                        <UserPlus className="w-5 h-5 text-emerald-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-mono uppercase tracking-[0.3em] mb-1.5 text-emerald-400">
+                        § Inscription · {props.joinCta.tournamentName}
+                      </div>
+                      <h2 className="text-xl md:text-2xl font-black text-white tracking-tight mb-1.5 leading-tight">
+                        {props.joinCta.hasPendingRequest
+                          ? 'Ta demande est en attente'
+                          : 'Rejoins une équipe'}
+                      </h2>
+                      <p className="text-sm text-white/60 leading-relaxed">
+                        {props.joinCta.hasPendingRequest
+                          ? 'Un coach ou un admin doit valider ta demande. Tu peux la suivre ou la retirer ici.'
+                          : "Tu es participant mais tu n'as pas encore d'équipe. Choisis une nation, propose ton numéro et ton poste."}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center justify-center bg-white text-black hover:bg-white/90 font-black uppercase tracking-[0.18em] text-xs px-6 h-10 rounded-md shrink-0 transition">
+                      {props.joinCta.hasPendingRequest ? 'Voir ma demande' : 'Postuler'}
+                      <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                    </span>
+                  </div>
+                  <BorderBeam size={180} duration={9} colorFrom="#10b981" colorTo="#facc15" borderWidth={1} />
+                </Card>
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* FORM */}
         <section className="relative bg-black border-b border-white/10 py-16">

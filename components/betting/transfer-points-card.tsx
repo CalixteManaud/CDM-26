@@ -59,8 +59,7 @@ export function TransferPointsCard({ balance, onDone }: Props) {
   const overBalance = typeof balance === 'number' && Number.isFinite(points) && points > balance;
   const canSubmit = recipient.trim().length > 0 && amountValid && !overBalance && !submitting;
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submit = async () => {
     if (!canSubmit) return;
 
     setSubmitting(true);
@@ -116,7 +115,19 @@ export function TransferPointsCard({ balance, onDone }: Props) {
         </div>
       </div>
 
-      <form onSubmit={submit} className="space-y-3">
+      {/* Pas de <form> ici : ce composant est monté dans le <form> du profil,
+          et imbriquer deux <form> casse l'hydratation + rattache ce bouton au
+          form parent. On gère l'envoi via onClick + Enter à la main. */}
+      <div
+        className="space-y-3"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            submit();
+          }
+        }}
+      >
         <div className="space-y-1.5">
           <Label htmlFor="transfer-recipient" className="text-[10px] font-mono text-white/55 uppercase tracking-[0.25em]">
             Destinataire
@@ -188,7 +199,8 @@ export function TransferPointsCard({ balance, onDone }: Props) {
         </div>
 
         <Button
-          type="submit"
+          type="button"
+          onClick={submit}
           disabled={!canSubmit}
           className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-[0.18em] text-xs h-12 disabled:opacity-40 disabled:cursor-not-allowed"
         >
@@ -204,7 +216,7 @@ export function TransferPointsCard({ balance, onDone }: Props) {
             </>
           )}
         </Button>
-      </form>
+      </div>
 
       {history.length > 0 && (
         <div className="mt-5 pt-4 border-t border-white/10">

@@ -354,3 +354,45 @@ export async function getUserRequestsForTournament(userId: string, tournamentId:
     orderBy: { createdAt: 'desc' },
   });
 }
+
+export type ParticipantJoinCta = {
+  tournamentId: string;
+  tournamentName: string;
+  hasPendingRequest: boolean;
+};
+
+/**
+ * CTA "Rejoindre une équipe" du profil : renvoie le tournoi ouvert aux
+ * inscriptions le plus proche que le participant n'a PAS encore rejoint (+ s'il
+ * y a déjà une demande en attente dessus). `null` s'il n'y a rien à rejoindre
+ * (aucun tournoi ouvert, ou déjà joueur partout).
+ */
+export async function getParticipantJoinCta(userId: string): Promise<ParticipantJoinCta | null> {
+  // Tournois où l'user est déjà joueur → à exclure.
+  const playerRows = await prisma.player.findMany({
+    where: { userId },
+    select: { team: { select: { tournamentId: true } } },
+  });
+  const joinedTournamentIds = new Set(playerRows.map((p) => p.team.tournamentId));
+
+  // Tournois ouverts aux inscriptions, le plus proche d'abord.
+  const openTournaments = await prisma.tournament.findMany({
+    where: { archivedAt: null, groupStageComplete: false },
+    select: { id: true, name: true },
+    orderBy: { startDate: 'asc' },
+  });
+
+  const target = openTournaments.find((t) => !joinedTournamentIds.has(t.id));
+  if (!target) return null;
+
+  const pending = await prisma.teamJoinRequest.findFirst({
+    where: { userId, tournamentId: target.id, status: 'PENDING' },
+    select: { id: true },
+  });
+
+  return {
+    tournamentId: target.id,
+    tournamentName: target.name,
+    hasPendingRequest: !!pending,
+  };
+}
