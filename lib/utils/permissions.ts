@@ -162,6 +162,11 @@ export async function canUserBetOnTournament(
   userId: string,
   tournamentId: string
 ): Promise<{ ok: true } | { ok: false; reason: BetRefusal }> {
+  // Les admins sont exemptés : ils deviennent coach "par défaut" des équipes
+  // qu'ils créent, avant l'affectation des vrais coachs. Cohérent avec
+  // l'exemption admin sur les transferts (isActiveTournamentInsider).
+  if (await isSiteAdmin(userId)) return { ok: true };
+
   const [isPlayer, isCoach] = await Promise.all([
     prisma.player.findFirst({
       where: { userId, team: { tournamentId } },

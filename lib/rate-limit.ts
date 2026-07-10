@@ -97,16 +97,32 @@ async function ensureUpstash() {
 // ====================== API publique ======================
 
 /**
+ * Applique la limite via Upstash si dispo, sinon in-memory. Si l'appel Upstash
+ * échoue au runtime (DNS mort, réseau, instance down), on NE casse PAS la requête
+ * appelante : on log, on désactive Upstash pour le reste du process (évite de
+ * re-taper un hôte mort à chaque requête → latence DNS répétée) et on retombe
+ * sur l'in-memory. Une panne du rate-limiter ne doit jamais bloquer un pari.
+ */
+async function applyLimit(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
+  await ensureUpstash();
+  if (upstashLimiter) {
+    try {
+      const r = await upstashLimiter.limit(key);
+      return { success: r.success, remaining: r.remaining, resetAt: r.reset };
+    } catch (err) {
+      console.warn('[rate-limit] Upstash limit() failed, falling back to in-memory:', err);
+      upstashLimiter = null; // circuit-break : on arrête de solliciter l'hôte mort
+    }
+  }
+  return inMemoryLimit(key, limit, windowMs);
+}
+
+/**
  * Limite les placements de paris à 10 / minute / user.
  * @param userId DB user ID (utilisé comme clé — pas l'IP, pour pas pénaliser le NAT)
  */
 export async function rateLimitBet(userId: string): Promise<RateLimitResult> {
-  await ensureUpstash();
-  if (upstashLimiter) {
-    const r = await upstashLimiter.limit(`bet:${userId}`);
-    return { success: r.success, remaining: r.remaining, resetAt: r.reset };
-  }
-  return inMemoryLimit(`bet:${userId}`, 10, 60_000);
+  return applyLimit(`bet:${userId}`, 10, 60_000);
 }
 
 /**
@@ -114,12 +130,7 @@ export async function rateLimitBet(userId: string): Promise<RateLimitResult> {
  * @param userId DB user ID de l'expéditeur.
  */
 export async function rateLimitTransfer(userId: string): Promise<RateLimitResult> {
-  await ensureUpstash();
-  if (upstashLimiter) {
-    const r = await upstashLimiter.limit(`transfer:${userId}`);
-    return { success: r.success, remaining: r.remaining, resetAt: r.reset };
-  }
-  return inMemoryLimit(`transfer:${userId}`, 5, 60_000);
+  return applyLimit(`transfer:${userId}`, 5, 60_000);
 }
 
 /**

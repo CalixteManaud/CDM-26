@@ -163,7 +163,8 @@ Les endpoints admin sont sous `pages/api/admin/`. Voir `pages/api/admin/promote-
 - **Qui peut parier** : tout user authentifié avec Twitch lié (admins inclus), SAUF :
   - Tout `Player` inscrit dans une équipe du tournoi concerné (info privilégiée)
   - Tout `Team.coachUserId` d'une équipe du tournoi concerné
-  - Check centralisé dans `lib/utils/permissions.ts` : `canUserBetOnMatch`, `canUserBetOnMarket`, `canUserBetOnTournament`. Toutes les API routes (`bets/place`, `markets/place`, `markets/slip`) appellent ces helpers avant le débit Wizebot.
+  - **Exception admin** : un `User.role === 'ADMIN'` est exempté de ces deux exclusions (il devient coach "par défaut" des équipes qu'il crée avant l'affectation des vrais coachs). Même exemption sur les transferts de points (`isActiveTournamentInsider` court-circuité pour les admins dans `transferPoints`).
+  - Check centralisé dans `lib/utils/permissions.ts` : `canUserBetOnMatch`, `canUserBetOnMarket`, `canUserBetOnTournament` (exemption admin en tête de `canUserBetOnTournament`). Toutes les API routes (`bets/place`, `markets/place`, `markets/slip`) appellent ces helpers avant le débit Wizebot.
 - **Limite par pari** : `MAX_BET_POINTS = 50_000` (1X2 et marchés). Constantes exportées par `lib/utils/betting.ts` et `actions/markets.ts` — ajuste-les là pour propager partout.
 - **No switching sides** : une fois qu'un user a parié sur un outcome d'un match (1X2) ou d'un marché flexible, il ne peut **plus changer de camp** — il peut uniquement cumuler sur son choix initial. Enforced dans `placeBet` (code `OUTCOME_LOCKED`), `placeMarketBet` et `placeBetSlip` (check par jambe).
 - **Rate limit** : `lib/rate-limit.ts` → `rateLimitBet(userId)` = 10 paris/min/user, appliqué dans les 3 API routes de placement. En mémoire process par défaut (suffit en dev / lambda solo) ; pour la prod multi-instance Vercel, brancher Upstash KV (instructions dans le fichier).

@@ -19,7 +19,7 @@ import {
   normalizeTwitchUsername,
 } from '@/lib/wizebot';
 import { recordPendingRefund } from '@/lib/utils/betting';
-import { isActiveTournamentInsider } from '@/lib/utils/permissions';
+import { isActiveTournamentInsider, isSiteAdmin } from '@/lib/utils/permissions';
 import { createNotification } from '@/lib/utils/notifications';
 import { TransferStatus, NotificationType } from '@/prisma/prisma-client/enums';
 
@@ -111,7 +111,11 @@ export async function transferPoints(params: {
 
   // 2 bis. Intégrité : un joueur/coach d'un tournoi actif ne peut pas transférer
   // ses points (il pourrait financer un prête-nom qui parie à sa place).
-  if (await isActiveTournamentInsider(senderId)) {
+  // Exception : les admins sont exemptés. Ils deviennent coach "par défaut" des
+  // équipes qu'ils créent, avant l'affectation des vrais coachs — ce n'est pas
+  // un conflit d'intérêt réel, et ça les empêcherait de distribuer des points.
+  const senderIsAdmin = await isSiteAdmin(senderId);
+  if (!senderIsAdmin && (await isActiveTournamentInsider(senderId))) {
     return {
       ok: false,
       code: 'INSIDER_BLOCKED',
