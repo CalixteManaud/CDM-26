@@ -676,7 +676,7 @@ export default function CDM26Home({ counts, fixtures, streamers, ticker }: CDM26
     <>
       <PageHead
         title="Le Mondial FIFA 26 sur Twitch"
-        description="La Coupe du Monde FIFA 26 en version esport. 32 nations, 8 groupes, des matchs diffusés en direct sur Twitch. Forme ta nation, joue les éliminatoires, hisse ton drapeau."
+        description="La Coupe du Monde FIFA 26 en esport sur Twitch. 32 nations, 8 groupes, matchs en direct, paris en points de chaîne. Forme ta nation !"
         path="/"
       />
       <script
