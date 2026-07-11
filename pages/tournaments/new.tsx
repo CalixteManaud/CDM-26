@@ -283,7 +283,7 @@ export default function NewTournamentPage(props: InferGetServerSidePropsType<typ
                     icon={Users}
                     accent="red"
                     min={3}
-                    max={15}
+                    max={26}
                     value={formData.playersPerTeam}
                     onChange={(v) => setFormData((p) => ({ ...p, playersPerTeam: v }))}
                   />

@@ -201,8 +201,8 @@ export function AuthShell({
                 </h2>
                 <p className="text-xs text-white/50 mt-1">
                   {mode === 'sign-in'
-                    ? 'Saisis tes identifiants ou utilise un provider.'
-                    : 'Quelques secondes — Twitch, Google ou email.'}
+                    ? 'Connecte-toi avec ton compte Twitch.'
+                    : 'Quelques secondes — connexion via Twitch.'}
                 </p>
               </div>
 

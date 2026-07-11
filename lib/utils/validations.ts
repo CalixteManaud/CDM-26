@@ -5,7 +5,7 @@ export const tournamentSchema = z.object({
   name: z.string().min(3, 'Le nom doit contenir au moins 3 caractères'),
   startDate: z.coerce.date(),
   teamsPerGroup: z.coerce.number().min(2).max(8),
-  playersPerTeam: z.coerce.number().min(3).max(15),
+  playersPerTeam: z.coerce.number().min(3).max(26),
   groupCount: z.coerce.number().min(1).max(8),
 });
 

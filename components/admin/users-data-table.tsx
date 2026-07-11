@@ -162,13 +162,17 @@ export function UsersDataTable({ initialData, initialTotal, onMutate }: UsersDat
       const res = await fetch('/api/admin/promote-to-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ targetUserId: userId }),
       });
-      if (!res.ok) throw new Error();
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || 'Erreur lors de la promotion');
+        return;
+      }
       toast.success(`${userName} est maintenant administrateur`);
       onMutate();
     } catch {
-      toast.error('Erreur lors de la promotion');
+      toast.error('Erreur réseau');
     }
   };
 
@@ -177,13 +181,17 @@ export function UsersDataTable({ initialData, initialTotal, onMutate }: UsersDat
       const res = await fetch('/api/admin/demote-from-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ targetUserId: userId }),
       });
-      if (!res.ok) throw new Error();
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || 'Erreur lors de la rétrogradation');
+        return;
+      }
       toast.success(`${userName} n'est plus administrateur`);
       onMutate();
     } catch {
-      toast.error('Erreur lors de la rétrogradation');
+      toast.error('Erreur réseau');
     }
   };
 
