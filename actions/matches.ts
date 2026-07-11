@@ -15,6 +15,8 @@ import { MatchStage, MatchStatus } from '@/prisma/prisma-client/enums';
 export async function getAllMatches() {
   try {
     const matches = await prisma.match.findMany({
+      // Exclut les tournois archivés (sélecteur + stats du bandeau sur /matches).
+      where: { tournament: { archivedAt: null } },
       include: {
         homeTeam: true,
         awayTeam: true,

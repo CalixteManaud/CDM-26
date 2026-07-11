@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bell, Check, Gift, Trophy, RotateCcw, AlertTriangle, Info, UserPlus, UserCheck, UserX } from 'lucide-react';
+import { Bell, Check, Gift, Trophy, RotateCcw, AlertTriangle, Info, UserPlus, UserCheck, UserX, X, Trash2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -144,6 +144,35 @@ export function NotificationBell() {
     }
   };
 
+  const deleteOne = async (id: string) => {
+    const wasUnread = items.some((n) => n.id === id && !n.read);
+    setItems((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) setUnread((u) => Math.max(0, u - 1));
+    try {
+      await fetch('/api/notifications/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+    } catch {
+      // silencieux — on rechargera au prochain poll
+    }
+  };
+
+  const deleteAll = async () => {
+    setItems([]);
+    setUnread(0);
+    try {
+      await fetch('/api/notifications/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+    } catch {
+      // silencieux
+    }
+  };
+
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -166,15 +195,26 @@ export function NotificationBell() {
             <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/60">
               Notifications
             </span>
-            {unread > 0 && (
-              <button
-                type="button"
-                onClick={markAllRead}
-                className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.18em] text-emerald-300 hover:text-emerald-200"
-              >
-                <Check className="w-3 h-3" /> Tout lire
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unread > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.18em] text-emerald-300 hover:text-emerald-200"
+                >
+                  <Check className="w-3 h-3" /> Tout lire
+                </button>
+              )}
+              {items.length > 0 && (
+                <button
+                  type="button"
+                  onClick={deleteAll}
+                  className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/45 hover:text-red-300"
+                >
+                  <Trash2 className="w-3 h-3" /> Effacer tout
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
@@ -189,7 +229,7 @@ export function NotificationBell() {
                 const inner = (
                   <div
                     className={cn(
-                      'flex items-start gap-3 px-4 py-3 border-b border-white/5 transition',
+                      'flex items-start gap-3 pl-4 pr-9 py-3 border-b border-white/5 transition',
                       !n.read && 'bg-white/[0.03]'
                     )}
                   >
@@ -208,27 +248,44 @@ export function NotificationBell() {
                     </div>
                   </div>
                 );
-                return n.href ? (
-                  <Link
-                    key={n.id}
-                    href={n.href}
-                    onClick={() => {
-                      markOneRead(n.id);
-                      setOpen(false);
-                    }}
-                    className="block hover:bg-white/5"
-                  >
-                    {inner}
-                  </Link>
-                ) : (
+                const deleteBtn = (
                   <button
-                    key={n.id}
                     type="button"
-                    onClick={() => markOneRead(n.id)}
-                    className="block w-full text-left hover:bg-white/5"
+                    aria-label="Supprimer la notification"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      deleteOne(n.id);
+                    }}
+                    className="absolute top-2 right-2 z-10 inline-flex items-center justify-center w-6 h-6 rounded-md text-white/30 hover:text-red-300 hover:bg-white/10 transition"
                   >
-                    {inner}
+                    <X className="w-3.5 h-3.5" />
                   </button>
+                );
+                return (
+                  <div key={n.id} className="relative">
+                    {n.href ? (
+                      <Link
+                        href={n.href}
+                        onClick={() => {
+                          markOneRead(n.id);
+                          setOpen(false);
+                        }}
+                        className="block hover:bg-white/5"
+                      >
+                        {inner}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => markOneRead(n.id)}
+                        className="block w-full text-left hover:bg-white/5"
+                      >
+                        {inner}
+                      </button>
+                    )}
+                    {deleteBtn}
+                  </div>
                 );
               })
             )}

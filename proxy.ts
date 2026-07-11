@@ -1,11 +1,14 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
+import type { NextRequest } from 'next/server';
 
-const isPublicRoute = createRouteMatcher([
+/**
+ * Routes publiques (accessibles sans session). Le reste est protégé par défaut.
+ *
+ * On utilise le matching natif de Next (`req.nextUrl.pathname`) plutôt que
+ * `createRouteMatcher` (déprécié chez Clerk). `clerkMiddleware()` reste requis.
+ */
+const PUBLIC_EXACT = new Set([
   '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/sso-callback(.*)',
-  '/api/webhooks(.*)',
   '/reglement',
   '/support',
   '/faq',
@@ -16,8 +19,17 @@ const isPublicRoute = createRouteMatcher([
   '/sitemap.xml',
 ]);
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
+// Équivalents des anciens patterns `'/xxx(.*)'` : préfixe + tout suffixe.
+const PUBLIC_PREFIXES = ['/sign-in', '/sign-up', '/sso-callback', '/api/webhooks'];
+
+function isPublicRoute(req: NextRequest): boolean {
+  const { pathname } = req.nextUrl;
+  if (PUBLIC_EXACT.has(pathname)) return true;
+  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
     await auth.protect();
   }
 });

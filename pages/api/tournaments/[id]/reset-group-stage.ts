@@ -6,7 +6,12 @@
  *
  * Garde-fous (réinitialisation refusée si) :
  *  - un match de poule a déjà un résultat (FINISHED) ;
- *  - des paris (1X2 ou marchés) ont été placés sur ces matchs.
+ *  - des paris ACTIFS (PENDING) sont en cours sur ces matchs (mises engagées).
+ *
+ * Les paris CANCELED / VOID ont déjà été remboursés : ils n'empêchent pas la
+ * réinitialisation, mais comme `Bet.match` et `MarketBet.market` sont en
+ * onDelete: Restrict, on doit les supprimer explicitement dans la transaction
+ * avant de supprimer les matchs.
  *
  * Suppression : les marchés / pools / events / stats des matchs cascadent au
  * niveau DB. On efface aussi les standings (dérivés) et on remet
@@ -59,21 +64,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  // On ne bloque que sur les paris ACTIFS (PENDING) : leurs mises sont encore
+  // engagées dans le pool et seraient perdues si on supprimait le match. Les
+  // paris CANCELED / VOID ont déjà été remboursés et retirés du pool, donc ils
+  // ne posent aucun problème pour la réinitialisation.
   const matchIds = groupMatches.map((m) => m.id);
   const [betCount, marketBetCount] = await Promise.all([
-    prisma.bet.count({ where: { matchId: { in: matchIds } } }),
-    prisma.marketBet.count({ where: { market: { matchId: { in: matchIds } } } }),
+    prisma.bet.count({ where: { matchId: { in: matchIds }, status: 'PENDING' } }),
+    prisma.marketBet.count({
+      where: { market: { matchId: { in: matchIds } }, status: 'PENDING' },
+    }),
   ]);
   const totalBets = betCount + marketBetCount;
   if (totalBets > 0) {
     return res.status(409).json({
-      error: `Réinitialisation impossible : ${totalBets} pari${totalBets > 1 ? 's ont' : ' a'} été placé${totalBets > 1 ? 's' : ''} sur ces matchs — les points seraient perdus.`,
+      error: `Réinitialisation impossible : ${totalBets} pari${totalBets > 1 ? 's actifs sont' : ' actif est'} en cours sur ces matchs — annule-les d’abord (les mises seront remboursées).`,
     });
   }
 
   try {
     const matchesDeleted = await prisma.$transaction(async (tx) => {
       await tx.standing.deleteMany({ where: { tournamentId } });
+      // Retire les paris déjà remboursés/settled (CANCELED / VOID) référençant
+      // ces matchs : leurs FK sont en onDelete: Restrict et bloqueraient sinon
+      // la suppression des matchs (et des marchés cascadés).
+      await tx.marketBet.deleteMany({ where: { market: { matchId: { in: matchIds } } } });
+      await tx.bet.deleteMany({ where: { matchId: { in: matchIds } } });
       const del = await tx.match.deleteMany({ where: { tournamentId, stage: 'GROUP' } });
       await tx.tournament.update({
         where: { id: tournamentId },

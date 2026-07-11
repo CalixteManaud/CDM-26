@@ -473,7 +473,7 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   return (
     <>
       <Head>
-        <title>{match.homeTeam.name} vs {match.awayTeam.name} — CDM 26</title>
+        <title>{`${match.homeTeam.name} vs ${match.awayTeam.name} — CDM 26`}</title>
         <meta
           name="description"
           content={`${match.homeTeam.name} vs ${match.awayTeam.name} — ${stage.label}, ${match.tournament.name}`}

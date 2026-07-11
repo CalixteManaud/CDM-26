@@ -95,7 +95,7 @@ export default function DrawPage(props: InferGetServerSidePropsType<typeof getSe
   return (
     <>
       <Head>
-        <title>Tirage au sort — {props.tournament.name} — CDM 26</title>
+        <title>{`Tirage au sort — ${props.tournament.name} — CDM 26`}</title>
         <meta
           name="description"
           content={`Cérémonie de tirage au sort officielle — ${props.tournament.name}`}

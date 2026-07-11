@@ -51,7 +51,7 @@ export default function TeamJoinRequestsPage(props: InferGetServerSidePropsType<
   return (
     <>
       <Head>
-        <title>Demandes · {team.name} — CDM 26</title>
+        <title>{`Demandes · ${team.name} — CDM 26`}</title>
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">

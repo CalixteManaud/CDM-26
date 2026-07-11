@@ -237,7 +237,7 @@ export default function AddPlayerPage(props: InferGetServerSidePropsType<typeof 
   return (
     <>
       <Head>
-        <title>Ajouter un joueur · {team.name} — CDM 26</title>
+        <title>{`Ajouter un joueur · ${team.name} — CDM 26`}</title>
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">

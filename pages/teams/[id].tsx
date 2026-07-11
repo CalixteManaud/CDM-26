@@ -275,7 +275,7 @@ export default function TeamDetailPage(props: InferGetServerSidePropsType<typeof
   return (
     <>
       <Head>
-        <title>{team.name} — CDM 26</title>
+        <title>{`${team.name} — CDM 26`}</title>
         <meta name="description" content={`${team.name} — effectif, classement, statistiques.`} />
       </Head>
 

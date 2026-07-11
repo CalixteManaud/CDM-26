@@ -139,7 +139,7 @@ export default function TournamentBettingPage(props: InferGetServerSidePropsType
   return (
     <>
       <Head>
-        <title>{tournament.name} — Paris longue durée — CDM 26</title>
+        <title>{`${tournament.name} — Paris longue durée — CDM 26`}</title>
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">

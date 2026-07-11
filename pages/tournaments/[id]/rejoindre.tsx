@@ -287,7 +287,7 @@ export default function JoinTournamentPage(props: InferGetServerSidePropsType<ty
   return (
     <>
       <Head>
-        <title>Rejoindre une équipe · {tournament.name} — CDM 26</title>
+        <title>{`Rejoindre une équipe · ${tournament.name} — CDM 26`}</title>
       </Head>
 
       <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">

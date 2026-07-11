@@ -39,6 +39,7 @@ import { TeamsList } from '@/components/tournament/teams-list';
 import { GenerateMatchesButton } from '@/components/tournament/generate-matches-button';
 import { CompleteGroupStageButton } from '@/components/tournament/complete-group-stage-button';
 import { ResetGroupStageButton } from '@/components/tournament/reset-group-stage-button';
+import { TeamCountControl } from '@/components/tournament/team-count-control';
 import { TournamentStatisticsView } from '@/components/tournament/tournament-statistics';
 import { ImportTeamsDialog } from '@/components/tournament/import-teams-dialog';
 import { UnassignedTeamsAlert } from '@/components/tournament/unassigned-teams-alert';
@@ -103,6 +104,7 @@ type Tournament = {
   startDate: string;
   groupCount: number;
   teamsPerGroup: number;
+  playersPerTeam: number;
   groupStageComplete: boolean;
   archivedAt: string | null;
   teams?: Team[];
@@ -207,6 +209,16 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
 
   const handleRefresh = () => router.replace(router.asPath);
 
+  // Ouvre directement l'onglet passé en query (?tab=teams) — ex. après le tirage
+  // au sort, on veut atterrir sur « Équipes » pour voir le résultat.
+  useEffect(() => {
+    const t = router.query.tab;
+    const valid: TabId[] = ['overview', 'teams', 'groups', 'bracket', 'matches', 'stats'];
+    if (typeof t === 'string' && (valid as string[]).includes(t)) {
+      setActiveTab(t as TabId);
+    }
+  }, [router.query.tab]);
+
   useEffect(() => {
     if (activeTab === 'stats' && !statistics && tournament) {
       startTransition(async () => {
@@ -260,6 +272,16 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
   const playersCount = tournament.teams?.reduce((acc, team) => acc + (team.players?.length ?? 0), 0) ?? 0;
   const finishedMatches = matches.filter((m) => m.status === 'FINISHED').length;
 
+  // Le nombre d'équipes reste ajustable tant qu'aucun match n'a été généré
+  // (changer la structure des groupes après coup casserait le calendrier).
+  const noMatchesYet = matches.length === 0;
+  const groupOccupancy = new Map<string, number>();
+  for (const t of tournament.teams ?? []) {
+    if (t.group?.id) groupOccupancy.set(t.group.id, (groupOccupancy.get(t.group.id) ?? 0) + 1);
+  }
+  const largestGroupOccupancy = groupOccupancy.size > 0 ? Math.max(...groupOccupancy.values()) : 0;
+  const occupiedGroupsCount = groupOccupancy.size;
+
   const startDate = new Date(tournament.startDate);
   const now = new Date();
   const isUpcoming = startDate > now;
@@ -285,7 +307,7 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
   return (
     <>
       <Head>
-        <title>{tournament.name} — CDM 26</title>
+        <title>{`${tournament.name} — CDM 26`}</title>
         <meta name="description" content={`${tournament.name} — phase de poules, bracket, classements et statistiques.`} />
       </Head>
 
@@ -488,6 +510,16 @@ export default function TournamentDetailPage(props: InferGetServerSidePropsType<
               {/* TEAMS */}
               <TabsContent value="teams" className="mt-0">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                  {isAdmin && !isArchived && noMatchesYet && (
+                    <TeamCountControl
+                      tournamentId={tournament.id}
+                      currentGroupCount={tournament.groupCount}
+                      currentTeamsPerGroup={tournament.teamsPerGroup}
+                      largestGroupOccupancy={largestGroupOccupancy}
+                      occupiedGroupsCount={occupiedGroupsCount}
+                      registeredTeams={teamsCount}
+                    />
+                  )}
                   {isAdmin && !isArchived && (
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span
