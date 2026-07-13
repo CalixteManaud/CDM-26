@@ -230,6 +230,34 @@ function useWinnerConfetti(enabled: boolean) {
   }, [enabled]);
 }
 
+/**
+ * Score "live" dérivé des buts déjà logués dans le feed (events), sans toucher au
+ * score stocké en base. Permet d'afficher un tableau qui monte pendant le LIVE au
+ * fil des `⚽ +1 but` de la console, tout en gardant le match en cours. Le score
+ * final n'est écrit qu'à la clôture (formulaire de résultat → submit-result).
+ *  - GOAL / PENALTY_SCORED : +1 pour l'équipe qui marque
+ *  - OWN_GOAL              : +1 pour l'adversaire
+ */
+function deriveLiveScore(
+  events: MatchEventRow[],
+  homeTeamId: string,
+  awayTeamId: string
+): { home: number; away: number } {
+  let home = 0;
+  let away = 0;
+  for (const e of events) {
+    const teamId = e.team?.id ?? null;
+    if (e.type === 'GOAL' || e.type === 'PENALTY_SCORED') {
+      if (teamId === homeTeamId) home += 1;
+      else if (teamId === awayTeamId) away += 1;
+    } else if (e.type === 'OWN_GOAL') {
+      if (teamId === homeTeamId) away += 1;
+      else if (teamId === awayTeamId) home += 1;
+    }
+  }
+  return { home, away };
+}
+
 export default function MatchDetailPage(props: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter();
   const { user } = useUser();
@@ -453,6 +481,11 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
   const isLive = match.status === 'LIVE';
   const isFinished = match.status === 'FINISHED';
   const isScheduled = match.status === 'SCHEDULED';
+  // Pendant le LIVE, le score affiché est dérivé des buts logués dans le feed
+  // (le score stocké reste vierge jusqu'à la clôture via le formulaire de résultat).
+  const liveScore = isLive
+    ? deriveLiveScore(props.events, match.homeTeam.id, match.awayTeam.id)
+    : null;
   // Player embarqué uniquement si le match est live ou à venir et qu'un stream existe
   const canEmbedStream = (isLive || isScheduled) && !!(match.twitchUrl || match.youtubeUrl);
   const stage = stageMeta[match.stage] ?? { label: match.stage, code: match.stage.slice(0, 3) };
@@ -492,7 +525,13 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="fixed top-16 inset-x-0 z-30"
             >
-              <StickyScorebug match={match} homeWin={homeWin} awayWin={awayWin} />
+              <StickyScorebug
+                match={match}
+                homeWin={homeWin}
+                awayWin={awayWin}
+                liveHome={liveScore?.home ?? null}
+                liveAway={liveScore?.away ?? null}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -558,7 +597,12 @@ export default function MatchDetailPage(props: InferGetServerSidePropsType<typeo
                 className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-10 max-w-5xl mx-auto"
               >
                 <TeamColumn team={match.homeTeam} align="right" side="home" outcome={homeOutcome} reduce={!!reduce} />
-                <HeroScore status={match.status} homeScore={match.homeScore} awayScore={match.awayScore} reduce={!!reduce} />
+                <HeroScore
+                  status={match.status}
+                  homeScore={liveScore ? liveScore.home : match.homeScore}
+                  awayScore={liveScore ? liveScore.away : match.awayScore}
+                  reduce={!!reduce}
+                />
                 <TeamColumn team={match.awayTeam} align="left" side="away" outcome={awayOutcome} reduce={!!reduce} />
               </motion.div>
 
@@ -988,10 +1032,15 @@ function StickyScorebug({
   match,
   homeWin,
   awayWin,
+  liveHome = null,
+  liveAway = null,
 }: {
   match: Match;
   homeWin: boolean;
   awayWin: boolean;
+  /** Score live dérivé des events (affiché en LIVE à la place du score stocké). */
+  liveHome?: number | null;
+  liveAway?: number | null;
 }) {
   const isLive = match.status === 'LIVE';
   const isFinished = match.status === 'FINISHED';
@@ -1033,9 +1082,9 @@ function StickyScorebug({
               </div>
             ) : isLive ? (
               <div className="flex items-center gap-1.5 text-xl font-black tabular-nums leading-none text-red-400 drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]">
-                <span>{hs ?? 0}</span>
+                <span>{liveHome ?? hs ?? 0}</span>
                 <span className="text-red-500/40 italic text-base animate-pulse">:</span>
-                <span>{as ?? 0}</span>
+                <span>{liveAway ?? as ?? 0}</span>
               </div>
             ) : (
               <span className="font-mono text-sm font-black tabular-nums text-white/70">
