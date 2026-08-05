@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.8.0
- * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
+ * Prisma Client JS version: 7.9.1
+ * Query Engine version: e922089b7d7502aff4249d5da3420f6fa55fc6ad
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.8.0",
-  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
+  client: "7.9.1",
+  engine: "e922089b7d7502aff4249d5da3420f6fa55fc6ad"
 }
 
 /**
@@ -156,6 +156,19 @@ export type Subset<T, U> = {
 };
 
 /**
+ * Resolved type of the argument passed to the `PrismaClient` constructor.
+ *
+ * When called without a narrower options type (the common case), this resolves
+ * to `PrismaClientOptions` directly, which produces a clear TypeScript error
+ * message (`not assignable to parameter of type 'PrismaClientOptions'`) when
+ * the argument is missing or incomplete. When the user supplies a narrower
+ * options type (e.g. via a literal), it falls back to `Subset` to keep
+ * filtering out unknown properties.
+ */
+export type PrismaClientConstructorArgs<Options extends PrismaClientOptions> =
+  [PrismaClientOptions] extends [Options] ? PrismaClientOptions : Subset<Options, PrismaClientOptions>;
+
+/**
  * SelectSubset
  * @desc From `T` pick properties that exist in `U`. Simple version of Intersection.
  * Additionally, it validates, if both select and include are present. If the case, it errors.
@@ -187,7 +200,7 @@ type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
 export type XOR<T, U> =
   T extends object ?
   U extends object ?
-    (Without<T, U> & U) | (Without<U, T> & T)
+    ((Without<T, U> & U) | (Without<U, T> & T)) & object
   : U : T
 
 
@@ -392,7 +405,6 @@ export const ModelName = {
   Match: 'Match',
   MatchPlayerStats: 'MatchPlayerStats',
   Standing: 'Standing',
-  Webhook: 'Webhook',
   MatchBettingPool: 'MatchBettingPool',
   Bet: 'Bet',
   PendingRefund: 'PendingRefund',
@@ -419,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "webhook" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "teamJoinRequest" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
+    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "teamJoinRequest" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1012,80 +1024,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.StandingCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.StandingCountAggregateOutputType> | number
-        }
-      }
-    }
-    Webhook: {
-      payload: Prisma.$WebhookPayload<ExtArgs>
-      fields: Prisma.WebhookFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.WebhookFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.WebhookFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>
-        }
-        findFirst: {
-          args: Prisma.WebhookFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.WebhookFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>
-        }
-        findMany: {
-          args: Prisma.WebhookFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>[]
-        }
-        create: {
-          args: Prisma.WebhookCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>
-        }
-        createMany: {
-          args: Prisma.WebhookCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.WebhookCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>[]
-        }
-        delete: {
-          args: Prisma.WebhookDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>
-        }
-        update: {
-          args: Prisma.WebhookUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>
-        }
-        deleteMany: {
-          args: Prisma.WebhookDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.WebhookUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.WebhookUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>[]
-        }
-        upsert: {
-          args: Prisma.WebhookUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebhookPayload>
-        }
-        aggregate: {
-          args: Prisma.WebhookAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateWebhook>
-        }
-        groupBy: {
-          args: Prisma.WebhookGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.WebhookGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.WebhookCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.WebhookCountAggregateOutputType> | number
         }
       }
     }
@@ -2074,26 +2012,6 @@ export const StandingScalarFieldEnum = {
 export type StandingScalarFieldEnum = (typeof StandingScalarFieldEnum)[keyof typeof StandingScalarFieldEnum]
 
 
-export const WebhookScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  name: 'name',
-  url: 'url',
-  secret: 'secret',
-  events: 'events',
-  isActive: 'isActive',
-  tournamentId: 'tournamentId',
-  teamId: 'teamId',
-  lastTriggeredAt: 'lastTriggeredAt',
-  triggerCount: 'triggerCount',
-  failureCount: 'failureCount',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type WebhookScalarFieldEnum = (typeof WebhookScalarFieldEnum)[keyof typeof WebhookScalarFieldEnum]
-
-
 export const MatchBettingPoolScalarFieldEnum = {
   id: 'id',
   matchId: 'matchId',
@@ -2125,7 +2043,6 @@ export const BetScalarFieldEnum = {
   status: 'status',
   actualPayout: 'actualPayout',
   settledAt: 'settledAt',
-  wizebotEventId: 'wizebotEventId',
   wizebotCreditTxId: 'wizebotCreditTxId',
   wizebotCreditError: 'wizebotCreditError',
   createdAt: 'createdAt',
@@ -2417,20 +2334,6 @@ export type ListEnumMatchStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
- * Reference to a field of type 'WebhookEventType[]'
- */
-export type ListEnumWebhookEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WebhookEventType[]'>
-    
-
-
-/**
- * Reference to a field of type 'WebhookEventType'
- */
-export type EnumWebhookEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WebhookEventType'>
-    
-
-
-/**
  * Reference to a field of type 'Decimal'
  */
 export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
@@ -2593,19 +2496,10 @@ export type BatchPayload = {
 export const defineExtension = runtime.Extensions.defineExtension as unknown as runtime.Types.Extensions.ExtendsHook<"define", TypeMapCb, runtime.Types.Extensions.DefaultArgs>
 export type DefaultPrismaClient = PrismaClient
 export type ErrorFormat = 'pretty' | 'colorless' | 'minimal'
-export type PrismaClientOptions = ({
-  /**
-   * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-pg`.
-   */
-  adapter: runtime.SqlDriverAdapterFactory
-  accelerateUrl?: never
-} | {
-  /**
-   * Prisma Accelerate URL allowing the client to connect through Accelerate instead of a direct database.
-   */
-  accelerateUrl: string
-  adapter?: never
-}) & {
+/**
+ * Options common to all variants of `PrismaClientOptions`, regardless of whether you connect to your database through a driver adapter or through Prisma Accelerate.
+ */
+export interface PrismaClientBaseOptions {
   /**
    * @default "colorless"
    */
@@ -2692,6 +2586,56 @@ export type PrismaClientOptions = ({
    */
   queryPlanCacheMaxSize?: number
 }
+
+/**
+ * `PrismaClient` options for connecting to your database through Prisma Accelerate instead of a driver adapter.
+ * 
+ * Learn more: https://pris.ly/d/accelerate
+ */
+export interface PrismaClientOptionsWithAccelerateUrl extends PrismaClientBaseOptions {
+  /**
+   * The Prisma Accelerate connection URL. Use this option to connect to your database through Prisma Accelerate instead of using a driver adapter to connect directly.
+   * 
+   * Learn more: https://pris.ly/d/accelerate
+   */
+  accelerateUrl: string
+  adapter?: never
+}
+
+/**
+ * `PrismaClient` options for connecting to your database through a driver adapter. This is the common case in Prisma 7.
+ * 
+ * Learn more: https://pris.ly/d/driver-adapters
+ */
+export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions {
+  /**
+   * A driver adapter that PrismaClient uses to connect to your database, such as the ones provided by `@prisma/adapter-pg`, `@prisma/adapter-libsql`, `@prisma/adapter-planetscale`, etc.
+   * 
+   * A driver adapter is **required** unless you connect to your database through Prisma Accelerate (in which case use `accelerateUrl` instead).
+   * 
+   * Learn more: https://pris.ly/d/driver-adapters
+   * 
+   * @example
+   * ```ts
+   * import { PrismaPg } from '@prisma/adapter-pg'
+   * import { PrismaClient } from './generated/prisma/client'
+   * 
+   * const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * const prisma = new PrismaClient({ adapter })
+   * ```
+   */
+  adapter: runtime.SqlDriverAdapterFactory
+  accelerateUrl?: never
+}
+
+/**
+ * Options passed to the `PrismaClient` constructor.
+ * 
+ * A driver adapter (or, alternatively, a Prisma Accelerate URL) is **required**. See {@link PrismaClientOptionsWithAdapter} and {@link PrismaClientOptionsWithAccelerateUrl} for the two variants. All other properties live in {@link PrismaClientBaseOptions} and are optional.
+ * 
+ * Learn more about driver adapters: https://pris.ly/d/driver-adapters
+ */
+export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   tournament?: Prisma.TournamentOmit
@@ -2701,7 +2645,6 @@ export type GlobalOmitConfig = {
   match?: Prisma.MatchOmit
   matchPlayerStats?: Prisma.MatchPlayerStatsOmit
   standing?: Prisma.StandingOmit
-  webhook?: Prisma.WebhookOmit
   matchBettingPool?: Prisma.MatchBettingPoolOmit
   bet?: Prisma.BetOmit
   pendingRefund?: Prisma.PendingRefundOmit

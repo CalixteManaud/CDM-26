@@ -50,7 +50,6 @@ export type BetMinAggregateOutputType = {
   status: $Enums.BetStatus | null
   actualPayout: number | null
   settledAt: Date | null
-  wizebotEventId: string | null
   wizebotCreditTxId: string | null
   wizebotCreditError: string | null
   createdAt: Date | null
@@ -69,7 +68,6 @@ export type BetMaxAggregateOutputType = {
   status: $Enums.BetStatus | null
   actualPayout: number | null
   settledAt: Date | null
-  wizebotEventId: string | null
   wizebotCreditTxId: string | null
   wizebotCreditError: string | null
   createdAt: Date | null
@@ -88,7 +86,6 @@ export type BetCountAggregateOutputType = {
   status: number
   actualPayout: number
   settledAt: number
-  wizebotEventId: number
   wizebotCreditTxId: number
   wizebotCreditError: number
   createdAt: number
@@ -121,7 +118,6 @@ export type BetMinAggregateInputType = {
   status?: true
   actualPayout?: true
   settledAt?: true
-  wizebotEventId?: true
   wizebotCreditTxId?: true
   wizebotCreditError?: true
   createdAt?: true
@@ -140,7 +136,6 @@ export type BetMaxAggregateInputType = {
   status?: true
   actualPayout?: true
   settledAt?: true
-  wizebotEventId?: true
   wizebotCreditTxId?: true
   wizebotCreditError?: true
   createdAt?: true
@@ -159,7 +154,6 @@ export type BetCountAggregateInputType = {
   status?: true
   actualPayout?: true
   settledAt?: true
-  wizebotEventId?: true
   wizebotCreditTxId?: true
   wizebotCreditError?: true
   createdAt?: true
@@ -265,7 +259,6 @@ export type BetGroupByOutputType = {
   status: $Enums.BetStatus
   actualPayout: number
   settledAt: Date | null
-  wizebotEventId: string | null
   wizebotCreditTxId: string | null
   wizebotCreditError: string | null
   createdAt: Date
@@ -307,7 +300,6 @@ export type BetWhereInput = {
   status?: Prisma.EnumBetStatusFilter<"Bet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntFilter<"Bet"> | number
   settledAt?: Prisma.DateTimeNullableFilter<"Bet"> | Date | string | null
-  wizebotEventId?: Prisma.StringNullableFilter<"Bet"> | string | null
   wizebotCreditTxId?: Prisma.StringNullableFilter<"Bet"> | string | null
   wizebotCreditError?: Prisma.StringNullableFilter<"Bet"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Bet"> | Date | string
@@ -329,7 +321,6 @@ export type BetOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  wizebotEventId?: Prisma.SortOrderInput | Prisma.SortOrder
   wizebotCreditTxId?: Prisma.SortOrderInput | Prisma.SortOrder
   wizebotCreditError?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -341,7 +332,6 @@ export type BetOrderByWithRelationInput = {
 
 export type BetWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  wizebotEventId?: string
   AND?: Prisma.BetWhereInput | Prisma.BetWhereInput[]
   OR?: Prisma.BetWhereInput[]
   NOT?: Prisma.BetWhereInput | Prisma.BetWhereInput[]
@@ -362,7 +352,7 @@ export type BetWhereUniqueInput = Prisma.AtLeast<{
   match?: Prisma.XOR<Prisma.MatchScalarRelationFilter, Prisma.MatchWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   pickedTeam?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
-}, "id" | "wizebotEventId">
+}, "id">
 
 export type BetOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -376,7 +366,6 @@ export type BetOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrderInput | Prisma.SortOrder
-  wizebotEventId?: Prisma.SortOrderInput | Prisma.SortOrder
   wizebotCreditTxId?: Prisma.SortOrderInput | Prisma.SortOrder
   wizebotCreditError?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -403,7 +392,6 @@ export type BetScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumBetStatusWithAggregatesFilter<"Bet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntWithAggregatesFilter<"Bet"> | number
   settledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Bet"> | Date | string | null
-  wizebotEventId?: Prisma.StringNullableWithAggregatesFilter<"Bet"> | string | null
   wizebotCreditTxId?: Prisma.StringNullableWithAggregatesFilter<"Bet"> | string | null
   wizebotCreditError?: Prisma.StringNullableWithAggregatesFilter<"Bet"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Bet"> | Date | string
@@ -419,7 +407,6 @@ export type BetCreateInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -441,7 +428,6 @@ export type BetUncheckedCreateInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -457,7 +443,6 @@ export type BetUpdateInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -479,7 +464,6 @@ export type BetUncheckedUpdateInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -498,7 +482,6 @@ export type BetCreateManyInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -514,7 +497,6 @@ export type BetUpdateManyMutationInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -533,7 +515,6 @@ export type BetUncheckedUpdateManyInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -562,7 +543,6 @@ export type BetCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrder
-  wizebotEventId?: Prisma.SortOrder
   wizebotCreditTxId?: Prisma.SortOrder
   wizebotCreditError?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -587,7 +567,6 @@ export type BetMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrder
-  wizebotEventId?: Prisma.SortOrder
   wizebotCreditTxId?: Prisma.SortOrder
   wizebotCreditError?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -606,7 +585,6 @@ export type BetMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   actualPayout?: Prisma.SortOrder
   settledAt?: Prisma.SortOrder
-  wizebotEventId?: Prisma.SortOrder
   wizebotCreditTxId?: Prisma.SortOrder
   wizebotCreditError?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -762,7 +740,6 @@ export type BetCreateWithoutUserInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -782,7 +759,6 @@ export type BetUncheckedCreateWithoutUserInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -830,7 +806,6 @@ export type BetScalarWhereInput = {
   status?: Prisma.EnumBetStatusFilter<"Bet"> | $Enums.BetStatus
   actualPayout?: Prisma.IntFilter<"Bet"> | number
   settledAt?: Prisma.DateTimeNullableFilter<"Bet"> | Date | string | null
-  wizebotEventId?: Prisma.StringNullableFilter<"Bet"> | string | null
   wizebotCreditTxId?: Prisma.StringNullableFilter<"Bet"> | string | null
   wizebotCreditError?: Prisma.StringNullableFilter<"Bet"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Bet"> | Date | string
@@ -846,7 +821,6 @@ export type BetCreateWithoutPickedTeamInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -866,7 +840,6 @@ export type BetUncheckedCreateWithoutPickedTeamInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -908,7 +881,6 @@ export type BetCreateWithoutMatchInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -928,7 +900,6 @@ export type BetUncheckedCreateWithoutMatchInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -972,7 +943,6 @@ export type BetCreateManyUserInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -988,7 +958,6 @@ export type BetUpdateWithoutUserInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1008,7 +977,6 @@ export type BetUncheckedUpdateWithoutUserInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1026,7 +994,6 @@ export type BetUncheckedUpdateManyWithoutUserInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1044,7 +1011,6 @@ export type BetCreateManyPickedTeamInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -1060,7 +1026,6 @@ export type BetUpdateWithoutPickedTeamInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1080,7 +1045,6 @@ export type BetUncheckedUpdateWithoutPickedTeamInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1098,7 +1062,6 @@ export type BetUncheckedUpdateManyWithoutPickedTeamInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1116,7 +1079,6 @@ export type BetCreateManyMatchInput = {
   status?: $Enums.BetStatus
   actualPayout?: number
   settledAt?: Date | string | null
-  wizebotEventId?: string | null
   wizebotCreditTxId?: string | null
   wizebotCreditError?: string | null
   createdAt?: Date | string
@@ -1132,7 +1094,6 @@ export type BetUpdateWithoutMatchInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1152,7 +1113,6 @@ export type BetUncheckedUpdateWithoutMatchInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1170,7 +1130,6 @@ export type BetUncheckedUpdateManyWithoutMatchInput = {
   status?: Prisma.EnumBetStatusFieldUpdateOperationsInput | $Enums.BetStatus
   actualPayout?: Prisma.IntFieldUpdateOperationsInput | number
   settledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  wizebotEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditTxId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wizebotCreditError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1191,7 +1150,6 @@ export type BetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
-  wizebotEventId?: boolean
   wizebotCreditTxId?: boolean
   wizebotCreditError?: boolean
   createdAt?: boolean
@@ -1213,7 +1171,6 @@ export type BetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extension
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
-  wizebotEventId?: boolean
   wizebotCreditTxId?: boolean
   wizebotCreditError?: boolean
   createdAt?: boolean
@@ -1235,7 +1192,6 @@ export type BetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extension
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
-  wizebotEventId?: boolean
   wizebotCreditTxId?: boolean
   wizebotCreditError?: boolean
   createdAt?: boolean
@@ -1257,14 +1213,13 @@ export type BetSelectScalar = {
   status?: boolean
   actualPayout?: boolean
   settledAt?: boolean
-  wizebotEventId?: boolean
   wizebotCreditTxId?: boolean
   wizebotCreditError?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "matchId" | "userId" | "outcome" | "pickedTeamId" | "wizebotDebitTxId" | "pointsWagered" | "oddsAtPlacement" | "status" | "actualPayout" | "settledAt" | "wizebotEventId" | "wizebotCreditTxId" | "wizebotCreditError" | "createdAt" | "updatedAt", ExtArgs["result"]["bet"]>
+export type BetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "matchId" | "userId" | "outcome" | "pickedTeamId" | "wizebotDebitTxId" | "pointsWagered" | "oddsAtPlacement" | "status" | "actualPayout" | "settledAt" | "wizebotCreditTxId" | "wizebotCreditError" | "createdAt" | "updatedAt", ExtArgs["result"]["bet"]>
 export type BetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   match?: boolean | Prisma.MatchDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1300,7 +1255,6 @@ export type $BetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
     status: $Enums.BetStatus
     actualPayout: number
     settledAt: Date | null
-    wizebotEventId: string | null
     wizebotCreditTxId: string | null
     wizebotCreditError: string | null
     createdAt: Date
@@ -1742,7 +1696,6 @@ export interface BetFieldRefs {
   readonly status: Prisma.FieldRef<"Bet", 'BetStatus'>
   readonly actualPayout: Prisma.FieldRef<"Bet", 'Int'>
   readonly settledAt: Prisma.FieldRef<"Bet", 'DateTime'>
-  readonly wizebotEventId: Prisma.FieldRef<"Bet", 'String'>
   readonly wizebotCreditTxId: Prisma.FieldRef<"Bet", 'String'>
   readonly wizebotCreditError: Prisma.FieldRef<"Bet", 'String'>
   readonly createdAt: Prisma.FieldRef<"Bet", 'DateTime'>

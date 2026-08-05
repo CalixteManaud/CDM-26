@@ -9,16 +9,12 @@ import {
   Crown,
   UserCheck,
   ShieldCheck,
-  ChevronRight,
   CircleDot,
-  ClipboardCheck,
-  Wallet,
 } from 'lucide-react';
-import Link from 'next/link';
 
-import { UsersDataTable } from '@/components/admin/users-data-table';
-import { TeamsDataTable } from '@/components/admin/teams-data-table';
-import { SystemHealthBadge } from '@/components/admin/system-health-badge';
+import { UsersAdminTable } from '@/components/admin/users-admin-table';
+import { TeamsAdminTable } from '@/components/admin/teams-admin-table';
+import { AdminShell } from '@/components/admin/admin-shell';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BorderBeam } from '@/components/ui/border-beam';
@@ -171,7 +167,7 @@ export default function AdminDashboardPage(
         <title>Dashboard admin — CDM 26</title>
       </Head>
 
-      <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
+      <AdminShell active="gestion" bleed>
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
@@ -189,14 +185,6 @@ export default function AdminDashboardPage(
           />
 
           <div className="container mx-auto px-4 py-16 md:py-20 relative">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition"
-            >
-              <ChevronRight className="w-3 h-3 rotate-180" />
-              Retour à l&apos;accueil
-            </Link>
-
             <motion.div variants={containerStagger} initial="hidden" animate="show" className="flex items-start gap-6 flex-wrap">
               {/* Big shield admin signature */}
               <motion.div variants={fadeUp} className="relative shrink-0">
@@ -232,25 +220,6 @@ export default function AdminDashboardPage(
                   <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono">
                     <CircleDot className="w-3 h-3 mr-1" /> Saison 2026
                   </Badge>
-                  <SystemHealthBadge />
-                  <Link
-                    href="/admin/matchs-a-revoir"
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-300 uppercase tracking-[0.22em] text-[10px] font-mono hover:bg-amber-500/15 transition"
-                  >
-                    <ClipboardCheck className="w-3 h-3" /> Matchs à revoir
-                  </Link>
-                  <Link
-                    href="/admin/tresorerie"
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 uppercase tracking-[0.22em] text-[10px] font-mono hover:bg-yellow-500/15 transition"
-                  >
-                    <Wallet className="w-3 h-3" /> Trésorerie
-                  </Link>
-                  <Link
-                    href="/admin/demandes"
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 uppercase tracking-[0.22em] text-[10px] font-mono hover:bg-emerald-500/15 transition"
-                  >
-                    <UserCheck className="w-3 h-3" /> Demandes d&apos;adhésion
-                  </Link>
                 </motion.div>
               </div>
             </motion.div>
@@ -340,7 +309,7 @@ export default function AdminDashboardPage(
                         {stats.totalUsers} entrées
                       </span>
                     </div>
-                    <UsersDataTable initialData={users} initialTotal={stats.totalUsers} onMutate={handleRefresh} />
+                    <UsersAdminTable initialData={users} initialTotal={stats.totalUsers} onMutate={handleRefresh} />
                   </Card>
                 </motion.div>
               </TabsContent>
@@ -371,10 +340,9 @@ export default function AdminDashboardPage(
                         {stats.coachedCount} / {stats.totalTeams} coachées
                       </span>
                     </div>
-                    <TeamsDataTable
+                    <TeamsAdminTable
                       initialData={teams}
                       initialTotal={stats.totalTeams}
-                      initialCoached={stats.coachedCount}
                       onCoachAssigned={handleRefresh}
                     />
                   </Card>
@@ -400,7 +368,7 @@ export default function AdminDashboardPage(
           </div>
         </section>
 
-      </div>
+      </AdminShell>
     </>
   );
 }

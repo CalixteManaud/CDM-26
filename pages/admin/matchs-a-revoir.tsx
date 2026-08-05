@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NumberTicker } from '@/components/ui/number-ticker';
+import { AdminShell } from '@/components/admin/admin-shell';
 import {
   analyzeMatchCompleteness,
   worstSeverity,
@@ -174,20 +175,12 @@ export default function MatchsARevoirPage(
         <title>Matchs à revoir — Admin CDM 26</title>
       </Head>
 
-      <div className="relative bg-black text-white min-h-screen">
+      <AdminShell active="matchs" bleed>
         {/* HERO */}
         <section className="relative border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
           <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-red-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-14 md:py-16 relative">
-            <Link
-              href="/admin/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition"
-            >
-              <ChevronRight className="w-3 h-3 rotate-180" />
-              Retour au dashboard
-            </Link>
-
             <div className="inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.32em] font-bold text-red-400">
               <span className="block w-12 h-px bg-red-400" />
               <span className="font-mono">/ QA</span>
@@ -251,7 +244,7 @@ export default function MatchsARevoirPage(
             </>
           )}
         </section>
-      </div>
+      </AdminShell>
     </>
   );
 }

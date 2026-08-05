@@ -82,11 +82,6 @@ export type MatchPlayerStats = Prisma.MatchPlayerStatsModel
  */
 export type Standing = Prisma.StandingModel
 /**
- * Model Webhook
- * 
- */
-export type Webhook = Prisma.WebhookModel
-/**
  * Model MatchBettingPool
  * 
  */

@@ -6,6 +6,7 @@ import { UserCheck, ChevronRight } from 'lucide-react';
 
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { JoinRequestsReview, type ReviewRequest } from '@/components/team/join-requests-review';
+import { AdminShell } from '@/components/admin/admin-shell';
 
 type PageProps = {
   requests: ReviewRequest[];
@@ -42,20 +43,12 @@ export default function AdminJoinRequestsPage(props: InferGetServerSidePropsType
         <title>Demandes d&apos;adhésion — CDM 26</title>
       </Head>
 
-      <div className="relative bg-black text-white overflow-hidden isolate min-h-screen">
+      <AdminShell active="demandes" bleed>
         {/* HERO */}
         <section className="relative bg-black border-b border-white/10 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-cdm opacity-25 pointer-events-none" />
           <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-500/60 to-transparent" />
           <div className="container mx-auto px-4 py-14 md:py-18 relative">
-            <Link
-              href="/admin/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-white/50 hover:text-white uppercase tracking-[0.25em] mb-8 transition"
-            >
-              <ChevronRight className="w-3 h-3 rotate-180" />
-              Dashboard admin
-            </Link>
-
             <div className="inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.32em] font-bold text-emerald-400">
               <span className="block w-12 h-px bg-emerald-400" />
               <span className="font-mono">/ ADH</span>
@@ -91,7 +84,7 @@ export default function AdminJoinRequestsPage(props: InferGetServerSidePropsType
             </motion.div>
           </div>
         </section>
-      </div>
+      </AdminShell>
     </>
   );
 }

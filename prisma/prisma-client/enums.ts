@@ -40,17 +40,6 @@ export const MatchStatus = {
 export type MatchStatus = (typeof MatchStatus)[keyof typeof MatchStatus]
 
 
-export const WebhookEventType = {
-  MATCH_STARTED: 'MATCH_STARTED',
-  MATCH_FINISHED: 'MATCH_FINISHED',
-  SCORE_UPDATED: 'SCORE_UPDATED',
-  STANDINGS_UPDATED: 'STANDINGS_UPDATED',
-  BRACKET_UPDATED: 'BRACKET_UPDATED'
-} as const
-
-export type WebhookEventType = (typeof WebhookEventType)[keyof typeof WebhookEventType]
-
-
 export const BetOutcome = {
   HOME_WIN: 'HOME_WIN',
   DRAW: 'DRAW',

@@ -59,7 +59,6 @@ export const ModelName = {
   Match: 'Match',
   MatchPlayerStats: 'MatchPlayerStats',
   Standing: 'Standing',
-  Webhook: 'Webhook',
   MatchBettingPool: 'MatchBettingPool',
   Bet: 'Bet',
   PendingRefund: 'PendingRefund',
@@ -221,26 +220,6 @@ export const StandingScalarFieldEnum = {
 export type StandingScalarFieldEnum = (typeof StandingScalarFieldEnum)[keyof typeof StandingScalarFieldEnum]
 
 
-export const WebhookScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  name: 'name',
-  url: 'url',
-  secret: 'secret',
-  events: 'events',
-  isActive: 'isActive',
-  tournamentId: 'tournamentId',
-  teamId: 'teamId',
-  lastTriggeredAt: 'lastTriggeredAt',
-  triggerCount: 'triggerCount',
-  failureCount: 'failureCount',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type WebhookScalarFieldEnum = (typeof WebhookScalarFieldEnum)[keyof typeof WebhookScalarFieldEnum]
-
-
 export const MatchBettingPoolScalarFieldEnum = {
   id: 'id',
   matchId: 'matchId',
@@ -272,7 +251,6 @@ export const BetScalarFieldEnum = {
   status: 'status',
   actualPayout: 'actualPayout',
   settledAt: 'settledAt',
-  wizebotEventId: 'wizebotEventId',
   wizebotCreditTxId: 'wizebotCreditTxId',
   wizebotCreditError: 'wizebotCreditError',
   createdAt: 'createdAt',

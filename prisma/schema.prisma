@@ -289,41 +289,6 @@ model Standing {
   @@index([teamId])
 }
 
-enum WebhookEventType {
-  MATCH_STARTED // Match passe en LIVE
-  MATCH_FINISHED // Match passe en FINISHED
-  SCORE_UPDATED // Score du match mis à jour
-  STANDINGS_UPDATED // Classement d'une poule/groupe mis à jour
-  BRACKET_UPDATED // Bracket mis à jour (progression)
-}
-
-model Webhook {
-  id       String             @id @default(uuid()) @db.Uuid
-  userId   String             @db.Uuid
-  name     String // Nom personnalisé du webhook
-  url      String // URL du webhook
-  secret   String? // Secret pour signer les requêtes (optionnel)
-  events   WebhookEventType[] // Types d'événements à écouter
-  isActive Boolean            @default(true)
-
-  // Filtres optionnels
-  tournamentId String? @db.Uuid // Si défini, ne déclenche que pour ce tournoi
-  teamId       String? @db.Uuid // Si défini, ne déclenche que pour cette équipe
-
-  // Statistiques
-  lastTriggeredAt DateTime?
-  triggerCount    Int       @default(0)
-  failureCount    Int       @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([tournamentId])
-  @@index([teamId])
-  @@index([isActive])
-}
-
 // =================== PARIS ===================
 //
 // Système de paris en pari mutuel.
@@ -414,9 +379,6 @@ model Bet {
   status       BetStatus @default(PENDING)
   actualPayout Int       @default(0)
   settledAt    DateTime?
-
-  // Idempotence Wizebot — header X-Wizebot-Event-Id si dispo, sinon hash payload
-  wizebotEventId String? @unique
 
   // Audit du crédit sortant
   wizebotCreditTxId  String? // ID retourné par l'API Wizebot

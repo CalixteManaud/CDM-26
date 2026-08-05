@@ -5,12 +5,6 @@ import prisma from '@/lib/prisma';
 import { recalculateStandings } from '@/lib/utils/standings';
 import { progressKnockoutStage, checkTournamentComplete } from '@/lib/utils/bracket-progression';
 import { MatchStatus } from '@/prisma/prisma-client/enums';
-import {
-  triggerMatchFinishedWebhooks,
-  triggerScoreUpdatedWebhooks,
-  triggerStandingsUpdatedWebhooks,
-  triggerBracketUpdatedWebhooks,
-} from '@/lib/webhooks';
 import { settleMatchBets, matchOutcomeFromScores } from '@/lib/utils/betting';
 import { autoSettleMatchScoreMarkets } from '@/actions/markets';
 
@@ -51,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Scores invalides' });
     }
 
-    // Récupérer le match avec les équipes pour les webhooks
+    // Récupérer le match avec les équipes (disqualification, settlement, standings)
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: {
@@ -126,60 +120,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return updated;
     });
 
-    // Déclencher les webhooks pour la mise à jour du score
-    triggerScoreUpdatedWebhooks({
-      id: updatedMatch.id,
-      tournamentId: updatedMatch.tournamentId,
-      homeTeamId: match.homeTeamId,
-      awayTeamId: match.awayTeamId,
-      homeTeam: { name: match.homeTeam.name },
-      awayTeam: { name: match.awayTeam.name },
-      homeScore,
-      awayScore,
-    }).catch((err) => console.error('Webhook error:', err));
-
-    // Déclencher les webhooks pour la fin du match
-    triggerMatchFinishedWebhooks({
-      id: updatedMatch.id,
-      tournamentId: updatedMatch.tournamentId,
-      homeTeamId: match.homeTeamId,
-      awayTeamId: match.awayTeamId,
-      homeTeam: { name: match.homeTeam.name },
-      awayTeam: { name: match.awayTeam.name },
-      homeScore,
-      awayScore,
-      winnerTeamId: winnerId,
-      stage: match.stage,
-    }).catch((err) => console.error('Webhook error:', err));
-
     // Si c'est un match de poule, recalculer les standings
     if (match.stage === 'GROUP') {
       await recalculateStandings(match.tournamentId);
-
-      // Récupérer les standings mis à jour pour les webhooks
-      const standings = await prisma.standing.findMany({
-        where: { tournamentId: match.tournamentId },
-        include: { team: true },
-        orderBy: [{ points: 'desc' }, { goalsFor: 'desc' }],
-      });
-
-      // Déclencher les webhooks pour la mise à jour du classement
-      triggerStandingsUpdatedWebhooks(
-        match.tournamentId,
-        match.groupId,
-        standings.map((s) => ({
-          position: s.position,
-          teamId: s.teamId,
-          teamName: s.team.name,
-          played: s.played,
-          won: s.won,
-          drawn: s.drawn,
-          lost: s.lost,
-          goalsFor: s.goalsFor,
-          goalsAgainst: s.goalsAgainst,
-          points: s.points,
-        }))
-      ).catch((err) => console.error('Webhook error:', err));
     }
 
     // Settle des paris Wizebot — exécuté après l'écriture du résultat.
@@ -215,27 +158,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Tenter de faire progresser le bracket
         progressionResult = await progressKnockoutStage(match.tournamentId, match.stage);
 
-        // Déclencher les webhooks pour la mise à jour du bracket
-        if (progressionResult?.progressed && progressionResult.message) {
-          triggerBracketUpdatedWebhooks(
-            match.tournamentId,
-            match.stage,
-            progressionResult.message
-          ).catch((err) => console.error('Webhook error:', err));
-        }
-
         // Si c'est la finale, vérifier si le tournoi est terminé
         if (match.stage === 'FINAL') {
           tournamentResult = await checkTournamentComplete(match.tournamentId);
-
-          // Déclencher un webhook spécial pour la fin du tournoi
-          if (tournamentResult?.complete && tournamentResult.winnerTeam) {
-            triggerBracketUpdatedWebhooks(
-              match.tournamentId,
-              'TOURNAMENT_COMPLETE',
-              `Tournoi terminé ! Vainqueur : ${tournamentResult.winnerTeam.name}`
-            ).catch((err) => console.error('Webhook error:', err));
-          }
         }
       } catch (error) {
         console.error('Error progressing bracket:', error);

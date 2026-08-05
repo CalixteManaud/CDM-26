@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { AdminShell } from '@/components/admin/admin-shell';
 
 type Tournament = { id: string; name: string; startDate: string };
 type MatchRow = {
@@ -209,7 +210,7 @@ export default function AdminMarketsPage(props: InferGetServerSidePropsType<type
       <Head>
         <title>Admin · Marchés — CDM 26</title>
       </Head>
-      <div className="relative bg-black text-white min-h-screen">
+      <AdminShell active="markets" bleed>
         <section className="container mx-auto px-4 py-12">
           <div className="flex items-center gap-3 text-[11px] font-mono uppercase tracking-[0.32em] text-yellow-400 font-bold mb-4">
             <Settings className="w-4 h-4" />
@@ -477,7 +478,7 @@ export default function AdminMarketsPage(props: InferGetServerSidePropsType<type
             )}
           </div>
         </section>
-      </div>
+      </AdminShell>
     </>
   );
 }

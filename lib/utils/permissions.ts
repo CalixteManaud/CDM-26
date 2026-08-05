@@ -18,6 +18,26 @@ export async function isSiteAdmin(userId: string): Promise<boolean> {
 }
 
 /**
+ * Propriétaire du site — un cran au-dessus d'ADMIN. Réservé aux actions
+ * ultra-sensibles (ex : reset complet des données) qu'on ne veut PAS ouvrir aux
+ * autres admins.
+ *
+ * Défini par la variable d'env `OWNER_EMAIL` (une ou plusieurs adresses séparées
+ * par des virgules), insensible à la casse. Fail-closed : si l'env n'est pas
+ * configurée, personne n'est propriétaire.
+ */
+export function isOwnerEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const raw = process.env.OWNER_EMAIL;
+  if (!raw) return false;
+  const owners = raw
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return owners.includes(email.trim().toLowerCase());
+}
+
+/**
  * Check if a user is the coach/admin of a specific team
  */
 export async function isTeamCoach(userId: string, teamId: string): Promise<boolean> {

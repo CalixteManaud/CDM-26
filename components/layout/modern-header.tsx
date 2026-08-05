@@ -461,7 +461,7 @@ export function ModernHeader() {
                 <div className="flex items-center gap-2">
                   <NotificationBell />
                   {isAdmin && (
-                    <Link href="/admin/dashboard" className="hidden md:block">
+                    <Link href="/admin" className="hidden md:block">
                       <Button
                         size="sm"
                         className="rounded-full font-black uppercase tracking-[0.15em] text-[11px] bg-linear-to-r from-red-600 via-orange-600 to-yellow-500 hover:brightness-110 text-white shadow-md shadow-red-500/30 border-0"
@@ -622,11 +622,11 @@ export function ModernHeader() {
                     )}
                     {isSignedIn && isAdmin && (
                       <Link
-                        href="/admin/dashboard"
+                        href="/admin"
                         onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl text-sm font-black uppercase tracking-[0.12em] bg-linear-to-r from-red-600 via-orange-600 to-yellow-500 text-white"
                       >
-                        <Shield className="w-4 h-4" /> Dashboard Admin
+                        <Shield className="w-4 h-4" /> Espace admin
                       </Link>
                     )}
                   </nav>
