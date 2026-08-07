@@ -55,6 +55,7 @@ model User {
   transfersReceived PointTransfer[] @relation("TransfersReceived")
   notifications     Notification[]  @relation("UserNotifications")
   joinRequests      TeamJoinRequest[] @relation("JoinRequestUser")
+  teamInvitesReceived TeamCreationInvite[] @relation("InviteTarget")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -87,6 +88,9 @@ model Tournament {
 
   // Demandes d'adhésion des participants aux équipes du tournoi
   joinRequests TeamJoinRequest[]
+
+  // Invitations « crée ton équipe » envoyées par un admin
+  teamInvites TeamCreationInvite[] @relation("TournamentInvites")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -150,6 +154,9 @@ model Team {
 
   // Pools des marchés où cette équipe est l'outcome (vainqueur tournoi par ex.)
   marketPoolEntries MarketPool[] @relation("MarketPoolTeam")
+
+  // Invitation « crée ton équipe » qui a donné naissance à cette équipe (si applicable)
+  creationInvites TeamCreationInvite[] @relation("TeamCreationInvite")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -556,6 +563,49 @@ model TeamJoinRequest {
   @@index([teamId, status])
   @@index([tournamentId, status])
   @@index([userId])
+}
+
+// =================== INVITATIONS « CRÉE TON ÉQUIPE » ===================
+//
+// Un admin envoie à un joueur du site un lien/QR unique pour qu'il crée
+// lui-même son équipe (nom unique par tournoi, logo obligatoire) et en devienne
+// le coach — au lieu que l'admin la crée à sa place. L'admin garde la création
+// directe. Le joueur est prévenu par notification in-app (+ email optionnel).
+// L'admin suit l'état des envois (en attente / cliqué / accepté / refusé…).
+
+enum TeamInviteStatus {
+  PENDING  // envoyée, pas encore ouverte
+  CLICKED  // le joueur a ouvert le lien
+  ACCEPTED // équipe créée
+  REFUSED  // le joueur a décliné
+  EXPIRED  // délai dépassé sans réponse
+  REVOKED  // annulée par l'admin
+}
+
+model TeamCreationInvite {
+  id           String @id @default(uuid()) @db.Uuid
+  token        String @unique // jeton aléatoire URL-safe, single-use
+  targetUserId String @db.Uuid
+  tournamentId String @db.Uuid
+  createdById  String @db.Uuid // admin émetteur (id DB ; pas de relation, cf. TeamJoinRequest.reviewedById)
+
+  status      TeamInviteStatus @default(PENDING)
+  expiresAt   DateTime
+  clickedAt   DateTime?
+  respondedAt DateTime?
+
+  teamId String? @db.Uuid // équipe créée si ACCEPTED
+
+  targetUser User       @relation("InviteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  tournament Tournament @relation("TournamentInvites", fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team?      @relation("TeamCreationInvite", fields: [teamId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([targetUserId])
+  @@index([tournamentId])
+  @@index([status])
 }
 
 // =================== MARCHÉS FLEXIBLES ===================

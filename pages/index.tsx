@@ -35,6 +35,7 @@ import { NumberTicker } from '@/components/ui/number-ticker';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { Ripple } from '@/components/ui/ripple';
 import Marquee from '@/components/ui/marquee';
+import logo from '@/public/logo.png';
 import { AnimatedTestimonials, type Testimonial } from '@/components/ui/animated-testimonials';
 
 import { HeroCdm26 } from '@/components/landing/hero-cdm26';
@@ -188,7 +189,8 @@ const SPONSORS = [
   '★',
 ];
 
-const MARQUEE_IMAGES = Array.from({ length: 16 }, () => '/logo.png');
+// logo.src = URL fingerprintée (hash de contenu) → busté auto à chaque modif du fichier.
+const MARQUEE_IMAGES = Array.from({ length: 16 }, () => logo.src);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS

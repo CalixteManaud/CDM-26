@@ -3,6 +3,7 @@
 import { UserButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
+import logo from '@/public/logo.png';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useSyncExternalStore } from 'react';
@@ -282,7 +283,7 @@ export function ModernHeader() {
                   className="relative w-11 h-11 rounded-2xl bg-white/4 border border-white/15 flex items-center justify-center shadow-md overflow-hidden"
                 >
                   <Image
-                    src="/logo.png"
+                    src={logo}
                     alt="CDM 26"
                     width={36}
                     height={36}
@@ -536,7 +537,7 @@ export function ModernHeader() {
                     <SheetTitle className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-white/4 border border-white/15 flex items-center justify-center shadow-sm">
                         <Image
-                          src="/logo.png"
+                          src={logo}
                           alt="CDM 26"
                           width={32}
                           height={32}

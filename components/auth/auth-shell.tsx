@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import logo from '@/public/logo.png';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Radio, Trophy, ChevronRight } from 'lucide-react';
 
@@ -92,7 +93,7 @@ export function AuthShell({
                 <div className="absolute inset-0 bg-linear-to-br from-emerald-500/40 via-yellow-500/40 to-red-500/40 rounded-2xl blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
                 <div className="relative w-12 h-12 rounded-2xl bg-white/4 border border-white/15 flex items-center justify-center shadow-md overflow-hidden">
                   <Image
-                    src="/logo.png"
+                    src={logo}
                     alt="CDM 26"
                     width={40}
                     height={40}

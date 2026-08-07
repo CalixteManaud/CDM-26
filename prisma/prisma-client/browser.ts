@@ -88,6 +88,11 @@ export type Notification = Prisma.NotificationModel
  */
 export type TeamJoinRequest = Prisma.TeamJoinRequestModel
 /**
+ * Model TeamCreationInvite
+ * 
+ */
+export type TeamCreationInvite = Prisma.TeamCreationInviteModel
+/**
  * Model BettingMarket
  * 
  */

@@ -436,6 +436,23 @@ export type EnumJoinRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumJoinRequestStatusFilter<$PrismaModel>
 }
 
+export type EnumTeamInviteStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.TeamInviteStatus | Prisma.EnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTeamInviteStatusFilter<$PrismaModel> | $Enums.TeamInviteStatus
+}
+
+export type EnumTeamInviteStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TeamInviteStatus | Prisma.EnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTeamInviteStatusWithAggregatesFilter<$PrismaModel> | $Enums.TeamInviteStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTeamInviteStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTeamInviteStatusFilter<$PrismaModel>
+}
+
 export type EnumBettingMarketTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.BettingMarketType | Prisma.EnumBettingMarketTypeFieldRefInput<$PrismaModel>
   in?: $Enums.BettingMarketType[] | Prisma.ListEnumBettingMarketTypeFieldRefInput<$PrismaModel>
@@ -916,6 +933,23 @@ export type NestedEnumJoinRequestStatusWithAggregatesFilter<$PrismaModel = never
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumJoinRequestStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumJoinRequestStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumTeamInviteStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.TeamInviteStatus | Prisma.EnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTeamInviteStatusFilter<$PrismaModel> | $Enums.TeamInviteStatus
+}
+
+export type NestedEnumTeamInviteStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TeamInviteStatus | Prisma.EnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TeamInviteStatus[] | Prisma.ListEnumTeamInviteStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTeamInviteStatusWithAggregatesFilter<$PrismaModel> | $Enums.TeamInviteStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTeamInviteStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTeamInviteStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumBettingMarketTypeFilter<$PrismaModel = never> = {

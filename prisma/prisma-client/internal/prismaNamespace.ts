@@ -411,6 +411,7 @@ export const ModelName = {
   PointTransfer: 'PointTransfer',
   Notification: 'Notification',
   TeamJoinRequest: 'TeamJoinRequest',
+  TeamCreationInvite: 'TeamCreationInvite',
   BettingMarket: 'BettingMarket',
   MarketPool: 'MarketPool',
   MarketBet: 'MarketBet',
@@ -431,7 +432,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "teamJoinRequest" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
+    modelProps: "user" | "tournament" | "group" | "team" | "player" | "match" | "matchPlayerStats" | "standing" | "matchBettingPool" | "bet" | "pendingRefund" | "pointTransfer" | "notification" | "teamJoinRequest" | "teamCreationInvite" | "bettingMarket" | "marketPool" | "marketBet" | "betSlip" | "matchEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1471,6 +1472,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TeamCreationInvite: {
+      payload: Prisma.$TeamCreationInvitePayload<ExtArgs>
+      fields: Prisma.TeamCreationInviteFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TeamCreationInviteFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TeamCreationInviteFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>
+        }
+        findFirst: {
+          args: Prisma.TeamCreationInviteFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TeamCreationInviteFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>
+        }
+        findMany: {
+          args: Prisma.TeamCreationInviteFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>[]
+        }
+        create: {
+          args: Prisma.TeamCreationInviteCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>
+        }
+        createMany: {
+          args: Prisma.TeamCreationInviteCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TeamCreationInviteCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>[]
+        }
+        delete: {
+          args: Prisma.TeamCreationInviteDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>
+        }
+        update: {
+          args: Prisma.TeamCreationInviteUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>
+        }
+        deleteMany: {
+          args: Prisma.TeamCreationInviteDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TeamCreationInviteUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TeamCreationInviteUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>[]
+        }
+        upsert: {
+          args: Prisma.TeamCreationInviteUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamCreationInvitePayload>
+        }
+        aggregate: {
+          args: Prisma.TeamCreationInviteAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTeamCreationInvite>
+        }
+        groupBy: {
+          args: Prisma.TeamCreationInviteGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TeamCreationInviteGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TeamCreationInviteCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TeamCreationInviteCountAggregateOutputType> | number
+        }
+      }
+    }
     BettingMarket: {
       payload: Prisma.$BettingMarketPayload<ExtArgs>
       fields: Prisma.BettingMarketFieldRefs
@@ -2123,6 +2198,24 @@ export const TeamJoinRequestScalarFieldEnum = {
 export type TeamJoinRequestScalarFieldEnum = (typeof TeamJoinRequestScalarFieldEnum)[keyof typeof TeamJoinRequestScalarFieldEnum]
 
 
+export const TeamCreationInviteScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  targetUserId: 'targetUserId',
+  tournamentId: 'tournamentId',
+  createdById: 'createdById',
+  status: 'status',
+  expiresAt: 'expiresAt',
+  clickedAt: 'clickedAt',
+  respondedAt: 'respondedAt',
+  teamId: 'teamId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeamCreationInviteScalarFieldEnum = (typeof TeamCreationInviteScalarFieldEnum)[keyof typeof TeamCreationInviteScalarFieldEnum]
+
+
 export const BettingMarketScalarFieldEnum = {
   id: 'id',
   type: 'type',
@@ -2432,6 +2525,20 @@ export type ListEnumJoinRequestStatusFieldRefInput<$PrismaModel> = FieldRefInput
 
 
 /**
+ * Reference to a field of type 'TeamInviteStatus'
+ */
+export type EnumTeamInviteStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TeamInviteStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'TeamInviteStatus[]'
+ */
+export type ListEnumTeamInviteStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TeamInviteStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'BettingMarketType'
  */
 export type EnumBettingMarketTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BettingMarketType'>
@@ -2651,6 +2758,7 @@ export type GlobalOmitConfig = {
   pointTransfer?: Prisma.PointTransferOmit
   notification?: Prisma.NotificationOmit
   teamJoinRequest?: Prisma.TeamJoinRequestOmit
+  teamCreationInvite?: Prisma.TeamCreationInviteOmit
   bettingMarket?: Prisma.BettingMarketOmit
   marketPool?: Prisma.MarketPoolOmit
   marketBet?: Prisma.MarketBetOmit

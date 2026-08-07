@@ -11,6 +11,7 @@ import {
   Coins,
   Wallet,
   UserCheck,
+  MailPlus,
   Shield,
   Menu,
   ExternalLink,
@@ -30,6 +31,7 @@ export type AdminNavKey =
   | 'overview'
   | 'gestion'
   | 'equipes'
+  | 'invitations'
   | 'matchs'
   | 'markets'
   | 'tresorerie'
@@ -59,6 +61,7 @@ export const ADMIN_NAV: NavItem[] = [
   { key: 'overview', label: "Vue d'ensemble", href: '/admin', icon: LayoutDashboard, accent: 'red' },
   { key: 'gestion', label: 'Utilisateurs & Équipes', href: '/admin/dashboard', icon: Users, accent: 'emerald' },
   { key: 'equipes', label: 'Équipes (CRUD)', href: '/admin/equipes', icon: Shirt, accent: 'yellow' },
+  { key: 'invitations', label: 'Invitations équipe', href: '/admin/invitations', icon: MailPlus, accent: 'emerald' },
   { key: 'matchs', label: 'Matchs à revoir', href: '/admin/matchs-a-revoir', icon: ClipboardCheck, accent: 'yellow' },
   { key: 'markets', label: 'Marchés (paris)', href: '/admin/markets', icon: Coins, accent: 'purple' },
   { key: 'tresorerie', label: 'Trésorerie', href: '/admin/tresorerie', icon: Wallet, accent: 'yellow' },

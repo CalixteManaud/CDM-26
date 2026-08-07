@@ -103,6 +103,18 @@ export const JoinRequestStatus = {
 export type JoinRequestStatus = (typeof JoinRequestStatus)[keyof typeof JoinRequestStatus]
 
 
+export const TeamInviteStatus = {
+  PENDING: 'PENDING',
+  CLICKED: 'CLICKED',
+  ACCEPTED: 'ACCEPTED',
+  REFUSED: 'REFUSED',
+  EXPIRED: 'EXPIRED',
+  REVOKED: 'REVOKED'
+} as const
+
+export type TeamInviteStatus = (typeof TeamInviteStatus)[keyof typeof TeamInviteStatus]
+
+
 export const BettingMarketType = {
   MATCH_EXACT_SCORE: 'MATCH_EXACT_SCORE',
   MATCH_TOTAL_GOALS: 'MATCH_TOTAL_GOALS',
