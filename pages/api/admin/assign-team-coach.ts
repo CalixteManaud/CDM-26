@@ -3,6 +3,7 @@ import { getAuth } from '@clerk/nextjs/server';
 import { syncClerkUserById } from '@/lib/clerk';
 import { isSiteAdmin } from '@/lib/utils/permissions';
 import prisma from '@/lib/prisma';
+import { ensureCoachAsPlayer } from '@/lib/utils/coach-player';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -51,6 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: { id: teamId },
       data: { coachUserId },
     });
+
+    // Le coach est aussi joueur → il intègre l'effectif (idempotent).
+    await ensureCoachAsPlayer({ teamId, userId: coachUserId });
 
     return res.status(200).json({ success: true });
   } catch (error) {

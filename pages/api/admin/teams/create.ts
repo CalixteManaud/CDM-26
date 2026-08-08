@@ -13,6 +13,7 @@ import { syncClerkUserById } from '@/lib/clerk';
 import { isSiteAdmin } from '@/lib/utils/permissions';
 import prisma from '@/lib/prisma';
 import { teamSchema } from '@/lib/utils/validations';
+import { ensureCoachAsPlayer } from '@/lib/utils/coach-player';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -57,6 +58,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       select: { id: true },
     });
+
+    // Le coach est aussi joueur → il intègre l'effectif.
+    if (coachUserId) {
+      await ensureCoachAsPlayer({ teamId: team.id, userId: coachUserId });
+    }
 
     return res.status(200).json({ success: true, id: team.id });
   } catch (error: unknown) {

@@ -14,6 +14,7 @@ import prisma from '@/lib/prisma';
 import { TeamInviteStatus, NotificationType } from '@/prisma/prisma-client/enums';
 import { loadInviteForUser, isTeamNameTaken, isTeamShortNameTaken } from '@/lib/utils/team-invites';
 import { createNotification } from '@/lib/utils/notifications';
+import { VALID_POSITIONS } from '@/lib/utils/coach-player';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -30,16 +31,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!loaded.ok) return res.status(loaded.status).json({ error: loaded.error });
   const { invite } = loaded;
 
-  const body = (req.body ?? {}) as { name?: unknown; shortName?: unknown; logo?: unknown };
+  const body = (req.body ?? {}) as {
+    name?: unknown;
+    shortName?: unknown;
+    logo?: unknown;
+    jerseyNumber?: unknown;
+    position?: unknown;
+  };
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const shortName = typeof body.shortName === 'string' ? body.shortName.trim().toUpperCase() : '';
   const logo = typeof body.logo === 'string' ? body.logo.trim() : '';
+  const jerseyNumber =
+    typeof body.jerseyNumber === 'number'
+      ? body.jerseyNumber
+      : Number.parseInt(String(body.jerseyNumber ?? ''), 10);
+  const position = typeof body.position === 'string' ? body.position.trim().toUpperCase() : '';
 
   if (name.length < 2) return res.status(400).json({ error: 'Le nom doit faire au moins 2 caractères', code: 'NAME' });
   if (shortName.length < 2 || shortName.length > 3) {
     return res.status(400).json({ error: 'Le nom court doit faire 2 à 3 caractères', code: 'SHORT' });
   }
   if (!logo) return res.status(400).json({ error: 'Le logo est obligatoire', code: 'LOGO' });
+  if (!Number.isInteger(jerseyNumber) || jerseyNumber < 1 || jerseyNumber > 99) {
+    return res.status(400).json({ error: 'Numéro de maillot invalide (1 à 99)', code: 'JERSEY' });
+  }
+  if (!(VALID_POSITIONS as readonly string[]).includes(position)) {
+    return res.status(400).json({ error: 'Poste invalide (GK, DEF, MID, ATT)', code: 'POSITION' });
+  }
 
   // 1 équipe / joueur / tournoi
   const alreadyCoach = await prisma.team.findFirst({
@@ -78,6 +96,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           coachUserId: dbUser.id,
         },
         select: { id: true, name: true },
+      });
+      // Le coach est aussi joueur → il intègre l'effectif (équipe neuve : pas de
+      // conflit de numéro possible).
+      await tx.player.create({
+        data: { teamId: created.id, userId: dbUser.id, jerseyNumber, position },
       });
       await tx.teamCreationInvite.update({
         where: { id: invite.id },

@@ -12,7 +12,21 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { ImageUpload } from '@/components/ui/image-upload';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { TeamInviteStatus } from '@/prisma/prisma-client/enums';
+
+const POSITIONS = [
+  { value: 'GK', label: 'Gardien' },
+  { value: 'DEF', label: 'Défenseur' },
+  { value: 'MID', label: 'Milieu' },
+  { value: 'ATT', label: 'Attaquant' },
+];
 
 type PageProps =
   | { state: 'error'; message: string }
@@ -78,6 +92,8 @@ function InviteForm({ token, tournamentName }: { token: string; tournamentName: 
   const [name, setName] = useState('');
   const [shortName, setShortName] = useState('');
   const [logo, setLogo] = useState('');
+  const [jersey, setJersey] = useState('');
+  const [position, setPosition] = useState('');
   const [availability, setAvailability] = useState<Availability>('idle');
   const [submitting, setSubmitting] = useState(false);
   const [refusing, setRefusing] = useState(false);
@@ -105,11 +121,16 @@ function InviteForm({ token, tournamentName }: { token: string; tournamentName: 
     return () => clearTimeout(t);
   }, [name, token]);
 
+  const jerseyNum = Number.parseInt(jersey, 10);
+  const jerseyValid = Number.isInteger(jerseyNum) && jerseyNum >= 1 && jerseyNum <= 99;
+
   const canSubmit =
     name.trim().length >= 2 &&
     shortName.trim().length >= 2 &&
     shortName.trim().length <= 3 &&
     !!logo &&
+    jerseyValid &&
+    !!position &&
     availability !== 'taken' &&
     availability !== 'checking';
 
@@ -120,7 +141,13 @@ function InviteForm({ token, tournamentName }: { token: string; tournamentName: 
       const res = await fetch(`/api/invites/${token}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), shortName: shortName.trim(), logo }),
+        body: JSON.stringify({
+          name: name.trim(),
+          shortName: shortName.trim(),
+          logo,
+          jerseyNumber: jerseyNum,
+          position,
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -215,6 +242,43 @@ function InviteForm({ token, tournamentName }: { token: string; tournamentName: 
                 maxLength={3}
                 className="border-white/15 bg-white/[0.03] font-mono uppercase tracking-[0.3em]"
               />
+            </div>
+
+            {/* Coach = joueur : numéro + poste (compte dans l'effectif) */}
+            <div className="space-y-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03] p-3.5">
+              <p className="text-[11px] leading-relaxed text-white/60">
+                <strong className="text-emerald-300">Toi, coach, tu es aussi joueur</strong> — tu comptes dans
+                l&apos;effectif. Choisis ton numéro et ton poste.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/55">Numéro (1-99)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={jersey}
+                    onChange={(e) => setJersey(e.target.value)}
+                    placeholder="10"
+                    className="border-white/15 bg-white/[0.03] font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/55">Poste</Label>
+                  <Select value={position} onValueChange={setPosition}>
+                    <SelectTrigger className="border-white/15 bg-white/[0.03]">
+                      <SelectValue placeholder="Choisir" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {POSITIONS.map((p) => (
+                        <SelectItem key={p.value} value={p.value}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             {/* Logo obligatoire */}
