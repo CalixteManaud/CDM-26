@@ -27,14 +27,11 @@ const POOL_SELECT = {
  */
 export async function getOpenBettingMatches() {
   try {
-    const liveCutoff = new Date(Date.now() - 25 * 60 * 1000); // matchs LIVE encore bettables
+    // Modèle status-only : bettable = match SCHEDULED (les paris ferment au
+    // passage LIVE). Pas de butoir sur l'horaire — un match programmé reste
+    // dans « le marché ouvert » tant qu'il n'est pas lancé.
     const matches = await prisma.match.findMany({
-      where: {
-        OR: [
-          { status: MatchStatus.SCHEDULED, matchDate: { gt: new Date() } },
-          { status: MatchStatus.LIVE, matchDate: { gt: liveCutoff } },
-        ],
-      },
+      where: { status: MatchStatus.SCHEDULED },
       orderBy: { matchDate: 'asc' },
       select: {
         id: true,
