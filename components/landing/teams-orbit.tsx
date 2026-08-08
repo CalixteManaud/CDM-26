@@ -64,8 +64,9 @@ export function TeamsOrbit() {
             </div>
           </motion.div>
 
-          {/* ORBIT */}
-          <div className="relative h-[480px] md:h-[560px] flex items-center justify-center">
+          {/* ORBIT — scalé sur mobile pour que l'orbite externe (Ø ~476px) tienne
+              dans la largeur d'un téléphone sans rogner les drapeaux. */}
+          <div className="relative h-[360px] sm:h-[480px] md:h-[560px] flex items-center justify-center scale-[0.7] sm:scale-100">
             {/* Glow */}
             <div className="absolute inset-0 -z-10">
               <div className="absolute inset-12 rounded-full bg-linear-to-br from-emerald-500/20 via-yellow-500/15 to-red-500/20 blur-3xl" />

@@ -104,7 +104,7 @@ export function BecomeParticipant() {
         </motion.button>
       </DialogTrigger>
 
-      <DialogContent className="p-0 max-w-lg overflow-hidden bg-black border-white/10 text-white gap-0">
+      <DialogContent className="p-0 max-w-lg max-h-[92dvh] overflow-y-auto overflow-x-hidden bg-black border-white/10 text-white gap-0">
         <BorderBeam size={160} duration={9} colorFrom="#10b981" colorTo="#facc15" borderWidth={1.2} />
 
         {/* HEADER avec mesh CDM */}
