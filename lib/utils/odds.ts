@@ -62,27 +62,30 @@ export function computeLiveOdds(pool: {
  *  - LIVE (ou tout autre statut) → fermé
  * Dès que le match est lancé, plus aucun pari n'est accepté.
  */
+/**
+ * Modèle status-only : les paris sont ouverts tant que le match est SCHEDULED,
+ * et ferment dès qu'il passe LIVE (ou FINISHED / CANCELED). L'horaire prévu
+ * (matchDate) n'est PAS un butoir — c'est le passage en LIVE par l'admin qui
+ * verrouille. `matchDate` reste accepté (appelants historiques) mais ignoré.
+ */
 export function isBettingOpen(match: {
   status: string;
-  matchDate: Date | string;
+  matchDate?: Date | string;
 }): boolean {
-  if (match.status !== 'SCHEDULED') return false;
-  return Date.now() < new Date(match.matchDate).getTime();
+  return match.status === 'SCHEDULED';
 }
 
 /**
  * Phase courante du marché 1X2 sur ce match.
- *  - 'PRE'   → avant le coup d'envoi, paris ouverts
+ *  - 'PRE'   → match programmé, paris ouverts
  *  - 'LIVE'  → match en cours (paris fermés, cotes figées en lecture seule)
- *  - 'CLOSED' → match terminé / annulé / horaire dépassé sans lancement
+ *  - 'CLOSED' → match terminé / annulé
  */
 export function bettingPhase(match: {
   status: string;
-  matchDate: Date | string;
+  matchDate?: Date | string;
 }): 'PRE' | 'LIVE' | 'CLOSED' {
-  if (match.status === 'SCHEDULED' && Date.now() < new Date(match.matchDate).getTime()) {
-    return 'PRE';
-  }
+  if (match.status === 'SCHEDULED') return 'PRE';
   if (match.status === 'LIVE') return 'LIVE';
   return 'CLOSED';
 }
