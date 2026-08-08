@@ -21,7 +21,12 @@ export async function sendEmail(params: {
   text?: string;
 }): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || 'CDM 26 <onboarding@resend.dev>';
+  // Tolère un EMAIL_FROM avec des guillemets englobants (copié depuis .env.example) :
+  // Resend exige `Name <email@ex.com>` ou `email@ex.com`, sans guillemets autour.
+  const from = (process.env.EMAIL_FROM || 'CDM 26 <onboarding@resend.dev>')
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .trim();
 
   if (!key) {
     console.warn('[email] RESEND_API_KEY absente — email mocké', {

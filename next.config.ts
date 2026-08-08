@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   experimental: {
     useTypeScriptCli: true,
   },
+  // Sharp est un module natif : il ne doit PAS être bundlé par Turbopack (sinon
+  // son import résout `undefined` au runtime prod → "(void 0) is not a function"
+  // à l'upload d'image). On le charge depuis node_modules au runtime.
+  serverExternalPackages: ["sharp"],
   images: {
     remotePatterns: [
       // Vercel Blob Storage

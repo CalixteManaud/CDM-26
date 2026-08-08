@@ -24,11 +24,22 @@ export async function saveUploadedFileToBlob(
         let finalExtension: string;
 
         if (isImage) {
-            processedBuffer = await sharp(fileBuffer)
-                .webp({ quality: 80 })
-                .toBuffer();
-            finalContentType = "image/webp";
-            finalExtension = ".webp";
+            try {
+                // Compression WebP via Sharp (natif). En cas d'échec (Sharp
+                // indispo dans l'environnement), on retombe sur l'upload de
+                // l'image d'origine plutôt que de casser tout l'upload.
+                processedBuffer = await sharp(fileBuffer)
+                    .webp({ quality: 80 })
+                    .toBuffer();
+                finalContentType = "image/webp";
+                finalExtension = ".webp";
+            } catch (sharpError) {
+                console.error("[blob] compression Sharp échouée — upload de l'original:", sharpError);
+                processedBuffer = fileBuffer;
+                finalContentType = file.type || "application/octet-stream";
+                const ext = file.name.split('.').pop();
+                finalExtension = ext ? `.${ext}` : '';
+            }
         } else {
             processedBuffer = fileBuffer;
             finalContentType = file.type || "application/octet-stream";
