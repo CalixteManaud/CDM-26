@@ -27,11 +27,12 @@ const POOL_SELECT = {
  */
 export async function getOpenBettingMatches() {
   try {
-    // Modèle status-only : bettable = match SCHEDULED (les paris ferment au
-    // passage LIVE). Pas de butoir sur l'horaire — un match programmé reste
-    // dans « le marché ouvert » tant qu'il n'est pas lancé.
+    // Modèle status-only. Affiche les SCHEDULED (bettables) ET les LIVE (en
+    // lecture seule : cotes live visibles, mais paris fermés côté isBettingOpen).
+    // Basé sur le statut : un LIVE reste visible tant qu'il n'est pas FINISHED,
+    // sans butoir sur l'horaire.
     const matches = await prisma.match.findMany({
-      where: { status: MatchStatus.SCHEDULED },
+      where: { status: { in: [MatchStatus.SCHEDULED, MatchStatus.LIVE] } },
       orderBy: { matchDate: 'asc' },
       select: {
         id: true,
