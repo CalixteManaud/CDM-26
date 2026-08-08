@@ -10,8 +10,9 @@ import prisma from '@/lib/prisma';
 import { TeamInviteStatus, NotificationType } from '@/prisma/prisma-client/enums';
 import { createNotification } from '@/lib/utils/notifications';
 import { sendEmail } from '@/lib/email';
+import { getSiteUrl } from '@/lib/site-url';
 
-export const INVITE_TTL_HOURS = 1;
+export const INVITE_TTL_HOURS: number = 8;
 /** Libellé humain de la durée de validité (utilisé dans l'email). */
 export const INVITE_TTL_LABEL = INVITE_TTL_HOURS === 1 ? '1 heure' : `${INVITE_TTL_HOURS} heures`;
 
@@ -24,12 +25,8 @@ export function inviteExpiry(): Date {
   return new Date(Date.now() + INVITE_TTL_HOURS * 60 * 60 * 1000);
 }
 
-function appBaseUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
-}
-
 export function inviteUrl(token: string): string {
-  return `${appBaseUrl()}/invite/${token}`;
+  return `${getSiteUrl()}/invite/${token}`;
 }
 
 /** Statuts « encore actionnables » par le joueur. */

@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { getSiteUrl } from "@/lib/site-url";
 
 type PageHeadProps = {
   title: string;
@@ -15,8 +16,7 @@ type PageHeadProps = {
 const SITE_NAME = "CDM 26";
 const DEFAULT_DESCRIPTION =
   "Coupe du Monde FIFA 26 sur Twitch — tournois, équipes, matchs en direct et paris en points de chaîne.";
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cdm.rgtcity.fr";
+const APP_URL = getSiteUrl();
 /** Carte de partage 1200×630 (Discord / Twitter / Twitch). */
 const DEFAULT_IMAGE = "/og.png";
 

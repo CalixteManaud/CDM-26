@@ -9,6 +9,7 @@ import { BetSlipProvider } from '@/lib/contexts/bet-slip-context';
 import { BetSlipPanel } from '@/components/betting/bet-slip-panel';
 import { GlobalLiveNotifier } from '@/components/match/global-live-notifier';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { getSiteUrl } from '@/lib/site-url';
 import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
@@ -16,8 +17,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   // chemins relatifs). Les `key` permettent à next/head de dédoublonner : une
   // page qui rend <PageHead> écrase ces valeurs par défaut (au lieu d'ajouter
   // une 2e balise en conflit).
-  const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://cdm.rgtcity.fr').replace(/\/$/, '');
-  const ogImage = `${APP_URL}/og.png`;
+  const ogImage = `${getSiteUrl()}/og.png`;
   return (
     <ThemeProvider>
       {/* Métadonnées de partage par défaut (Open Graph / Twitter). */}
