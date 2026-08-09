@@ -14,7 +14,7 @@
  * subscription sur `MatchBettingPool` (postgres_changes). L'interface publique
  * reste la même → swap transparent côté composants.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type LivePoolData = {
   matchId: string;
@@ -35,11 +35,14 @@ export type LivePoolData = {
   odds: { home: number | null; draw: number | null; away: number | null };
 };
 
-export function useLiveMatchPool(matchId: string | null, intervalMs = 5000) {
+export function useLiveMatchPool(matchId: string | null, intervalMs = 2000) {
   const [data, setData] = useState<LivePoolData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!matchId);
   const abortRef = useRef<AbortController | null>(null);
+  // Exposé pour un refresh immédiat (ex: après avoir soi-même placé un pari) —
+  // référence mutable réassignée à chaque montage d'effet.
+  const refreshRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!matchId) return;
@@ -47,12 +50,15 @@ export function useLiveMatchPool(matchId: string | null, intervalMs = 5000) {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
-    const fetchOnce = async () => {
+    // `bust` ajoute un param anti-cache pour lire le pool à jour tout de suite
+    // (le CDN sert sinon une version cache jusqu'à max-age).
+    const fetchOnce = async (bust = false) => {
       abortRef.current?.abort();
       const ctrl = new AbortController();
       abortRef.current = ctrl;
       try {
-        const res = await fetch(`/api/matches/${matchId}/pool`, { signal: ctrl.signal });
+        const url = `/api/matches/${matchId}/pool${bust ? `?t=${Date.now()}` : ''}`;
+        const res = await fetch(url, { signal: ctrl.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as LivePoolData;
         if (cancelled) return;
@@ -64,6 +70,10 @@ export function useLiveMatchPool(matchId: string | null, intervalMs = 5000) {
       } finally {
         if (!cancelled) setIsLoading(false);
       }
+    };
+
+    refreshRef.current = () => {
+      if (!cancelled) fetchOnce(true);
     };
 
     const tick = async () => {
@@ -92,5 +102,7 @@ export function useLiveMatchPool(matchId: string | null, intervalMs = 5000) {
     };
   }, [matchId, intervalMs]);
 
-  return { data, isLoading, error };
+  const refresh = useCallback(() => refreshRef.current(), []);
+
+  return { data, isLoading, error, refresh };
 }

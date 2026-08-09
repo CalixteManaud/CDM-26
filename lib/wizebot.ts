@@ -40,14 +40,29 @@ const WIZEBOT_TIMEOUT_MS = 8_000;
 const WIZEBOT_MAX_RETRIES = 1;
 const WIZEBOT_RETRY_DELAY_MS = 250;
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+// Anti-spam Wizebot : l'API renvoie HTTP 500 `spam_limit_exceeded` si on
+// l'appelle trop vite (typiquement au settlement qui crédite plein de gagnants
+// d'un coup). On sérialise donc TOUS les appels Wizebot avec un intervalle mini.
+// Un appel isolé (débit d'un pari) reste immédiat ; seuls les appels en rafale
+// sont espacés. Configurable via WIZEBOT_MIN_INTERVAL_MS.
+const WIZEBOT_MIN_INTERVAL_MS = Number(process.env.WIZEBOT_MIN_INTERVAL_MS) || 1500;
+let wizebotGate: Promise<void> = Promise.resolve();
+
+/** File d'attente sérielle : espace chaque appel du précédent d'au moins l'intervalle. */
+function throttleWizebot(): Promise<void> {
+  const prev = wizebotGate;
+  wizebotGate = prev.then(() => sleep(WIZEBOT_MIN_INTERVAL_MS));
+  return prev;
+}
+
 type WizebotResponse = {
   success?: boolean;
   status?: string;
   error_code?: string;
   message?: string;
 };
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Wrap fetch avec :
@@ -56,6 +71,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * Renvoie soit la réponse, soit une erreur "synthétique" si toutes les tentatives ont échoué.
  */
 async function wizebotFetch(url: string, init?: RequestInit): Promise<Response> {
+  // Anti-spam : sérialise/espace les appels avant même le 1er essai.
+  await throttleWizebot();
+
   let lastError: unknown;
   for (let attempt = 0; attempt <= WIZEBOT_MAX_RETRIES; attempt++) {
     const controller = new AbortController();

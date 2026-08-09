@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     : { home: null, draw: null, away: null };
 
   // Cache court côté CDN/browser pour limiter le DDOS si polling agressif
-  res.setHeader('Cache-Control', 'public, max-age=2, stale-while-revalidate=4');
+  res.setHeader('Cache-Control', 'public, max-age=1, stale-while-revalidate=2');
 
   return res.status(200).json({
     matchId: match.id,

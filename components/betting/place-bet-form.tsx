@@ -6,9 +6,10 @@ import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins, Lock, AlertTriangle, Check, Ticket, Zap } from 'lucide-react';
+import { Coins, Lock, AlertTriangle, Check, Ticket, Zap, Info } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { computeLiveOdds, MAX_BET_POINTS } from '@/lib/utils/odds';
 import { cn } from '@/lib/utils';
@@ -86,7 +87,7 @@ export function PlaceBetForm({
     setAwaitingConfirm(false);
   }, [points, outcome]);
 
-  const { data: live } = useLiveMatchPool(matchId);
+  const { data: live, refresh: refreshPool } = useLiveMatchPool(matchId);
 
   const { data: quota, refresh: refreshQuota } = useBetQuota(
     matchId,
@@ -183,10 +184,11 @@ export function PlaceBetForm({
         if (!res.ok) throw new Error(json?.error || 'Erreur lors du pari');
 
         toast.success(
-          `Ticket validé : ${points.toLocaleString('fr-FR')} pts · cote ×${Number(json.oddsAtPlacement).toFixed(2)}`
+          `Ticket validé : ${points.toLocaleString('fr-FR')} pts · cote ~×${Number(json.oddsAtPlacement).toFixed(2)} (live · gain calculé à la clôture)`
         );
         setOutcome(null);
         refreshQuota();
+        refreshPool(); // cotes/pool à jour tout de suite (sans attendre le tick)
         onPlaced?.();
         router.replace(router.asPath, undefined, { scroll: false });
       } catch (err) {
@@ -334,20 +336,29 @@ export function PlaceBetForm({
         />
         <div className="flex items-end justify-between gap-3 pl-2">
           <div className="min-w-0">
-            <div className="ff-board text-[10px] uppercase tracking-[0.24em] text-white/45">Gain potentiel</div>
-            <div className="mt-1.5 flex items-baseline gap-1.5">
+            <div className="ff-board flex items-center gap-1.5 text-[10px] uppercase tracking-[0.24em] text-white/45">
+              Gain estimé
+              <ParimutuelInfo />
+            </div>
+            <div className="mt-1.5 flex items-baseline gap-1">
               {expectedReturn != null ? (
-                <FlapNumber value={expectedReturn.toLocaleString('fr-FR')} className="text-3xl" />
+                <>
+                  <span className="ff-board text-2xl font-black text-white/30">~</span>
+                  <FlapNumber value={expectedReturn.toLocaleString('fr-FR')} className="text-3xl" />
+                </>
               ) : (
                 <span className="ff-board text-3xl font-black text-white/25">—</span>
               )}
               <span className="ff-board text-sm font-bold text-white/40">pts</span>
             </div>
+            <div className="ff-board mt-1 text-[9px] uppercase tracking-[0.18em] text-white/30">
+              évolue avec les mises
+            </div>
           </div>
           <div className="text-right">
-            <div className="ff-board text-[10px] uppercase tracking-[0.24em] text-white/45">Bénéfice</div>
+            <div className="ff-board text-[10px] uppercase tracking-[0.24em] text-white/45">Bénéfice est.</div>
             <div className="ff-board mt-1.5 text-lg font-black tabular-nums text-emerald-300">
-              +{benefit.toLocaleString('fr-FR')}
+              ~+{benefit.toLocaleString('fr-FR')}
             </div>
           </div>
         </div>
@@ -393,9 +404,41 @@ export function PlaceBetForm({
       </ShimmerButton>
 
       <p className="ff-board text-[10px] leading-relaxed text-white/35">
-        Mise débitée sur tes points de chaîne Wizebot. Cote figée au placement, gain recalculé au coup
-        d&apos;envoi. Modifiable ou annulable 3 min après le placement.
+        Mise débitée sur tes points de chaîne Wizebot. <span className="text-white/50">Pari mutuel</span> : la
+        cote est indicative et live — ton gain réel dépend du pool à la clôture, que les gagnants se partagent.
+        Modifiable ou annulable 3 min après le placement.
       </p>
     </form>
+  );
+}
+
+/** Explicatif pari mutuel — tap-friendly (mobile), dans le style tote board. */
+function ParimutuelInfo() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Comment marche le pari mutuel"
+          className="inline-flex text-white/35 transition-colors hover:text-[var(--tote-amber)]"
+        >
+          <Info className="h-3 w-3" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-72 border-white/12 bg-black p-4 text-white">
+        <div className="ff-board text-[10px] uppercase tracking-[0.24em] text-[var(--tote-amber)]">
+          Pari mutuel
+        </div>
+        <p className="mt-2 text-[12px] leading-relaxed text-white/70">
+          Pas de bookmaker : <strong className="text-white">tous les gagnants se partagent le pool</strong>{' '}
+          (moins la part de la maison). La cote affichée est un <strong className="text-white">instantané</strong>{' '}
+          — elle bouge à chaque mise.
+        </p>
+        <p className="mt-2 text-[12px] leading-relaxed text-white/70">
+          Ton gain réel est calculé <strong className="text-white">à la clôture</strong>, selon le pool final.
+          Miser tôt = cote encore incertaine.
+        </p>
+      </PopoverContent>
+    </Popover>
   );
 }

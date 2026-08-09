@@ -8,9 +8,11 @@ function getNextStage(currentStage: MatchStage): MatchStage | null {
   const progression: Record<MatchStage, MatchStage | null> = {
     GROUP: null,
     PLAYOFF: 'PLAYOFF', // PLAYOFF semi-finals → PLAYOFF final
+    ROUND_OF_32: 'ROUND_OF_16',
     ROUND_OF_16: 'QUARTER_FINAL',
     QUARTER_FINAL: 'SEMI_FINAL',
     SEMI_FINAL: 'FINAL',
+    THIRD_PLACE: null, // petite finale : match terminal, ne progresse pas
     FINAL: null,
   };
 
@@ -198,6 +200,31 @@ export async function progressKnockoutStage(tournamentId: string, completedMatch
   await prisma.match.createMany({
     data: newMatches,
   });
+
+  // Petite finale (3e place) : générée en même temps que la finale, avec les
+  // PERDANTS des deux demies. Idempotent (skip si déjà créée).
+  if (completedMatchStage === 'SEMI_FINAL' && stageMatches.length >= 2) {
+    const existingThird = await prisma.match.count({
+      where: { tournamentId, stage: 'THIRD_PLACE' },
+    });
+    if (existingThird === 0) {
+      const losers = stageMatches
+        .map((m) => (m.winnerTeamId === m.homeTeamId ? m.awayTeamId : m.homeTeamId))
+        .filter((id): id is string => !!id);
+      if (losers.length >= 2) {
+        await prisma.match.create({
+          data: {
+            tournamentId,
+            stage: 'THIRD_PLACE',
+            status: 'SCHEDULED',
+            matchDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+            homeTeamId: losers[0],
+            awayTeamId: losers[1],
+          },
+        });
+      }
+    }
+  }
 
   return {
     progressed: true,
