@@ -356,6 +356,7 @@ function Arm({
 function CenterFinal({
   finalSlot,
   thirdPlace,
+  showThirdPlace,
   hasArms,
   reduce,
   hovered,
@@ -363,6 +364,8 @@ function CenterFinal({
 }: {
   finalSlot: Slot;
   thirdPlace: BracketMatch | null;
+  /** Réserve l'emplacement 3e place même si le match n'est pas encore généré. */
+  showThirdPlace: boolean;
   hasArms: boolean;
   reduce: boolean | null;
   hovered: string | null;
@@ -416,13 +419,19 @@ function CenterFinal({
           ◆ Champion ◆
         </div>
 
-        {/* Petite finale (3e place) — sous la finale, comme sur un tableau Coupe du Monde */}
-        {thirdPlace && (
+        {/* Petite finale (3e place) — sous la finale, comme sur un tableau Coupe
+            du Monde. Réservée dès qu'il y a des demies (placeholder tant que les
+            perdants ne sont pas connus). */}
+        {(showThirdPlace || thirdPlace) && (
           <div className="mt-6 w-full">
             <div className="mb-2 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.28em] text-amber-600/80">
               <Medal className="h-3 w-3 text-amber-600" /> 3e place
             </div>
-            <MatchCard compact match={thirdPlace} isFinal={false} isHovered={hovered === thirdPlace.id} onHover={setHovered} />
+            {thirdPlace ? (
+              <MatchCard compact match={thirdPlace} isFinal={false} isHovered={hovered === thirdPlace.id} onHover={setHovered} />
+            ) : (
+              <PlaceholderCard compact label="Perdants des demies" />
+            )}
           </div>
         )}
       </div>
@@ -461,6 +470,8 @@ export function BracketView({ matches }: BracketViewProps) {
   const finalSlot: Slot = finalRound?.slots[0] ?? null;
   const armRoundsAll = treeRounds.filter((r) => r.stage !== 'FINAL');
   const hasArms = armRoundsAll.length > 0;
+  // Réserve l'emplacement 3e place dès qu'il y a une demi-finale dans l'arbre.
+  const showThirdPlace = treeRounds.some((r) => r.stage === 'SEMI_FINAL');
 
   const half = (n: number) => Math.ceil(n / 2);
   const leftRounds: Round[] = armRoundsAll.map((r) => ({ ...r, slots: r.slots.slice(0, half(r.slots.length)) }));
@@ -508,6 +519,7 @@ export function BracketView({ matches }: BracketViewProps) {
           <CenterFinal
             finalSlot={finalSlot}
             thirdPlace={thirdPlace}
+            showThirdPlace={showThirdPlace}
             hasArms={hasArms}
             reduce={reduce}
             hovered={hovered}

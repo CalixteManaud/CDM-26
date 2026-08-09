@@ -10,7 +10,15 @@ import { Card } from '@/components/ui/card';
 import { BorderBeam } from '@/components/ui/border-beam';
 
 type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED';
-type MatchStage = 'GROUP' | 'PLAYOFF' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'FINAL';
+type MatchStage =
+  | 'GROUP'
+  | 'PLAYOFF'
+  | 'ROUND_OF_32'
+  | 'ROUND_OF_16'
+  | 'QUARTER_FINAL'
+  | 'SEMI_FINAL'
+  | 'THIRD_PLACE'
+  | 'FINAL';
 
 interface Team {
   id: string;
@@ -44,11 +52,15 @@ interface MatchListProps {
 const stageMeta: Record<MatchStage, { label: string; code: string; accent: string }> = {
   GROUP: { label: 'Phase de poules', code: 'GS', accent: 'text-emerald-400 border-emerald-500/30' },
   PLAYOFF: { label: 'Barrages', code: 'PO', accent: 'text-blue-400 border-blue-500/30' },
+  ROUND_OF_32: { label: '16es de finale', code: 'R32', accent: 'text-cyan-400 border-cyan-500/30' },
   ROUND_OF_16: { label: '8es de finale', code: 'R16', accent: 'text-emerald-400 border-emerald-500/30' },
   QUARTER_FINAL: { label: 'Quarts de finale', code: 'QF', accent: 'text-yellow-400 border-yellow-500/30' },
   SEMI_FINAL: { label: 'Demi-finales', code: 'SF', accent: 'text-orange-400 border-orange-500/30' },
+  THIRD_PLACE: { label: 'Petite finale', code: '3e', accent: 'text-amber-400 border-amber-500/30' },
   FINAL: { label: 'Finale', code: 'F', accent: 'text-red-400 border-red-500/30' },
 };
+
+const FALLBACK_STAGE_META = { label: 'Match', code: '—', accent: 'text-white/60 border-white/20' };
 
 function StatusInline({ status }: { status: MatchStatus }) {
   if (status === 'LIVE') {
@@ -122,9 +134,11 @@ export function MatchList({ matches, title = 'Matchs' }: MatchListProps) {
   const stageOrder: MatchStage[] = [
     'GROUP',
     'PLAYOFF',
+    'ROUND_OF_32',
     'ROUND_OF_16',
     'QUARTER_FINAL',
     'SEMI_FINAL',
+    'THIRD_PLACE',
     'FINAL',
   ];
 
@@ -153,7 +167,7 @@ export function MatchList({ matches, title = 'Matchs' }: MatchListProps) {
       {stageOrder.map((stage) => {
         const list = grouped[stage];
         if (!list || list.length === 0) return null;
-        const meta = stageMeta[stage];
+        const meta = stageMeta[stage] ?? FALLBACK_STAGE_META;
         return (
           <div key={stage} className="space-y-4">
             <div className="flex items-center gap-3">

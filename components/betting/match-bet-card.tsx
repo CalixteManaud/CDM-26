@@ -52,9 +52,11 @@ type Match = {
 const stageCode: Record<string, string> = {
   GROUP: 'GS',
   PLAYOFF: 'PO',
+  ROUND_OF_32: 'R32',
   ROUND_OF_16: 'R16',
   QUARTER_FINAL: 'QF',
   SEMI_FINAL: 'SF',
+  THIRD_PLACE: '3e',
   FINAL: 'F',
 };
 

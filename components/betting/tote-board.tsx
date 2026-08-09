@@ -16,9 +16,11 @@ type Match = Parameters<typeof MatchBetCard>[0]['match'];
 const STAGE_CODE: Record<string, string> = {
   GROUP: 'GS',
   PLAYOFF: 'PO',
+  ROUND_OF_32: 'R32',
   ROUND_OF_16: 'R16',
   QUARTER_FINAL: 'QF',
   SEMI_FINAL: 'SF',
+  THIRD_PLACE: '3e',
   FINAL: 'F',
 };
 

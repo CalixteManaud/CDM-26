@@ -39,9 +39,11 @@ type MatchStatus = 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELED';
 type MatchStage =
   | 'GROUP'
   | 'PLAYOFF'
+  | 'ROUND_OF_32'
   | 'ROUND_OF_16'
   | 'QUARTER_FINAL'
   | 'SEMI_FINAL'
+  | 'THIRD_PLACE'
   | 'FINAL';
 
 interface Tournament {
@@ -84,11 +86,17 @@ type PageProps = { matches: Match[] };
 const stageMeta: Record<MatchStage, { label: string; code: string; bar: string; text: string }> = {
   GROUP: { label: 'Phase de poules', code: 'GS', bar: 'bg-emerald-500', text: 'text-emerald-300' },
   PLAYOFF: { label: 'Barrages', code: 'PO', bar: 'bg-blue-500', text: 'text-blue-300' },
+  ROUND_OF_32: { label: '16es de finale', code: 'R32', bar: 'bg-cyan-400', text: 'text-cyan-300' },
   ROUND_OF_16: { label: '8es de finale', code: 'R16', bar: 'bg-teal-400', text: 'text-teal-300' },
   QUARTER_FINAL: { label: 'Quarts', code: 'QF', bar: 'bg-yellow-500', text: 'text-yellow-300' },
   SEMI_FINAL: { label: 'Demi-finales', code: 'SF', bar: 'bg-orange-500', text: 'text-orange-300' },
+  THIRD_PLACE: { label: 'Petite finale', code: '3e', bar: 'bg-amber-600', text: 'text-amber-300' },
   FINAL: { label: 'Finale', code: 'F', bar: 'bg-red-500', text: 'text-red-300' },
 };
+
+// Fallback défensif : un stage inconnu (nouvelle valeur d'enum non encore
+// mappée) ne doit jamais crasher la page — on retombe sur un style neutre.
+const FALLBACK_STAGE = { label: 'Match', code: '—', bar: 'bg-white/30', text: 'text-white/60' };
 
 export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
   const { getAllMatches } = await import('@/actions/matches');
@@ -519,7 +527,7 @@ function Scorebug({ match, idx, reduce }: { match: Match; idx: number; reduce: b
   const as = match.awayScore ?? null;
   const homeWin = isFinished && hs != null && as != null && hs > as;
   const awayWin = isFinished && hs != null && as != null && as > hs;
-  const stage = stageMeta[match.stage];
+  const stage = stageMeta[match.stage] ?? FALLBACK_STAGE;
 
   const dotColor = isLive ? 'bg-red-500' : isFinished ? 'bg-white/35' : isCanceled ? 'bg-white/15' : 'bg-emerald-400';
   const statusShort = isLive ? 'live' : isFinished ? 'ft' : isCanceled ? 'annulé' : 'à venir';
