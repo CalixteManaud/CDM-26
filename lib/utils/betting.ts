@@ -493,7 +493,8 @@ export async function settleMatchBets(params: {
 
       const distributablePool = Math.floor(finalTotal * (1 - houseCut));
 
-      let losersCount = 0;
+      const loserIds: string[] = [];
+      const settledAt = new Date();
       for (const bet of pendingBets) {
         if (bet.outcome === outcome) {
           // Gagnant
@@ -504,16 +505,11 @@ export async function settleMatchBets(params: {
               ? Math.floor((bet.pointsWagered / winningPool) * distributablePool)
               : bet.pointsWagered; // fallback: rembourser
 
-          // Crédit Wizebot fait HORS transaction (ci-dessous), on stocke le bet
-          // avec status PENDING_CREDIT temporairement non, on met directement WON
-          // et on update wizebotCreditTxId après. Si crédit échoue, status -> CREDIT_FAILED.
+          // Crédit Wizebot fait HORS transaction (ci-dessous), on met directement
+          // WON et on update wizebotCreditTxId après. Si crédit échoue → CREDIT_FAILED.
           await tx.bet.update({
             where: { id: bet.id },
-            data: {
-              status: BetStatus.WON,
-              actualPayout: payout,
-              settledAt: new Date(),
-            },
+            data: { status: BetStatus.WON, actualPayout: payout, settledAt },
           });
           winnersData.push({
             betId: bet.id,
@@ -522,18 +518,20 @@ export async function settleMatchBets(params: {
             twitchUsername: bet.user.twitchUsername,
           });
         } else {
-          // Perdant
-          await tx.bet.update({
-            where: { id: bet.id },
-            data: {
-              status: BetStatus.LOST,
-              actualPayout: 0,
-              settledAt: new Date(),
-            },
-          });
-          losersCount++;
+          // Perdant — batché
+          loserIds.push(bet.id);
         }
       }
+
+      // Perdants réglés en UN seul updateMany (évite N updates séquentiels qui
+      // faisaient exploser le timeout de transaction sur les matchs très pariés).
+      if (loserIds.length > 0) {
+        await tx.bet.updateMany({
+          where: { id: { in: loserIds } },
+          data: { status: BetStatus.LOST, actualPayout: 0, settledAt },
+        });
+      }
+      const losersCount = loserIds.length;
 
       // Reliquat d'arrondi : la somme des floor() est < distributablePool.
       // On reverse le reste au plus gros gagnant pour ne pas laisser de points
@@ -554,7 +552,10 @@ export async function settleMatchBets(params: {
       }
 
       return { winnersData, refundData, losersCount };
-    }
+    },
+    // Timeout large : les gros matchs (des centaines de paris) enchaînent
+    // beaucoup d'updates ; le défaut Prisma (5 s) échouait silencieusement.
+    { timeout: 60_000, maxWait: 15_000 }
   );
 
   // Crédits Wizebot HORS transaction, en parallèle borné (~30s pour 1000 paris
