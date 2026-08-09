@@ -221,6 +221,27 @@ export default function TresoreriePage(
   props: InferGetServerSidePropsType<typeof getServerSideProps>
 ) {
   const [retrying, setRetrying] = useState(false);
+  const [settling, setSettling] = useState(false);
+
+  const settleUnsettled = async () => {
+    setSettling(true);
+    try {
+      const res = await fetch('/api/admin/bets/settle-unsettled', { method: 'POST' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(json.error ?? 'Échec du settlement');
+        return;
+      }
+      toast.success(
+        `Settlement terminé — ${json.matchesSettled ?? 0}/${json.matchesFound ?? 0} matchs réglés. Recharge en cours…`
+      );
+      setTimeout(() => window.location.reload(), 1400);
+    } catch {
+      toast.error('Erreur réseau');
+    } finally {
+      setSettling(false);
+    }
+  };
 
   const retry = async () => {
     setRetrying(true);
@@ -283,19 +304,27 @@ export default function TresoreriePage(
               <StatChip label="Transferts KO" value={props.totals.transferIssues} tone="amber" />
             </div>
 
-            <button
-              type="button"
-              onClick={retry}
-              disabled={retrying}
-              className="mt-8 inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-mono uppercase tracking-[0.2em] hover:bg-emerald-500/15 transition disabled:opacity-50"
-            >
-              {retrying ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              Rejouer crédits & remboursements
-            </button>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={retry}
+                disabled={retrying}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-mono uppercase tracking-[0.2em] hover:bg-emerald-500/15 transition disabled:opacity-50"
+              >
+                {retrying ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                Rejouer crédits & remboursements
+              </button>
+
+              <button
+                type="button"
+                onClick={settleUnsettled}
+                disabled={settling}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs font-mono uppercase tracking-[0.2em] hover:bg-amber-500/15 transition disabled:opacity-50"
+              >
+                {settling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
+                Régler les matchs non comptabilisés
+              </button>
+            </div>
           </div>
         </section>
 
