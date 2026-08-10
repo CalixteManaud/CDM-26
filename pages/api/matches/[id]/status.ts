@@ -43,5 +43,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   if (!result.success) return res.status(400).json({ error: result.error });
-  return res.status(200).json({ success: true, ...result.data });
+
+  // Match annulé → on rembourse les paris en cours (VOID + crédit Wizebot).
+  // settleMatchBets(outcome:null) est idempotent (skip si pool déjà réglé).
+  let refund: Awaited<ReturnType<typeof import('@/lib/utils/betting')['settleMatchBets']>> | null = null;
+  if (body.status === MatchStatus.CANCELED) {
+    try {
+      const { settleMatchBets } = await import('@/lib/utils/betting');
+      refund = await settleMatchBets({ matchId, outcome: null });
+    } catch (err) {
+      console.error('[status] remboursement à l’annulation échoué', matchId, err);
+    }
+  }
+
+  return res.status(200).json({ success: true, ...result.data, refund });
 }

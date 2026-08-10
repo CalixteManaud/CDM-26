@@ -233,9 +233,9 @@ export default function TresoreriePage(
         return;
       }
       toast.success(
-        `Settlement terminé — ${json.matchesSettled ?? 0}/${json.matchesFound ?? 0} matchs réglés. Recharge en cours…`
+        `Terminé — ${json.matchesSettled ?? 0} matchs réglés, ${json.matchesRefunded ?? 0} annulés remboursés (sur ${json.matchesFound ?? 0}). Recharge en cours…`
       );
-      setTimeout(() => window.location.reload(), 1400);
+      setTimeout(() => window.location.reload(), 1600);
     } catch {
       toast.error('Erreur réseau');
     } finally {

@@ -25,43 +25,70 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!dbUser) return res.status(401).json({ error: 'Utilisateur introuvable' });
   if (!(await isSiteAdmin(dbUser.id))) return res.status(403).json({ error: 'Réservé aux administrateurs' });
 
-  // Matchs terminés, avec score, qui ont encore des paris PENDING.
-  const matches = await prisma.match.findMany({
-    where: {
-      status: 'FINISHED',
-      homeScore: { not: null },
-      awayScore: { not: null },
-      bets: { some: { status: 'PENDING' } },
-    },
-    select: {
-      id: true,
-      homeScore: true,
-      awayScore: true,
-      homeTeam: { select: { shortName: true } },
-      awayTeam: { select: { shortName: true } },
-    },
-  });
+  // Matchs terminés (avec score) ET matchs annulés qui ont encore des paris
+  // PENDING. Terminés → réglés par l'issue du score ; annulés → remboursés (VOID).
+  const [finished, canceled] = await Promise.all([
+    prisma.match.findMany({
+      where: {
+        status: 'FINISHED',
+        homeScore: { not: null },
+        awayScore: { not: null },
+        bets: { some: { status: 'PENDING' } },
+      },
+      select: {
+        id: true,
+        homeScore: true,
+        awayScore: true,
+        homeTeam: { select: { shortName: true } },
+        awayTeam: { select: { shortName: true } },
+      },
+    }),
+    prisma.match.findMany({
+      where: { status: 'CANCELED', bets: { some: { status: 'PENDING' } } },
+      select: {
+        id: true,
+        homeTeam: { select: { shortName: true } },
+        awayTeam: { select: { shortName: true } },
+      },
+    }),
+  ]);
 
-  const results: Array<{ match: string; settled: boolean; error?: string }> = [];
+  const results: Array<{ match: string; kind: 'réglé' | 'remboursé'; ok: boolean; error?: string }> = [];
   let matchesSettled = 0;
+  let matchesRefunded = 0;
 
-  for (const m of matches) {
+  // 1) Matchs terminés → settlement par l'issue.
+  for (const m of finished) {
     const label = `${m.homeTeam.shortName} ${m.homeScore}-${m.awayScore} ${m.awayTeam.shortName}`;
     try {
       const outcome = matchOutcomeFromScores(m.homeScore as number, m.awayScore as number);
       await settleMatchBets({ matchId: m.id, outcome });
       matchesSettled++;
-      results.push({ match: label, settled: true });
+      results.push({ match: label, kind: 'réglé', ok: true });
     } catch (err) {
-      console.error('[settle-unsettled] échec', m.id, err);
-      results.push({ match: label, settled: false, error: err instanceof Error ? err.message : 'inconnu' });
+      console.error('[settle-unsettled] settle échec', m.id, err);
+      results.push({ match: label, kind: 'réglé', ok: false, error: err instanceof Error ? err.message : 'inconnu' });
+    }
+  }
+
+  // 2) Matchs annulés → remboursement (outcome null → VOID).
+  for (const m of canceled) {
+    const label = `${m.homeTeam.shortName} vs ${m.awayTeam.shortName} (annulé)`;
+    try {
+      await settleMatchBets({ matchId: m.id, outcome: null });
+      matchesRefunded++;
+      results.push({ match: label, kind: 'remboursé', ok: true });
+    } catch (err) {
+      console.error('[settle-unsettled] refund échec', m.id, err);
+      results.push({ match: label, kind: 'remboursé', ok: false, error: err instanceof Error ? err.message : 'inconnu' });
     }
   }
 
   return res.status(200).json({
     success: true,
-    matchesFound: matches.length,
+    matchesFound: finished.length + canceled.length,
     matchesSettled,
+    matchesRefunded,
     results,
   });
 }
