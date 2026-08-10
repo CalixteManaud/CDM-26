@@ -16,6 +16,7 @@ import {
   Settings,
   CheckCircle2,
   ArrowRight,
+  Ban,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,6 +32,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { AdminShell } from '@/components/admin/admin-shell';
 
 type Tournament = { id: string; name: string; startDate: string };
@@ -472,6 +484,9 @@ export default function AdminMarketsPage(props: InferGetServerSidePropsType<type
                         Voir <ArrowRight className="inline w-3 h-3 ml-0.5" />
                       </Link>
                     )}
+                    {m.status !== 'SETTLED' && m.status !== 'VOID' && (
+                      <VoidMarketButton marketId={m.id} label={m.type} />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -480,5 +495,75 @@ export default function AdminMarketsPage(props: InferGetServerSidePropsType<type
         </section>
       </AdminShell>
     </>
+  );
+}
+
+/** Annule un marché et rembourse les paris simples (VOID). Confirmation requise. */
+function VoidMarketButton({ marketId, label }: { marketId: string; label: string }) {
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/markets/void', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marketId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(json.error ?? "Échec de l'annulation");
+        return;
+      }
+      toast.success('Marché annulé — parieurs remboursés. Rechargement…');
+      setOpen(false);
+      setTimeout(() => window.location.reload(), 1200);
+    } catch {
+      toast.error('Erreur réseau');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.2em] text-red-300 hover:bg-red-500/15"
+        >
+          <Ban className="h-3 w-3" /> Annuler & rembourser
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="border-white/15 bg-black text-white">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-xl font-black">
+            <Ban className="h-5 w-5 text-red-400" />
+            Annuler ce marché ?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-white/60">
+            Le marché <span className="font-mono text-white/80">{label}</span> passe en VOID : tous les paris
+            simples en attente sont <strong className="text-white">remboursés</strong> (crédit Wizebot), et les
+            jambes de combiné neutralisées. Action définitive.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-white/15 bg-white/5 text-white/70 hover:bg-white/10">
+            Retour
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              run();
+            }}
+            disabled={loading}
+            className="bg-red-500 font-bold text-white hover:bg-red-400 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Annuler & rembourser'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
